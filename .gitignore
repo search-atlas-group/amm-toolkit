@@ -1,46 +1,50 @@
-# Environment variables
-.env
-.env.local
-.env.production
+# ── Whitelist approach ───────────────────────────────────────────────────────
+# Block everything by default. Only explicitly listed items are tracked.
+# Nothing internal can ever be accidentally committed.
 
-# OS files
-.DS_Store
-Thumbs.db
+/*
+/.*
 
-# Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
+# ── Root files ───────────────────────────────────────────────────────────────
 
-# Claude Code local config
-.mcp.json
-.claudeignore
+!/.gitignore
+!/CLAUDE.md
+!/LICENSE
+!/README.md
+!/WHATS-NEW.md
+!/setup.sh
+!/.env.example
 
-# Client data — generated locally, never committed
-clients/
-Clients/
-!clients/_template/
-!clients/_template/**
+# ── Public folders (all contents allowed) ────────────────────────────────────
 
-# Logs
-*.log
-logs/
+!/commands/
+!/commands/**
 
-# Node modules
-node_modules/
+!/workflows/
+!/workflows/**
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
+!/integrations/
+!/integrations/**
 
-# Internal — never in this repo
-AMM-Internal/
-_brain/
-amm-guardian/
-dashboard/
-tools/
-Work stuff/
-_private/
-_scratch/
+!/guides/
+!/guides/**
+
+!/plans/
+!/plans/**
+
+!/Scripts/
+!/Scripts/**
+Scripts/__pycache__/
+
+# ── docs/ — explicitly list allowed files, block everything else ─────────────
+
+!/docs/
+docs/*
+docs/.*
+!docs/GOLDEN_RULES.md
+!docs/INTENT_MAPPING.md
+!docs/MCP_SETUP.md
+!docs/TOOL_REFERENCE.md
+!docs/WORKFLOWS.md
+!docs/Agentic-Marketing-Mastermind-Setup-Guide.html
+!docs/Auto\ set\ up\ SA.html
