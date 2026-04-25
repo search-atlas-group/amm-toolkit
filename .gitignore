@@ -36,6 +36,11 @@
 !/Scripts/**
 Scripts/__pycache__/
 
+# ── deploy/ — static site builds for Northflank ──────────────────────────────
+
+!/deploy/
+!/deploy/**
+
 # ── docs/ — explicitly list allowed files, block everything else ─────────────
 
 !/docs/
