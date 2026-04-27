@@ -6,6 +6,35 @@ Latest additions and updates to the Agentic Marketing Mastermind toolkit.
 
 <!-- AMM Guardian adds entries here automatically. Newest at top. -->
 
+## 2026-04-27 — Claude Code v2.1.118: Hooks Can Now Call MCP Tools Directly
+
+Claude Code v2.1.118 shipped a change that matters for SA workflows: **hooks can now invoke MCP tools directly**, without a shell script in between. Set `"type": "mcp_tool"` in any hook and point it at a SearchAtlas tool — no bash wrapper needed.
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "type": "mcp_tool",
+        "server": "searchatlas",
+        "tool": "otto_trigger_recrawl",
+        "params": {}
+      }
+    ]
+  }
+}
+```
+
+Other changes in this release:
+- `/cost` and `/stats` are merged into `/usage` (both still work as shortcuts)
+- Custom themes: create and switch named themes via `/theme`, or hand-edit `~/.claude/themes/`
+- Windows: WSL can now inherit Windows-side managed settings via `wslInheritsWindowsSettings`
+
+**To update:** `npm update -g @anthropic-ai/claude-code`
+
+---
+
 ## 2026-04-23 — Setup Overhaul + Integration Wizard
 
 ### One-Command Quickstart (Mac + Windows)
