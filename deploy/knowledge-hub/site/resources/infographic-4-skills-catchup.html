@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills · Systems · Scale — Agentic Agency Series 04</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ──────────────────────────────────────────────── */
+:root {
+  --bg:     #f2f4f8;
+  --card:   #ffffff;
+  --card2:  #f8fafc;
+  --border: #dde3ed;
+  --border2:#c8d0de;
+  --ink:    #0f172a;
+  --ink2:   #334155;
+  --ink3:   #64748b;
+  --ink4:   #94a3b8;
+  --green:  #059669;
+  --g-lt:   rgba(5,150,105,0.08);
+  --g-bd:   rgba(5,150,105,0.22);
+  --blue:   #2563eb;
+  --b-lt:   rgba(37,99,235,0.08);
+  --b-bd:   rgba(37,99,235,0.22);
+  --orange: #d97706;
+  --o-lt:   rgba(217,119,6,0.08);
+  --o-bd:   rgba(217,119,6,0.22);
+  --purple: #7c3aed;
+  --p-lt:   rgba(124,58,237,0.08);
+  --p-bd:   rgba(124,58,237,0.22);
+  --red:    #dc2626;
+  --r-lt:   rgba(220,38,38,0.08);
+  --yellow: #d97706;
+  --y-lt:   rgba(217,119,6,0.08);
+  --teal:   #0d9488;
+  --t-lt:   rgba(13,148,136,0.08);
+  --t-bd:   rgba(13,148,136,0.22);
+  --sans:   'Inter', -apple-system, sans-serif;
+  --mono:   'JetBrains Mono', 'Consolas', monospace;
+  --r:      14px;
+  --r-sm:   8px;
+  --max:    1080px;
+  --nav-bg: #0f172a;
+}
+
+/* ── RESET ──────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;
+  font-size:15px;
+}
+
+/* ── NAV ────────────────────────────────────────────────────── */
+.nav{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  z-index:999;
+  display:flex;gap:2px;align-items:center;
+  background:var(--nav-bg);
+  border-radius:100px;padding:4px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.2);
+  opacity:0;animation:fadeIn .5s ease 1s forwards;
+}
+@keyframes fadeIn{to{opacity:1}}
+.np{
+  padding:6px 13px;border-radius:100px;
+  font-size:.69rem;font-weight:600;letter-spacing:.02em;
+  color:rgba(255,255,255,0.5);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+  text-decoration:none;
+}
+.np:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.08)}
+.np.active{background:#ffffff;color:#0f172a;font-weight:700}
+
+/* ── HERO ───────────────────────────────────────────────────── */
+.hero{
+  background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);
+  padding:88px 40px 72px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(5,150,105,0.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.35);
+  border-radius:100px;padding:6px 18px;
+  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:#6ee7b7;margin-bottom:28px;
+  opacity:0;animation:slideUp .6s ease .2s forwards;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero h1{
+  font-size:clamp(2.2rem,5vw,3.8rem);
+  font-weight:900;color:#fff;
+  line-height:1.05;letter-spacing:-.03em;
+  margin-bottom:20px;
+  opacity:0;animation:slideUp .6s ease .35s forwards;
+}
+.hero h1 span{color:#34d399}
+.hero p{
+  font-size:1.05rem;color:rgba(255,255,255,0.6);
+  max-width:560px;margin:0 auto 36px;line-height:1.7;
+  opacity:0;animation:slideUp .6s ease .5s forwards;
+}
+.hero-chips{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  opacity:0;animation:slideUp .6s ease .65s forwards;
+}
+.chip{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 16px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+  border-radius:100px;font-size:.76rem;font-weight:600;
+  color:rgba(255,255,255,0.55);cursor:pointer;
+  transition:all .25s;text-decoration:none;
+}
+.chip:hover{background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.85)}
+.chip.c-active{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.35);color:#6ee7b7}
+
+/* ── WRAPPER ────────────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:80px 40px}
+.divider{max-width:var(--max);margin:0 auto;height:1px;background:var(--border)}
+
+/* ── SECTION HEADER ─────────────────────────────────────────── */
+.sec-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink4);margin-bottom:14px;
+}
+.sec-title{
+  font-size:clamp(1.6rem,3vw,2.4rem);
+  font-weight:800;letter-spacing:-.025em;line-height:1.1;
+  color:var(--ink);margin-bottom:12px;max-width:640px;
+}
+.sec-desc{
+  font-size:.95rem;color:var(--ink3);
+  max-width:520px;line-height:1.75;margin-bottom:44px;
+}
+
+/* ── REVEAL ─────────────────────────────────────────────────── */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s cubic-bezier(.16,1,.3,1)}
+.rv.vis{opacity:1;transform:translateY(0)}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+.rv.d4{transition-delay:.32s}.rv.d5{transition-delay:.4s}.rv.d6{transition-delay:.48s}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 01 — FILE EXPLORER
+══════════════════════════════════════════════════════════════ */
+.explorer{
+  display:grid;grid-template-columns:260px 1fr;
+  border-radius:var(--r);
+  border:1px solid var(--border);
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,0.06);
+  min-height:560px;
+}
+
+/* Left: dark file tree panel */
+.tree-panel{
+  background:#1e2d3d;
+  display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,0.06);
+}
+.tree-hdr{
+  padding:12px 14px;
+  background:rgba(0,0,0,0.2);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:8px;
+}
+.tree-dots{display:flex;gap:5px}
+.td{width:10px;height:10px;border-radius:50%}
+.tree-title{
+  font-family:var(--mono);font-size:.7rem;
+  color:rgba(255,255,255,0.35);letter-spacing:.04em;margin-left:4px;
+}
+.tree-body{padding:8px 0;flex:1;overflow-y:auto}
+.ti{
+  display:flex;align-items:center;
+  padding:5px 14px;
+  font-family:var(--mono);font-size:.72rem;
+  color:rgba(255,255,255,0.55);
+  cursor:pointer;transition:all .2s;
+  gap:4px;white-space:nowrap;
+  border-left:2px solid transparent;
+}
+.ti:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85)}
+.ti.active{background:rgba(52,211,153,0.12);color:#6ee7b7;border-left-color:#34d399}
+.ti .em{font-size:.9rem;margin-right:2px;flex-shrink:0}
+.ti.dim{opacity:.5;cursor:default}
+.ti.dim:hover{background:transparent;color:rgba(255,255,255,0.55)}
+.tree-hint{
+  padding:10px 14px 12px;
+  font-size:.64rem;color:rgba(255,255,255,0.2);
+  font-family:var(--mono);letter-spacing:.04em;text-align:center;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+
+/* Right: detail panel */
+.detail-panel{
+  background:var(--card);
+  padding:32px 36px;
+  overflow-y:auto;
+}
+.dp-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 10px;border-radius:4px;margin-bottom:14px;
+}
+.dp-title{font-size:1.3rem;font-weight:800;color:var(--ink);margin-bottom:16px;letter-spacing:-.02em}
+.dp-section{margin-bottom:22px}
+.dp-section-title{
+  font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink4);margin-bottom:8px;
+}
+.dp-what{font-size:.88rem;color:var(--ink2);line-height:1.7}
+.dp-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.dp-list li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:.84rem;color:var(--ink2);line-height:1.55;
+}
+.dp-list li::before{content:'→';color:var(--green);opacity:.7;flex-shrink:0;margin-top:1px;font-size:.78rem}
+.dp-practices{display:flex;flex-direction:column;gap:8px}
+.dp-prac{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 12px;
+  font-size:.82rem;color:var(--ink2);line-height:1.55;
+}
+.dp-prac::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;font-size:.78rem}
+.dp-create{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:12px 14px;
+  font-size:.82rem;color:var(--ink2);line-height:1.65;
+}
+.dp-prompt-box{
+  background:#1e2d3d;border-radius:var(--r-sm);padding:14px 16px;
+  font-family:var(--mono);font-size:.74rem;line-height:1.7;
+  color:rgba(255,255,255,0.7);
+}
+.dp-prompt-box .ph{color:#6ee7b7}
+.dp-mind{
+  background:var(--o-lt);border:1px solid var(--o-bd);
+  border-radius:var(--r-sm);padding:12px 14px;
+  font-size:.81rem;color:var(--ink2);line-height:1.65;
+}
+.dp-mind strong{color:var(--orange)}
+.dp-default{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;min-height:300px;gap:12px;text-align:center;
+}
+.dp-default .big-icon{font-size:2.5rem;opacity:.3}
+.dp-default p{font-size:.85rem;color:var(--ink4);max-width:220px;line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 02 — SKILL FILES
+══════════════════════════════════════════════════════════════ */
+.skills-layout{display:grid;grid-template-columns:1fr 1.65fr;gap:28px;align-items:start}
+.anatomy-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+}
+.anatomy-bar{
+  padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);
+  font-size:.68rem;color:var(--ink4);font-family:var(--mono);
+  display:flex;align-items:center;gap:8px;letter-spacing:.04em;
+}
+.a-dots{display:flex;gap:5px}
+.ad{width:9px;height:9px;border-radius:50%}
+.anatomy-code{padding:20px;font-family:var(--mono);font-size:.75rem;line-height:2;color:var(--ink3)}
+.ck{color:var(--green)}.cv{color:var(--blue)}.cc{color:var(--ink4)}
+.transfer-box{
+  margin-top:14px;background:var(--y-lt);
+  border:1px solid rgba(217,119,6,.22);border-radius:var(--r-sm);
+  padding:14px 16px;
+}
+.tb-head{font-size:.64rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--yellow);margin-bottom:6px}
+.tb-text{font-size:.81rem;color:var(--ink2);line-height:1.65}
+.tb-text em{color:var(--ink);font-style:normal;font-weight:600}
+
+.skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sc{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:16px;
+  cursor:pointer;transition:all .3s;overflow:hidden;
+  position:relative;
+}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc-c,var(--green));opacity:0;transition:opacity .3s}
+.sc:hover::before,.sc.open::before{opacity:1}
+.sc:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.sc.open{border-color:var(--border2)}
+.sc-tag{
+  display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 7px;border-radius:4px;margin-bottom:8px;
+  background:var(--sc-dim,var(--g-lt));color:var(--sc-c,var(--green));
+}
+.sc-name{font-size:.88rem;font-weight:700;color:var(--ink);margin-bottom:5px}
+.sc-preview{font-size:.76rem;color:var(--ink3);line-height:1.5}
+.sc-expand{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.16,1,.3,1)}
+.sc.open .sc-expand{max-height:800px}
+.sc-detail{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:.78rem;color:var(--ink2);line-height:1.65}
+.sc-invoke{
+  margin-top:8px;font-family:var(--mono);font-size:.68rem;
+  color:var(--ink3);background:var(--card2);
+  padding:6px 10px;border-radius:6px;border:1px solid var(--border);
+  word-break:break-all;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 03 — WORKFLOWS
+══════════════════════════════════════════════════════════════ */
+.wf-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.wft{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 18px;border-radius:100px;
+  font-size:.8rem;font-weight:600;color:var(--ink3);
+  cursor:pointer;border:1.5px solid var(--border);background:var(--card);
+  transition:all .25s;
+}
+.wft:hover{border-color:var(--border2);color:var(--ink)}
+.wft.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.wf-panels{position:relative}
+.wf-panel{display:none;animation:panIn .35s cubic-bezier(.16,1,.3,1)}
+.wf-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@keyframes panIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.wf-steps{display:flex;flex-direction:column}
+.wf-step{display:flex;gap:14px;position:relative}
+.wf-step:not(:last-child)::before{
+  content:'';position:absolute;left:15px;top:38px;bottom:-6px;
+  width:1px;background:var(--border);
+}
+.wf-num{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.74rem;font-weight:700;color:var(--ink4);background:var(--card);
+  transition:all .3s;
+}
+.wf-step.active .wf-num{border-color:var(--green);color:#fff;background:var(--green)}
+.wf-sc{padding:4px 0 24px;flex:1}
+.wf-step:last-child .wf-sc{padding-bottom:0}
+.wf-sh{font-size:.88rem;font-weight:600;color:var(--ink4);margin-bottom:4px;transition:color .3s}
+.wf-step.active .wf-sh{color:var(--ink)}
+.wf-st{font-size:.79rem;color:var(--ink4);line-height:1.65;transition:color .3s}
+.wf-step.active .wf-st{color:var(--ink2)}
+
+.step-nav-row{display:flex;align-items:center;gap:10px;margin-top:20px}
+.sn-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 14px;border-radius:100px;
+  font-size:.74rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);color:var(--ink3);
+  transition:all .22s;
+}
+.sn-btn:hover:not(:disabled){border-color:var(--border2);color:var(--ink);background:var(--card2)}
+.sn-btn:disabled{opacity:.35;cursor:not-allowed}
+.sn-btn.pri{background:var(--green);color:#fff;border-color:var(--green)}
+.sn-btn.pri:hover{opacity:.88}
+.sn-dots{display:flex;gap:5px;flex:1;justify-content:center}
+.sn-dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:all .25s}
+.sn-dot.active{background:var(--green);width:14px;border-radius:3px}
+
+.wf-right{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.wfr-label{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4)}
+.wfr-prompt{
+  font-family:var(--mono);font-size:.73rem;line-height:1.8;
+  color:var(--ink2);background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;
+}
+.wfr-prompt .ph{color:var(--green);font-weight:500}
+.wfr-note{
+  background:var(--g-lt);border:1px solid var(--g-bd);
+  border-radius:var(--r-sm);padding:12px 14px;
+  font-size:.78rem;color:var(--ink2);line-height:1.65;
+}
+.wfr-note strong{color:var(--green)}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 04 — THREE LAYERS
+══════════════════════════════════════════════════════════════ */
+.layer-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.lb{
+  padding:14px 18px;border-radius:var(--r-sm);
+  font-size:.88rem;font-weight:700;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);color:var(--ink3);
+  transition:all .25s;text-align:center;position:relative;overflow:hidden;
+}
+.lb::before{content:'';position:absolute;inset:0;background:var(--lb-c,var(--green));opacity:0;transition:opacity .25s}
+.lb.active::before{opacity:.07}
+.lb.active{border-color:var(--lb-c,var(--green));color:var(--lb-c,var(--green))}
+.lb sub{display:block;font-size:.64rem;font-weight:500;color:var(--ink4);margin-top:3px;font-family:var(--sans)}
+.lb.active sub{color:var(--lb-c,var(--green));opacity:.7}
+
+.layer-panes{position:relative}
+.lp{display:none;animation:panIn .35s cubic-bezier(.16,1,.3,1)}
+.lp.active{display:block}
+.lp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lp-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:18px;transition:all .25s;
+}
+.lp-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,0.05);transform:translateY(-2px)}
+.lp-icon{font-size:1.3rem;margin-bottom:9px}
+.lp-title{font-size:.86rem;font-weight:700;color:var(--ink);margin-bottom:5px}
+.lp-desc{font-size:.77rem;color:var(--ink3);line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 05 — SCALING
+══════════════════════════════════════════════════════════════ */
+.scale-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tier{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;
+  cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1);
+  position:relative;overflow:hidden;
+}
+.tier::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--tc,var(--green));opacity:0;transition:opacity .3s;
+}
+.tier:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.tier:hover::after,.tier.open::after{opacity:1}
+.tier-label{font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tc,var(--green));margin-bottom:10px}
+.tier-title{font-size:.92rem;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.25}
+.tier-sub{font-size:.76rem;color:var(--ink3);line-height:1.55}
+
+.tier-expand{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.16,1,.3,1)}
+.tier.open .tier-expand{max-height:800px}
+.tier-detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:.76rem;color:var(--ink2);line-height:1.65}
+.tier-flow{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:10px}
+.tf-node{
+  font-size:.65rem;font-weight:600;padding:3px 8px;
+  border-radius:4px;background:var(--card2);
+  border:1px solid var(--border);color:var(--ink2);
+}
+.tf-arr{color:var(--ink4);font-size:.7rem}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION 06 — PITFALLS
+══════════════════════════════════════════════════════════════ */
+.pitfalls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ac{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);overflow:hidden;transition:border-color .25s;
+}
+.ac:hover{border-color:var(--border2)}
+.ac-trigger{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;cursor:pointer;gap:10px;
+}
+.ac-left{display:flex;align-items:center;gap:10px}
+.ac-icon{font-size:.9rem;flex-shrink:0}
+.ac-label{font-size:.87rem;font-weight:600;color:var(--ink)}
+.ac-chev{
+  width:20px;height:20px;border-radius:50%;background:var(--card2);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;color:var(--ink4);flex-shrink:0;
+  transition:transform .3s,background .25s,color .25s;
+}
+.ac.open .ac-chev{transform:rotate(180deg);background:var(--r-lt);color:var(--red)}
+.ac-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1)}
+.ac.open .ac-body{max-height:800px}
+.ac-content{padding:0 16px 16px 36px;font-size:.81rem;color:var(--ink2);line-height:1.7}
+.ac-fix{
+  margin-top:10px;padding:10px 12px;
+  background:var(--g-lt);border-left:2px solid var(--green);
+  border-radius:0 6px 6px 0;
+  font-size:.79rem;color:var(--ink2);line-height:1.65;
+}
+.ac-fix strong{color:var(--green)}
+
+/* ── FOOTER ─────────────────────────────────────────────────── */
+.footer{
+  max-width:var(--max);margin:0 auto;
+  padding:44px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--border);gap:24px;flex-wrap:wrap;
+}
+.footer-logo{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.footer-logo span{color:var(--green)}
+.footer-sub{font-size:.72rem;color:var(--ink4);margin-top:2px}
+.footer-series{display:flex;gap:20px;flex-wrap:wrap}
+.fs-it{font-size:.73rem;color:var(--ink4)}
+.fs-it.cur{color:var(--green);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="np active" href="#hero">Intro</a>
+  <a class="np" href="#files">File Setup</a>
+  <a class="np" href="#skills">Skills</a>
+  <a class="np" href="#workflows">Workflows</a>
+  <a class="np" href="#layers">3 Layers</a>
+  <a class="np" href="#scaling">Scale</a>
+  <a class="np" href="#pitfalls">Pitfalls</a>
+</nav>
+
+<!-- ════════════════════ HERO ════════════════════ -->
+<section id="hero" data-section="hero">
+  <div class="hero">
+    <div class="hero-badge">The Agentic Agency · Series 04</div>
+    <h1>Skills. Systems. <span>Scale.</span></h1>
+    <p>Configure Claude to know your agency, your clients, and your workflows — so every session starts exactly where the last one ended.</p>
+    <div class="hero-chips">
+      <a class="chip c-active" href="#files">File Setup</a>
+      <a class="chip" href="#skills">Skill Files</a>
+      <a class="chip" href="#workflows">Build Workflows</a>
+      <a class="chip" href="#layers">3 Layers</a>
+      <a class="chip" href="#scaling">Scaling Patterns</a>
+      <a class="chip" href="#pitfalls">Pitfalls</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 01 FILE EXPLORER ════════════════════ -->
+<section id="files" data-section="files">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">01 · The Foundation</div></div>
+    <div class="rv d1"><h2 class="sec-title">Your folder is your memory system.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Every file has a specific job. Click any file or folder in the tree to learn what goes inside it, best practices, and how to have Claude build it for you.</p></div>
+
+    <div class="explorer rv d2">
+      <!-- LEFT: File tree -->
+      <div class="tree-panel">
+        <div class="tree-hdr">
+          <div class="tree-dots">
+            <div class="td" style="background:#ff5f56"></div>
+            <div class="td" style="background:#febc2e"></div>
+            <div class="td" style="background:#27c93f"></div>
+          </div>
+          <span class="tree-title">EXPLORER</span>
+        </div>
+        <div class="tree-body" id="file-tree"></div>
+        <div class="tree-hint">← click any file or folder</div>
+      </div>
+      <!-- RIGHT: Detail panel -->
+      <div class="detail-panel" id="detail-panel">
+        <div class="dp-default">
+          <div class="big-icon">📁</div>
+          <p>Click any file or folder in the tree to see what it does, what to include, and how to create it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 02 SKILL FILES ════════════════════ -->
+<section id="skills" data-section="skills">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">02 · Skill Files</div></div>
+    <div class="rv d1"><h2 class="sec-title">Your SOPs, encoded. Your AI, consistent.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Skill files are markdown documents that tell Claude exactly how to run your agency's repeatable workflows — written once, invoked on demand, consistent every time. Tap a card to expand.</p></div>
+
+    <div class="skills-layout rv d2">
+      <div>
+        <div class="anatomy-card">
+          <div class="anatomy-bar">
+            <div class="a-dots">
+              <div class="ad" style="background:#ff5f56"></div>
+              <div class="ad" style="background:#febc2e"></div>
+              <div class="ad" style="background:#27c93f"></div>
+            </div>
+            keyword-research.md
+          </div>
+          <div class="anatomy-code">
+<span class="ck">---</span>
+<span class="ck">name:</span> <span class="cv">keyword-research</span>
+<span class="ck">trigger:</span> <span class="cv">"use skill keyword-research"</span>
+<span class="ck">context:</span>
+<span class="cc">  # brand vault + target URLs</span>
+<span class="ck">steps:</span>
+<span class="cc">  # 1. Extract seed keywords</span>
+<span class="cc">  # 2. Classify search intent</span>
+<span class="cc">  # 3. Identify entity gaps</span>
+<span class="cc">  # 4. Validate with KRT</span>
+<span class="ck">output:</span> <span class="cv">keyword-map.csv</span>
+<span class="ck">---</span>
+          </div>
+        </div>
+        <div class="transfer-box">
+          <div class="tb-head">💡 Already using ChatGPT?</div>
+          <p class="tb-text">Paste your best GPT system prompts into Claude and say <em>"Convert this into a skill file."</em> Claude formats it with invocation syntax automatically. Five years of prompt refinement — migrated in five minutes.</p>
+        </div>
+      </div>
+      <div class="skills-grid">
+        <div class="sc" style="--sc-c:var(--green);--sc-dim:var(--g-lt)" data-expand="sc">
+          <div class="sc-tag">Research</div>
+          <div class="sc-name">Keyword Research</div>
+          <div class="sc-preview">Seed extraction, intent clustering, entity gap analysis, KRT validation.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Pulls seed keywords from the brand vault, classifies search intent, identifies entity gaps vs competitors, and validates the final list against KRT data. Produces a structured keyword map ready for the site architecture skill.</div>
+            <div class="sc-invoke">use skill keyword-research for [client]</div>
+          </div>
+        </div>
+        <div class="sc" style="--sc-c:var(--blue);--sc-dim:var(--b-lt)" data-expand="sc">
+          <div class="sc-tag">SEO</div>
+          <div class="sc-name">Entity Mapping</div>
+          <div class="sc-preview">Map entity relationships, identify topical authority gaps, prioritize page targets.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Builds a structured entity map for a given topic cluster, identifies which entities the client is missing vs. competitors, and produces a priority page-creation list ready for the build workflow.</div>
+            <div class="sc-invoke">use skill entity-mapping for [topic]</div>
+          </div>
+        </div>
+        <div class="sc" style="--sc-c:var(--orange);--sc-dim:var(--o-lt)" data-expand="sc">
+          <div class="sc-tag">CRO</div>
+          <div class="sc-name">CRO Audit</div>
+          <div class="sc-preview">Evaluate CTAs, trust signals, heading hierarchy, and conversion blockers.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Systematically reviews a page for conversion rate weaknesses: CTA placement, trust signal gaps, heading hierarchy, friction points, and mobile experience. Returns a prioritized fix list.</div>
+            <div class="sc-invoke">use skill cro-audit for [page URL]</div>
+          </div>
+        </div>
+        <div class="sc" style="--sc-c:var(--purple);--sc-dim:var(--p-lt)" data-expand="sc">
+          <div class="sc-tag">Content</div>
+          <div class="sc-name">Brand Voice</div>
+          <div class="sc-preview">Apply this client's exact tone, vocabulary, and stylistic rules to any content.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Encodes the client's approved vocabulary, forbidden words, tone spectrum, and sample sentences. Any content Claude generates is automatically filtered through this guide — ensuring the output sounds like the client, not Claude's defaults.</div>
+            <div class="sc-invoke">use skill brand-voice for [client]</div>
+          </div>
+        </div>
+        <div class="sc" style="--sc-c:var(--teal);--sc-dim:var(--t-lt)" data-expand="sc">
+          <div class="sc-tag">Build</div>
+          <div class="sc-name">Site Architecture</div>
+          <div class="sc-preview">Define silo structure, URL patterns, internal link strategy, and page hierarchy.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Generates a complete site architecture plan from the keyword map — silo structure, URL slugs, internal link anchors, and which pages link to which. Output is ready to feed directly into Website Studio.</div>
+            <div class="sc-invoke">use skill site-architecture for [client]</div>
+          </div>
+        </div>
+        <div class="sc" style="--sc-c:var(--yellow);--sc-dim:var(--y-lt)" data-expand="sc">
+          <div class="sc-tag">Reporting</div>
+          <div class="sc-name">Client Report</div>
+          <div class="sc-preview">Monthly reporting structure, KPI definitions, and executive summary format.</div>
+          <div class="sc-expand">
+            <div class="sc-detail">Applies a consistent reporting structure — pulls ranking movement, traffic changes, and goal completions, then writes executive commentary in the client's preferred reading level. Consistent output, every month.</div>
+            <div class="sc-invoke">use skill client-report for [month]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 03 WORKFLOWS ════════════════════ -->
+<section id="workflows" data-section="workflows">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">03 · Build Workflows</div></div>
+    <div class="rv d1"><h2 class="sec-title">Three workflows proven in the field.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Step through each workflow. Every site build, client revision, and recovery follows one of these three patterns.</p></div>
+
+    <div class="rv d2">
+      <div class="wf-tabs">
+        <div class="wft active" data-tab="wf0">🏗️ &nbsp;Website Studio Build</div>
+        <div class="wft" data-tab="wf1">🎙️ &nbsp;Verbal Feedback</div>
+        <div class="wft" data-tab="wf2">🔧 &nbsp;Site Recovery</div>
+      </div>
+      <div class="wf-panels">
+
+        <!-- PANEL 0 -->
+        <div class="wf-panel active" id="wf0">
+          <div class="wf-steps">
+            <div class="wf-step active" data-step="0">
+              <div class="wf-step-left"><div class="wf-num">1</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Invoke the Search Atlas MCP tool</div>
+                <div class="wf-st">Open or create the client site in Website Studio via the MCP connection. Claude loads the client CLAUDE.md — brand, audience, and campaign goals are already in context before a single word is generated.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="1">
+              <div class="wf-step-left"><div class="wf-num">2</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Claude orchestrates the full build</div>
+                <div class="wf-st">Claude calls the MCP to generate pages, applies your site-architecture skill for structure, injects brand-voice content, and signals OTTO SEO to run checks as pages are created — all without switching tools.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="2">
+              <div class="wf-step-left"><div class="wf-num">3</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Review and publish inside the platform</div>
+                <div class="wf-st">Changes live directly in Website Studio. Review, approve, and publish without leaving Search Atlas. No separate deployment step, no manual file management, no broken handoffs.</div>
+              </div>
+            </div>
+            <div class="step-nav-row">
+              <button class="sn-btn" data-prev="wf0" disabled>← Prev</button>
+              <div class="sn-dots">
+                <div class="sn-dot active"></div><div class="sn-dot"></div><div class="sn-dot"></div>
+              </div>
+              <button class="sn-btn pri" data-next="wf0">Next →</button>
+            </div>
+          </div>
+          <div class="wf-right">
+            <div class="wfr-label">Starter prompt</div>
+            <div class="wfr-prompt">Using the Search Atlas MCP, open <span class="ph">[client]</span> in Website Studio. Use the site-architecture and brand-voice skills. Build <span class="ph">[page type]</span> for <span class="ph">[service]</span> targeting <span class="ph">[location/audience]</span>.</div>
+            <div class="wfr-note"><strong>Why Website Studio?</strong> Changes are version-controlled inside Search Atlas, integrated with OTTO SEO for instant optimization checks, and deployable in one click. Building outside the platform loses all of that.</div>
+          </div>
+        </div>
+
+        <!-- PANEL 1 -->
+        <div class="wf-panel" id="wf1">
+          <div class="wf-steps">
+            <div class="wf-step active" data-step="0">
+              <div class="wf-step-left"><div class="wf-num">1</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Client records their feedback verbally</div>
+                <div class="wf-st">A voice memo, a Loom, a voice note. No long emails, no back-and-forth. They just talk through what they want changed — in their own words, unfiltered and unedited.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="1">
+              <div class="wf-step-left"><div class="wf-num">2</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Transcribe and paste — raw, no interpretation</div>
+                <div class="wf-st">Include the transcript plus the current version of the content. No summarizing. No paraphrasing. Raw transcript in, exact changes out. Claude does the interpretation — not you.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="2">
+              <div class="wf-step-left"><div class="wf-num">3</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Claude makes exactly the requested changes</div>
+                <div class="wf-st">Not its own interpretation. Not extra improvements. Precisely what the client said. Review and send. Even picky clients approve this — because it reflects their exact words back to them.</div>
+              </div>
+            </div>
+            <div class="step-nav-row">
+              <button class="sn-btn" data-prev="wf1" disabled>← Prev</button>
+              <div class="sn-dots">
+                <div class="sn-dot active"></div><div class="sn-dot"></div><div class="sn-dot"></div>
+              </div>
+              <button class="sn-btn pri" data-next="wf1">Next →</button>
+            </div>
+          </div>
+          <div class="wf-right">
+            <div class="wfr-label">Starter prompt</div>
+            <div class="wfr-prompt">Here is my client's verbal feedback: <span class="ph">[raw transcript]</span>. Here is the current content: <span class="ph">[paste]</span>. Make exactly the changes they described — nothing more, nothing less.</div>
+            <div class="wfr-note"><strong>Why this works:</strong> Clients reject revisions when they feel unheard. When Claude returns their exact words as edits, approval rates jump dramatically. The transcript is the brief.</div>
+          </div>
+        </div>
+
+        <!-- PANEL 2 -->
+        <div class="wf-panel" id="wf2">
+          <div class="wf-steps">
+            <div class="wf-step active" data-step="0">
+              <div class="wf-step-left"><div class="wf-num">1</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Don't rebuild — diagnose first</div>
+                <div class="wf-st">Paste the broken code into Claude Code and ask it to inspect before doing anything. Describe what is and isn't working. Rebuilding from scratch discards working code and doubles your time.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="1">
+              <div class="wf-step-left"><div class="wf-num">2</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">Ask "What is broken and why?" — not "Fix it."</div>
+                <div class="wf-st">A diagnosis before a fix prevents Claude from generating changes that break things that were working. Once you understand the root cause, the fix is usually three lines — not a full rewrite.</div>
+              </div>
+            </div>
+            <div class="wf-step" data-step="2">
+              <div class="wf-step-left"><div class="wf-num">3</div></div>
+              <div class="wf-sc">
+                <div class="wf-sh">One fix at a time — confirm each before moving on</div>
+                <div class="wf-st">Review and confirm each change before the next. Batch fixes are harder to debug if something still doesn't work. One change → test → confirm → next.</div>
+              </div>
+            </div>
+            <div class="step-nav-row">
+              <button class="sn-btn" data-prev="wf2" disabled>← Prev</button>
+              <div class="sn-dots">
+                <div class="sn-dot active"></div><div class="sn-dot"></div><div class="sn-dot"></div>
+              </div>
+              <button class="sn-btn pri" data-next="wf2">Next →</button>
+            </div>
+          </div>
+          <div class="wf-right">
+            <div class="wfr-label">Starter prompt</div>
+            <div class="wfr-prompt">Here is my site code: <span class="ph">[paste]</span>. The following is broken: <span class="ph">[describe]</span>. Please inspect and explain what's wrong before making any changes.</div>
+            <div class="wfr-note"><strong>Rule of thumb:</strong> If Claude asks "Should I fix it?" — say no and ask for the diagnosis first. The extra 30 seconds saves 30 minutes of debugging a fix that introduced new problems.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 04 THREE LAYERS ════════════════════ -->
+<section id="layers" data-section="layers">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">04 · Tool Architecture</div></div>
+    <div class="rv d1"><h2 class="sec-title">Three tools. Three jobs. Zero overlap.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Claude Code orchestrates. Search Atlas MCP executes. Claude.ai thinks. They work together — not in competition. Using the wrong layer for the task loses each platform's built-in advantages.</p></div>
+
+    <div class="rv d2">
+      <div class="layer-btns">
+        <div class="lb active" style="--lb-c:var(--green)" data-layer="l0">Claude Code<sub>Orchestration layer</sub></div>
+        <div class="lb" style="--lb-c:var(--teal)" data-layer="l1">Search Atlas MCP<sub>Execution layer</sub></div>
+        <div class="lb" style="--lb-c:var(--blue)" data-layer="l2">Claude.ai<sub>Thinking layer</sub></div>
+      </div>
+      <div class="layer-panes">
+        <div class="lp active" id="l0">
+          <div class="lp-grid">
+            <div class="lp-card"><div class="lp-icon">🧠</div><div class="lp-title">Memory management</div><div class="lp-desc">Reads and updates AI_rules.md, client CLAUDE.md files, skill files, and MEMORY.md. Persistent context across every session.</div></div>
+            <div class="lp-card"><div class="lp-icon">⚙️</div><div class="lp-title">Skill invocation</div><div class="lp-desc">Skills live in your file system. Claude Code reads and applies them to every task automatically when triggered.</div></div>
+            <div class="lp-card"><div class="lp-icon">🔄</div><div class="lp-title">Multi-step workflows</div><div class="lp-desc">Sequences that read files, call tools, check results, and iterate — all in one session without losing context.</div></div>
+            <div class="lp-card"><div class="lp-icon">🔌</div><div class="lp-title">MCP orchestration</div><div class="lp-desc">The control layer that calls Search Atlas, Linear, Slack, Playwright — coordinating tools into complete workflows.</div></div>
+            <div class="lp-card"><div class="lp-icon">📦</div><div class="lp-title">Batch pipelines</div><div class="lp-desc">Loop over city lists, run sequential builds, manage verification across multiple pages or clients at once.</div></div>
+            <div class="lp-card"><div class="lp-icon">📁</div><div class="lp-title">File system access</div><div class="lp-desc">Reads, writes, and edits your actual files. The only layer that can manage your full agency folder structure.</div></div>
+          </div>
+        </div>
+        <div class="lp" id="l1">
+          <div class="lp-grid">
+            <div class="lp-card"><div class="lp-icon">🏗️</div><div class="lp-title">Website Studio</div><div class="lp-desc">Create, edit, and publish pages inside Search Atlas — version-controlled, OTTO-integrated, one-click deploy. Never build outside the platform.</div></div>
+            <div class="lp-card"><div class="lp-icon">🔍</div><div class="lp-title">OTTO SEO</div><div class="lp-desc">Audit management, technical fixes, schema markup, indexing — runs as Claude builds. Real-time SEO as you create.</div></div>
+            <div class="lp-card"><div class="lp-icon">✍️</div><div class="lp-title">Content Genius</div><div class="lp-desc">AI-assisted content generation, topical maps, and DKN — structured content that feeds directly into Website Studio.</div></div>
+            <div class="lp-card"><div class="lp-icon">🔑</div><div class="lp-title">Keyword Research (KRT)</div><div class="lp-desc">Entity mapping, competitor keyword gaps, SERP analysis — the research layer that informs every build plan.</div></div>
+            <div class="lp-card"><div class="lp-icon">📍</div><div class="lp-title">GBP Management</div><div class="lp-desc">Google Business Profile publishing, review management, post automation, citation building — all from one MCP connection.</div></div>
+            <div class="lp-card"><div class="lp-icon">📊</div><div class="lp-title">Site Explorer</div><div class="lp-desc">Backlink analysis, brand signals, competitive keyword gaps, holistic site audit — full platform coverage.</div></div>
+          </div>
+        </div>
+        <div class="lp" id="l2">
+          <div class="lp-grid">
+            <div class="lp-card"><div class="lp-icon">🔎</div><div class="lp-title">Research & analysis</div><div class="lp-desc">Quick web search, document summarization, competitive research — fast and conversational, no file context needed.</div></div>
+            <div class="lp-card"><div class="lp-icon">✏️</div><div class="lp-title">First-draft writing</div><div class="lp-desc">Blog posts, email copy, ad headlines, social captions — standalone writing tasks where speed matters more than file integration.</div></div>
+            <div class="lp-card"><div class="lp-icon">💡</div><div class="lp-title">Brainstorming</div><div class="lp-desc">Campaign concepts, naming options, strategic angles — exploratory thinking where you want speed and volume over precision.</div></div>
+            <div class="lp-card"><div class="lp-icon">🗣️</div><div class="lp-title">Client-facing explanations</div><div class="lp-desc">Plain-language explanations, executive overviews, summaries. Use Projects to give it persistent brand context.</div></div>
+            <div class="lp-card"><div class="lp-icon">⚡</div><div class="lp-title">Quick Q&A</div><div class="lp-desc">On-demand questions that don't require file access or tool orchestration — fast answers without any setup.</div></div>
+            <div class="lp-card"><div class="lp-icon">🧪</div><div class="lp-title">Strategy testing</div><div class="lp-desc">Think through approaches, stress-test plans, pressure-check briefs before committing them to a workflow.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 05 SCALING ════════════════════ -->
+<section id="scaling" data-section="scaling">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">05 · Scaling Patterns</div></div>
+    <div class="rv d1"><h2 class="sec-title">From 1 page to 500 — same workflow.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Four tiers of automation. Two available today, one near, one in development. Click each to see what powers it.</p></div>
+
+    <div class="scale-grid">
+      <div class="tier rv d2" style="--tc:var(--green)" data-expand="tier">
+        <div class="tier-label">Tier 1 · Available Now</div>
+        <div class="tier-title">Batch Pages via Website Studio MCP</div>
+        <div class="tier-sub">One city list, one service type, one skill invocation. Pages generated with OTTO checking each one as it builds.</div>
+        <div class="tier-expand"><div class="tier-detail">Consistent heading hierarchy, keyword placement, and internal links — across 10, 50, or 500 locations. No manual copying between tools. OTTO validates each page before publish.<div class="tier-flow"><span class="tf-node">city list</span><span class="tf-arr">→</span><span class="tf-node">SA MCP</span><span class="tf-arr">→</span><span class="tf-node">Website Studio</span><span class="tf-arr">→</span><span class="tf-node">OTTO check</span><span class="tf-arr">→</span><span class="tf-node">publish</span></div></div></div>
+      </div>
+      <div class="tier rv d3" style="--tc:var(--blue)" data-expand="tier">
+        <div class="tier-label">Tier 2 · Available Now</div>
+        <div class="tier-title">Onboarding → Full SA Workflow</div>
+        <div class="tier-sub">Intake answers in, complete build plan out. Content Genius + KRT + Website Studio — all in one Claude Code session.</div>
+        <div class="tier-expand"><div class="tier-detail">Intake feeds Content Genius research, KRT entity mapping defines page targets, then a Website Studio build plan is ready for approval before a single page is created.<div class="tier-flow"><span class="tf-node">intake</span><span class="tf-arr">→</span><span class="tf-node">Content Genius</span><span class="tf-arr">→</span><span class="tf-node">KRT entity map</span><span class="tf-arr">→</span><span class="tf-node">Website Studio plan</span></div></div></div>
+      </div>
+      <div class="tier rv d4" style="--tc:var(--orange)" data-expand="tier">
+        <div class="tier-label">Tier 3 · Near Future</div>
+        <div class="tier-title">Email → Site Update, No Human Layer</div>
+        <div class="tier-sub">Client emails a change request. Claude parses it, updates via Website Studio MCP, confirms back. Zero interpretation required.</div>
+        <div class="tier-expand"><div class="tier-detail">For agencies managing hundreds of live sites, eliminating the human interpretation layer between "client request" and "site update" is a business-level transformation.<div class="tier-flow"><span class="tf-node">client email</span><span class="tf-arr">→</span><span class="tf-node">Claude parses</span><span class="tf-arr">→</span><span class="tf-node">Website Studio</span><span class="tf-arr">→</span><span class="tf-node">confirmation sent</span></div></div></div>
+      </div>
+      <div class="tier rv d5" style="--tc:var(--purple)" data-expand="tier">
+        <div class="tier-label">Tier 4 · In Development</div>
+        <div class="tier-title">Full Overnight Site Build</div>
+        <div class="tier-sub">Search Atlas already has pre-built workflow templates for GBP, PPC, and SEO onboarding. Full overnight builds are next.</div>
+        <div class="tier-expand"><div class="tier-detail">Onboard a client before you leave for the day. Wake up to a complete, OTTO-validated, review-ready site. The natural extension of the SA workflow templates already in production.<div class="tier-flow"><span class="tf-node">client onboard</span><span class="tf-arr">→</span><span class="tf-node">SA MCP + OTTO</span><span class="tf-arr">→</span><span class="tf-node">Website Studio</span><span class="tf-arr">→</span><span class="tf-node">morning review</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════ 06 PITFALLS ════════════════════ -->
+<section id="pitfalls" data-section="pitfalls">
+  <div class="wrap">
+    <div class="rv"><div class="sec-tag">06 · Common Pitfalls</div></div>
+    <div class="rv d1"><h2 class="sec-title">The gaps that burn hours.</h2></div>
+    <div class="rv d2"><p class="sec-desc">Six failure patterns that show up consistently — and the specific fix for each. Tap to expand.</p></div>
+
+    <div class="pitfalls rv d2">
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">🧊</div><div class="ac-label">Cold-start syndrome</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">Every Claude session opens with zero memory. Without your AI_rules.md and CLAUDE.md files in place, you re-explain your world every single time — and results drift depending on what you happen to mention that day.<div class="ac-fix"><strong>Fix:</strong> Build your AI_rules.md and project CLAUDE.md before starting any real work. Ten minutes of setup saves hours of repeated explanation across every future session.</div></div></div></div>
+
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">📂</div><div class="ac-label">The silent misroute</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">Claude says "done." You look for the file and it's not where you expected. No error, no warning — just the wrong folder. Happens every time you open Claude Code without confirming the working directory.<div class="ac-fix"><strong>Fix:</strong> Before every build session, ask: "What is the current working directory?" Confirm it matches your client folder before generating anything.</div></div></div></div>
+
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">📝</div><div class="ac-label">Only using one level of CLAUDE.md</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">Root-only means every client gets the same output — no differentiation. Client-only means Claude has no agency baseline and loses your standards the moment context resets. Both levels running together are required.<div class="ac-fix"><strong>Fix:</strong> Root AI_rules.md in your agency folder sets the baseline. Client CLAUDE.md in every client subfolder adds the specifics. Never operate with just one.</div></div></div></div>
+
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">🎯</div><div class="ac-label">Generic prompts produce generic output</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">The less specific your input, the more Claude falls back on generic patterns. "Write a page about our plumbing services" produces a page that sounds like every other plumbing page on the internet — because Claude has nothing else to work from.<div class="ac-fix"><strong>Fix:</strong> Your skill files and CLAUDE.md exist to close this gap. The more specific those files are, the more distinctive the output — Claude applies your standards, not its defaults.</div></div></div></div>
+
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">🔌</div><div class="ac-label">Building site pages outside Search Atlas</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">Building sites outside Website Studio means losing version control, OTTO integration, one-click publish, and pre-built workflow templates. You trade ten minutes of platform setup for hours of manual work downstream on every project.<div class="ac-fix"><strong>Fix:</strong> Use Website Studio via the Search Atlas MCP for all site creation and editing. That's what it's built for — use it consistently.</div></div></div></div>
+
+      <div class="ac" data-expand="ac"><div class="ac-trigger"><div class="ac-left"><div class="ac-icon">🌊</div><div class="ac-label">Treating skill files as a one-time setup</div></div><div class="ac-chev">▼</div></div><div class="ac-body"><div class="ac-content">Skill files are living documents. If your keyword research process improves, the skill file should improve. If a client changes their brand voice, update the file. Stale skills produce stale, consistent-in-the-wrong-way output.<div class="ac-fix"><strong>Fix:</strong> Review each skill file when the underlying process changes. Treat them the same way you'd treat a team onboarding doc — always current, always specific.</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+<div class="footer">
+  <div>
+    <div class="footer-logo">The Agentic <span>Agency</span></div>
+    <div class="footer-sub">Infographic 4 of 4 — Memory, Skills & Build Workflows</div>
+  </div>
+  <div class="footer-series">
+    <div class="fs-it">01 Command Center Setup</div>
+    <div class="fs-it">02 Daily Playbook</div>
+    <div class="fs-it">03 Field Guide</div>
+    <div class="fs-it cur">04 Memory & Skills ←</div>
+  </div>
+</div>
+
+<script>
+/* ── FILE CONTENT DATA ──────────────────────────────────── */
+const FILES = {
+  root: {
+    icon:'📁', name:'your-agency/', badge:'Root Directory', bc:'green',
+    what:"Your agency's working directory — the single folder Claude Code opens into. Everything runs from here: global rules, client work, skills, and memory. Getting this structure right is the entire unlock.",
+    include:['AI_rules.md — your global agency standards (always active)','memory/ folder for session logs','skills/ folder for your workflow SOPs','clients/ folder — one named subfolder per client'],
+    practices:['Keep the root lean: config files only. Nothing gets built here directly.','Always open Claude Code (Warp) from this exact folder — not from inside a client subfolder.','Never put client output directly in root — always in a named client folder.'],
+    create:'Create the folder anywhere on your machine. Open it in Warp by dragging onto the icon, or type: cd your-agency && claude',
+    prompt:'Help me set up a folder structure for a marketing agency using Claude Code. I need a root folder with memory, skills, and client subfolders. Show me what to create.',
+    mind:"Opening Claude in the wrong folder is the #1 source of misrouted files. Before every session, ask: \"What is the current working directory?\""
+  },
+  'ai-rules': {
+    icon:'⭐', name:'AI_rules.md', badge:'Agency Baseline', bc:'green',
+    what:"Your agency's global brain. This file loads automatically in every Claude session, regardless of which client you're working on. It's what makes Claude sound like your agency before it even knows which client it's serving.",
+    include:['Your writing tone and style — specific, not vague','MCP tools available and when to invoke each one','Things Claude should never say or do — agency-wide rules','Your pricing and scope philosophy','A list of available skill files and their exact trigger phrases'],
+    practices:['Keep it under 500 words. Longer files get diluted in context — be specific and opinionated.','Use markdown headers to organize sections. Claude reads structure, not just text.','Review quarterly. Change only when your standards actually change — not every month.'],
+    create:"Create AI_rules.md in your root folder. Write it like an onboarding document for a senior contractor who knows SEO but needs to learn how your agency works specifically.",
+    prompt:"Based on our conversation today, help me write an AI_rules.md file that captures my agency's tone, tools, and non-negotiable standards. Ask me questions if you need more detail.",
+    mind:'This file applies to every client. Overly client-specific content here bleeds across all projects. Keep it agency-wide only — nothing client-specific belongs here.'
+  },
+  'memory-folder': {
+    icon:'📁', name:'memory/', badge:'Session Memory', bc:'blue',
+    what:"The folder that holds your session log (MEMORY.md). Think of it as Claude's persistent short-term memory — decisions made, gotchas hit, work completed, and what's coming next.",
+    include:["MEMORY.md — the primary session log Claude reads on startup","Optionally: archived logs by month (memory-jan-2026.md, etc.)"],
+    practices:['One folder, one primary active file. Keep it simple — complexity causes you to stop maintaining it.','Archive old entries monthly so the active file stays focused and fast to read.','Tell Claude where this folder is by referencing it in your AI_rules.md.'],
+    create:'Create a folder named memory/ inside your root. Create MEMORY.md inside it. Reference the path in AI_rules.md so Claude knows to read it.',
+    prompt:"Create a memory/ folder and start a MEMORY.md file with today's session notes based on what we've discussed.",
+    mind:'Memory is not automatic. You or Claude must update MEMORY.md at session end. Set the habit — one update before closing, every time.'
+  },
+  'memory-md': {
+    icon:'🗒️', name:'MEMORY.md', badge:'Session Log', bc:'blue',
+    what:"A running log Claude reads at session start to pick up exactly where you left off. Without it, every session is a cold start — you re-explain context that was perfectly clear the day before.",
+    include:['Date + what was worked on (1-2 sentences per session)','Key decisions made and the reasoning behind them','Client-specific quirks or preferences discovered','APIs or tools that behaved unexpectedly','Open questions and what needs to happen next'],
+    practices:["Short entries beat long ones. 3-5 bullets per session is ideal — more than that won't get read.","Write in second-person to Claude: \"Next session: build the homepage hero section.\"","Date every entry. Undated logs become unreadable within two weeks."],
+    create:"Create MEMORY.md inside your memory/ folder. Start with today's date as the first header, then add 3-5 bullets about what you just did and what comes next.",
+    prompt:"Add a memory entry for today's session. Include: what we worked on, any decisions made, and what needs to happen next session.",
+    mind:"MEMORY.md is read at session start, not during the session. Update it at the end of each session — not mid-flow when you're still working."
+  },
+  'skills-folder': {
+    icon:'📁', name:'skills/', badge:'Skill Library', bc:'orange',
+    what:"The folder that holds all your agency's encoded SOPs. Each file is one workflow — written once, invoked on demand, consistently every time. This is how you stop re-explaining your process to Claude in every session.",
+    include:['One .md file per workflow (keyword-research.md, cro-audit.md, etc.)','No nesting required — a flat folder is fine and easier to manage','Name files with dashes, lowercase — they become the trigger phrase'],
+    practices:["Start with your top 3 most-repeated workflows. Don't try to document everything at once — you'll abandon it.","Update a skill file every time output was wrong — treat it as a feedback loop, not a one-time setup.","Share the folder with your team as your agency's standard operating procedures."],
+    create:'Create a skills/ folder in root. Start by writing your first skill file — describe your keyword research process step by step as if teaching a sharp new hire.',
+    prompt:"I'll describe my keyword research process. Turn it into a skill file I can invoke with \"use skill keyword-research\". Ask me questions to fill any gaps.",
+    mind:'Skills are only invoked when referenced in AI_rules.md. Add a "Skills available" section listing each skill and its trigger phrase — otherwise Claude won\'t know they exist.'
+  },
+  'skill-file': {
+    icon:'⚙️', name:'keyword-research.md', badge:'Skill File', bc:'orange',
+    what:"A single markdown file that encodes one workflow — exactly how your agency does it. Claude reads and follows it step-by-step, every time it's invoked. No variation. No interpretation. Just your process, applied consistently.",
+    include:['Skill name and the exact trigger phrase to invoke it','What context Claude needs before starting (brand vault, client URL, etc.)','Step-by-step process — as specific and literal as a recipe','Expected output format and where to save results','Edge cases and what to do when something is unclear'],
+    practices:["Write steps as imperatives: \"Extract seed keywords from...\" not \"You might want to...\"","Include an example of what done looks like — Claude calibrates to concrete examples better than abstract descriptions.","If you have a ChatGPT prompt that works, paste it and ask Claude to format it as a skill file."],
+    create:'Create a .md file in your skills/ folder. Name it after the workflow (e.g. cro-audit.md). Write your process as numbered steps — each step should be one clear action.',
+    prompt:"Convert this process into a skill file: [describe your process]. Include a trigger phrase, context requirements, numbered steps, output format, and an example of good output.",
+    mind:'The more specific your steps, the more consistent the output. Vague instructions produce vague results — Claude follows exactly what you write, nothing more.'
+  },
+  'clients-folder': {
+    icon:'📁', name:'clients/', badge:'Client Workspace', bc:'purple',
+    what:"The folder that holds one subfolder per client. This separation is what keeps client work isolated — so a session for one client never accidentally bleeds into another's context or output.",
+    include:['One named subfolder per client (use slugs: acme-plumbing/, smith-dental/)','Each client folder contains its own CLAUDE.md and output folders','Never mix client output across folders'],
+    practices:['Name client folders consistently: lowercase, dashes, no spaces — this becomes part of your Claude working path.','Archive completed clients to an _archive/ subfolder rather than deleting — you will need them again.','Create the client folder before creating the CLAUDE.md — folder structure first, context second.'],
+    create:'Create a clients/ folder in root. Inside it, create a named subfolder for each client. The folder name becomes your working path reference in every session.',
+    prompt:'Create a new client folder for [client name] inside my clients/ directory. Include the standard subfolder structure: site/ and reports/.',
+    mind:'Working in the wrong client folder is the second most common setup error. Always confirm you\'re in the right client path before starting a build session.'
+  },
+  'client-folder': {
+    icon:'📁', name:'acme-plumbing/', badge:'Client Folder', bc:'purple',
+    what:"An isolated workspace for one client. When Claude Code is opened here, the client's CLAUDE.md activates and layers on top of your global AI_rules.md — giving Claude both your agency standards and this client's specific context simultaneously.",
+    include:['CLAUDE.md — the client-specific context layer (required, always)','site/ — where all built pages, HTML, and assets land','reports/ — monthly reports and audits','Optionally: briefs/, assets/, prompts/ for more organization'],
+    practices:['Create this folder the day you onboard a new client — before any Claude work starts.','The folder name should match how you refer to the client across all your tools.','Keep site/ and reports/ clean — archive old versions rather than overwriting active files.'],
+    create:'Inside your clients/ folder, create a subfolder with the client\'s slug name. Then create CLAUDE.md and output subfolders (site/, reports/) inside it.',
+    prompt:'Set up a new client folder for [client name]. Create a CLAUDE.md and output subfolders. Start CLAUDE.md with a template I can fill in from our intake notes.',
+    mind:'This folder is your isolated workspace. If you ever have two clients open, confirm each session is in the right folder before any builds — misrouting here costs real time.'
+  },
+  'client-claude': {
+    icon:'⭐', name:'CLAUDE.md', badge:'Client Context Layer', bc:'blue',
+    what:"The client-specific layer that sits on top of your global AI_rules.md. Every Claude session in this folder loads both files — your agency standards first, then this client's specifics on top. Remove this file and output becomes generic.",
+    include:['Brand voice, approved vocabulary, and words to never use','Services offered and what to avoid mentioning','Geographic targets, service areas, and local identifiers','Current campaign goals and active promotions','CMS, tech stack, and Website Studio configuration','Key contacts, review process, and approval chain'],
+    practices:["Write it like a client brief for a sharp new contractor — complete but scannable, not a wall of text.","Include 2-3 examples of approved copy so Claude hears the actual voice, not just a description of it.","Update it every time a campaign changes. Stale context produces stale output — and it will be consistent stale output."],
+    create:"Create CLAUDE.md inside the client's folder. Start from your intake form or onboarding notes. Be specific — generic briefs produce generic content.",
+    prompt:'Create a CLAUDE.md for [client name] using these notes: [paste intake form or onboarding notes]. Include brand voice, target audience, current campaign goals, tech stack, and what to avoid.',
+    mind:"This file inherits everything from AI_rules.md automatically. Only add what is specific to this client — don't repeat agency-wide rules here or the file bloats and loses focus."
+  },
+  'site-folder': {
+    icon:'📁', name:'site/', badge:'Output Directory', bc:'gray',
+    what:"Where all built files for this client land — pages, assets, and anything Claude generates. When Claude builds pages via Website Studio MCP or outputs content directly, this is where it goes.",
+    include:['All pages built via Website Studio MCP or direct Claude Code output','Assets, images, and reference files','Version snapshots (v1/, v2/) before major changes'],
+    practices:["Tell Claude explicitly to output to this path at the start of every build session — don't assume it knows.","Never build in the root folder — client output always goes in a named client subfolder.","Snapshot major versions before large changes: /site/v1/, /site/v2/ — you will want to go back."],
+    create:"Create a site/ folder inside the client folder. At session start, tell Claude: \"All output for this client goes in /clients/[name]/site/\".",
+    prompt:'All files you build for this session should go in /clients/acme-plumbing/site/. Confirm you\'re working in the right directory before starting.',
+    mind:"If you don't specify an output path, Claude may write to the current working directory — which might be root. Always state the output path explicitly before any build session."
+  }
+};
+
+/* ── BUILD FILE TREE ────────────────────────────────────── */
+const treeData = [
+  {key:'root', label:'📁 your-agency/', indent:0, clickable:true},
+  {key:'ai-rules', label:'⭐ AI_rules.md', indent:1, clickable:true, prefix:'├──'},
+  {key:'memory-folder', label:'📁 memory/', indent:1, clickable:true, prefix:'├──'},
+  {key:'memory-md', label:'🗒️ MEMORY.md', indent:2, clickable:true, prefix:'│   └──'},
+  {key:'skills-folder', label:'📁 skills/', indent:1, clickable:true, prefix:'├──'},
+  {key:'skill-file', label:'⚙️ keyword-research.md', indent:2, clickable:true, prefix:'│   ├──'},
+  {key:null, label:'entity-mapping.md', indent:2, clickable:false, prefix:'│   ├──'},
+  {key:null, label:'brand-voice.md', indent:2, clickable:false, prefix:'│   └──'},
+  {key:'clients-folder', label:'📁 clients/', indent:1, clickable:true, prefix:'└──'},
+  {key:'client-folder', label:'📁 acme-plumbing/', indent:2, clickable:true, prefix:'    └──'},
+  {key:'client-claude', label:'⭐ CLAUDE.md', indent:3, clickable:true, prefix:'        ├──'},
+  {key:'site-folder', label:'📁 site/', indent:3, clickable:true, prefix:'        ├──'},
+  {key:null, label:'📁 reports/', indent:3, clickable:false, prefix:'        └──'},
+];
+
+const treeEl = document.getElementById('file-tree');
+treeData.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'ti' + (item.clickable ? '' : ' dim');
+  if (!item.clickable) {
+    div.innerHTML = `<span style="opacity:.4;font-family:var(--mono);font-size:.7rem">${item.prefix}&nbsp;</span>${item.label}`;
+  } else if (item.indent === 0) {
+    div.innerHTML = item.label;
+  } else {
+    div.innerHTML = `<span style="opacity:.35;font-family:var(--mono);font-size:.68rem">${item.prefix}&nbsp;</span>${item.label}`;
+  }
+  if (item.key) {
+    div.dataset.file = item.key;
+    div.addEventListener('click', () => showFile(item.key, div));
+  }
+  treeEl.appendChild(div);
+});
+
+/* ── SHOW FILE DETAIL ───────────────────────────────────── */
+const badgeColors = {
+  green:'background:var(--g-lt);color:var(--green)',
+  blue:'background:var(--b-lt);color:var(--blue)',
+  orange:'background:var(--o-lt);color:var(--orange)',
+  purple:'background:var(--p-lt);color:var(--purple)',
+  gray:'background:#f1f5f9;color:#64748b'
+};
+
+function showFile(key, activeEl) {
+  document.querySelectorAll('.ti').forEach(t => t.classList.remove('active'));
+  if (activeEl) activeEl.classList.add('active');
+  const f = FILES[key];
+  if (!f) return;
+  const bc = badgeColors[f.bc] || badgeColors.gray;
+  document.getElementById('detail-panel').innerHTML = `
+    <span class="dp-badge" style="${bc}">${f.icon} ${f.badge}</span>
+    <div class="dp-title">${f.name}</div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">What this is</div>
+      <div class="dp-what">${f.what}</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">What to include</div>
+      <ul class="dp-list">${f.include.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Best practices</div>
+      <div class="dp-practices">${f.practices.map(p=>`<div class="dp-prac">${p}</div>`).join('')}</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">How to create it</div>
+      <div class="dp-create">${f.create}</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Ask Claude to build it</div>
+      <div class="dp-prompt-box"><span class="ph">[Prompt Claude]</span> ${f.prompt}</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Keep in mind</div>
+      <div class="dp-mind"><strong>⚠️</strong> ${f.mind}</div>
+    </div>
+  `;
+}
+
+// Default: show root on load
+document.addEventListener('DOMContentLoaded', () => {
+  const rootEl = treeEl.querySelector('[data-file="root"]');
+  showFile('root', rootEl);
+});
+
+/* ── SCROLL REVEAL ──────────────────────────────────────── */
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)} });
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+/* ── NAV ACTIVE ─────────────────────────────────────────── */
+const navPills = document.querySelectorAll('.np');
+const sio = new IntersectionObserver(es => {
+  es.forEach(e => {
+    if(e.isIntersecting){
+      const id = e.target.getAttribute('data-section');
+      navPills.forEach(p => p.classList.toggle('active', p.getAttribute('href')==='#'+id));
+    }
+  });
+},{threshold:.35});
+document.querySelectorAll('[data-section]').forEach(s => sio.observe(s));
+
+/* ── EXPANDABLE CARDS ───────────────────────────────────── */
+document.querySelectorAll('[data-expand="sc"]').forEach(el =>
+  el.addEventListener('click', () => el.classList.toggle('open')));
+document.querySelectorAll('[data-expand="tier"]').forEach(el =>
+  el.addEventListener('click', () => el.classList.toggle('open')));
+document.querySelectorAll('[data-expand="ac"]').forEach(el =>
+  el.querySelector('.ac-trigger').addEventListener('click', () => el.classList.toggle('open')));
+
+/* ── WORKFLOW TABS ──────────────────────────────────────── */
+document.querySelectorAll('.wft').forEach((tab, i) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.wft').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.wf-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.wf-panel')[i].classList.add('active');
+    resetSteps(document.querySelectorAll('.wf-panel')[i]);
+  });
+});
+
+function resetSteps(panel){
+  const steps = panel.querySelectorAll('.wf-step');
+  steps.forEach((s,i) => s.classList.toggle('active',i===0));
+  updateUI(panel, 0);
+}
+
+function updateUI(panel, cur){
+  const steps = panel.querySelectorAll('.wf-step');
+  const dots = panel.querySelectorAll('.sn-dot');
+  const prev = panel.querySelector('[data-prev]');
+  const next = panel.querySelector('[data-next]');
+  steps.forEach((s,i) => s.classList.toggle('active',i===cur));
+  dots.forEach((d,i) => d.classList.toggle('active',i===cur));
+  if(prev) prev.disabled = cur===0;
+  if(next){ next.disabled = cur===steps.length-1; next.textContent = cur===steps.length-1?'Done ✓':'Next →'; }
+}
+
+document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click',()=>{
+  const p = document.getElementById(btn.getAttribute('data-next'));
+  if(!p) return;
+  const steps = p.querySelectorAll('.wf-step');
+  const cur = Array.from(steps).findIndex(s=>s.classList.contains('active'));
+  if(cur < steps.length-1) updateUI(p, cur+1);
+}));
+document.querySelectorAll('[data-prev]').forEach(btn => btn.addEventListener('click',()=>{
+  const p = document.getElementById(btn.getAttribute('data-prev'));
+  if(!p) return;
+  const steps = p.querySelectorAll('.wf-step');
+  const cur = Array.from(steps).findIndex(s=>s.classList.contains('active'));
+  if(cur > 0) updateUI(p, cur-1);
+}));
+
+/* ── THREE LAYERS TOGGLE ────────────────────────────────── */
+document.querySelectorAll('[data-layer]').forEach(btn => {
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-layer]').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.lp').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const t = document.getElementById(btn.getAttribute('data-layer'));
+    if(t) t.classList.add('active');
+  });
+});
+
+/* ── HERO CHIPS ─────────────────────────────────────────── */
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('c-active'));
+    chip.classList.add('c-active');
+  });
+});
+</script>
+</body>
+</html>

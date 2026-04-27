@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Agency Series — Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   SEARCH ATLAS × AGENTIC AGENCY — DESIGN SYSTEM
+   Brand: SA Purple #936BDA · Warm Cream #EDE8DE · SA Dark #1D1E22
+   Fonts: Plus Jakarta Sans (GT Walsheim sub) · Inter Tight · JetBrains Mono
+══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 13px; }
+body {
+  font-family: 'Inter Tight', -apple-system, sans-serif;
+  background: #EDE8DE;
+  color: #1D1E22;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+a { text-decoration: none; }
+code { font-family: 'JetBrains Mono', monospace; }
+
+/* ── DESIGN TOKENS ────────────────────────────────────────────── */
+:root {
+  /* Search Atlas brand */
+  --sa-purple:    #936BDA;
+  --sa-purple-dk: #452B72;
+  --sa-purple-lt: #F0EAFA;
+  --sa-purple-md: #E0D0FD;
+  --sa-dark:      #1D1E22;
+  --sa-dark2:     #17181B;
+
+  /* Warm base */
+  --cream:   #EDE8DE;
+  --cream2:  #E5DFD4;
+  --paper:   #FDFAF6;
+  --white:   #FFFFFF;
+  --border:  #D8D1C6;
+  --border2: #C8C0B4;
+
+  /* Text */
+  --ink:     #1D1E22;
+  --ink2:    #2C2D32;
+  --muted:   #78746E;
+  --muted2:  #9C9890;
+
+  /* Accent palette (section-coding) */
+  --orange:    #E05C3A;
+  --orange-lt: #FBF0EC;
+  --green:     #2E9E6E;
+  --green-lt:  #EAF5EF;
+  --blue:      #3A7FC1;
+  --blue-lt:   #EAF2FA;
+  --teal:      #2A9D8A;
+  --teal-lt:   #E6F5F3;
+  --gold:      #C08B2A;
+  --gold-lt:   #FBF5E6;
+  --red:       #C0392B;
+  --red-lt:    #FBE9E7;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(29,30,34,0.08), 0 1px 2px rgba(29,30,34,0.04);
+  --shadow:    0 4px 12px rgba(29,30,34,0.10), 0 2px 4px rgba(29,30,34,0.06);
+  --shadow-lg: 0 12px 40px rgba(29,30,34,0.14), 0 4px 12px rgba(29,30,34,0.08);
+}
+
+/* ── NAV ──────────────────────────────────────────────────────── */
+.shell-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(253,250,246,0.95);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; gap: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.nav-logo {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95em; font-weight: 800; color: var(--ink);
+  white-space: nowrap; letter-spacing: -0.02em; flex-shrink: 0;
+}
+.nav-logo span { color: var(--sa-purple); }
+.nav-logo sub  { font-size: 0.58em; font-weight: 500; color: var(--muted); vertical-align: middle; margin-left: 4px; }
+
+.search-wrap { flex: 1; max-width: 440px; position: relative; }
+.search-input {
+  width: 100%; height: 34px;
+  background: var(--cream); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 0 36px 0 36px;
+  font-family: 'Inter Tight', sans-serif; font-size: 0.82em; color: var(--ink);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s; cursor: pointer;
+}
+.search-input::placeholder { color: var(--muted2); }
+.search-input:focus {
+  border-color: var(--sa-purple);
+  box-shadow: 0 0 0 3px rgba(147,107,218,0.14);
+  cursor: text; background: var(--white);
+}
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 0.9em; }
+.search-kbd  { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: var(--cream2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.6em; color: var(--muted); pointer-events: none; }
+
+.nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+.nav-tab {
+  padding: 6px 15px; border-radius: 8px; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.78em; font-weight: 600; color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+  border: 1.5px solid transparent; white-space: nowrap; user-select: none;
+}
+.nav-tab:hover { background: var(--cream2); color: var(--ink); }
+.nav-tab.active { background: var(--sa-purple); color: #fff; border-color: var(--sa-purple); }
+.nav-tab .tab-num { font-family: 'JetBrains Mono', monospace; font-size: 0.8em; opacity: 0.65; margin-right: 5px; }
+
+/* ── SEARCH OVERLAY ───────────────────────────────────────────── */
+.search-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(29,30,34,0.50);
+  backdrop-filter: blur(6px);
+  display: none; flex-direction: column; align-items: center;
+  padding-top: 80px;
+}
+.search-overlay.open { display: flex; }
+
+.search-modal {
+  width: min(680px, 94vw);
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.search-modal-input-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+}
+.search-modal-icon { color: var(--muted); font-size: 1.1em; flex-shrink: 0; }
+.search-modal-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1em; color: var(--ink);
+}
+.search-modal-input::placeholder { color: var(--muted2); }
+.search-close-btn {
+  background: var(--cream); border: 1px solid var(--border); border-radius: 6px;
+  padding: 3px 9px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65em; color: var(--muted); cursor: pointer; flex-shrink: 0;
+}
+.search-close-btn:hover { background: var(--cream2); color: var(--ink); }
+
+.search-results { max-height: 460px; overflow-y: auto; padding: 8px; }
+.search-results:empty::after {
+  content: 'Type to search commands, tips, workflows, files…';
+  display: block; text-align: center; padding: 32px 20px;
+  font-size: 0.82em; color: var(--muted);
+}
+.search-no-results { text-align: center; padding: 32px 20px; font-size: 0.82em; color: var(--muted); }
+
+.result-group { margin-bottom: 6px; }
+.result-group-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.6em; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 4px 10px 3px;
+}
+.result-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px;
+  border-radius: 10px; cursor: pointer; transition: background 0.1s;
+  border: 1.5px solid transparent;
+}
+.result-item:hover, .result-item.selected { background: var(--cream); border-color: var(--border); }
+.result-badge {
+  flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58em; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 3px 7px; border-radius: 100px; white-space: nowrap;
+}
+.badge-cmd      { background: var(--blue-lt);          color: var(--blue); }
+.badge-slash    { background: var(--sa-purple-lt);     color: var(--sa-purple); }
+.badge-agency   { background: var(--orange-lt);        color: var(--orange); }
+.badge-tip      { background: var(--gold-lt);          color: var(--gold); }
+.badge-workflow { background: var(--green-lt);         color: var(--green); }
+.badge-trouble  { background: var(--red-lt);           color: var(--red); }
+.badge-file     { background: var(--teal-lt);          color: var(--teal); }
+.badge-mcp      { background: var(--sa-purple-lt);     color: var(--sa-purple-dk); }
+
+.result-content { flex: 1; min-width: 0; }
+.result-name { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.result-name mark { background: rgba(147,107,218,0.2); color: var(--sa-purple-dk); border-radius: 2px; padding: 0 1px; }
+.result-desc { font-size: 0.74em; color: var(--muted); line-height: 1.45; }
+.result-desc mark { background: rgba(147,107,218,0.12); color: var(--ink2); border-radius: 2px; padding: 0 1px; }
+.result-section { flex-shrink: 0; font-size: 0.6em; color: var(--muted2); font-family: 'JetBrains Mono', monospace; margin-top: 2px; white-space: nowrap; }
+
+.search-footer {
+  padding: 10px 18px; border-top: 1px solid var(--border);
+  display: flex; gap: 16px; align-items: center; background: var(--cream);
+}
+.search-footer-key { display: flex; gap: 4px; align-items: center; font-size: 0.65em; color: var(--muted); }
+.key { background: var(--white); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; color: var(--muted); box-shadow: 0 1px 0 var(--border); }
+
+/* ── SECTION BASE ─────────────────────────────────────────────── */
+.section-page { padding-top: 56px; min-height: 100vh; background: var(--cream); }
+
+/* Hero — consistent across all sections */
+.s-hero {
+  background: var(--paper);
+  padding: 56px 40px 48px; text-align: center;
+  position: relative; overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.s-hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 70% at 50% -10%, rgba(147,107,218,0.08) 0%, transparent 70%);
+}
+.s-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--sa-purple-lt); border: 1.5px solid var(--sa-purple-md);
+  border-radius: 100px; padding: 5px 14px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68em; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 22px;
+  color: var(--sa-purple);
+}
+.s-hero h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(2em, 4.5vw, 3.2em); font-weight: 800;
+  color: var(--ink); letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 14px;
+}
+.s-hero h1 em { color: var(--sa-purple); font-style: normal; }
+.s-hero h1 .accent-o { color: var(--orange); }
+.s-hero p { font-size: 1em; color: var(--muted); max-width: 560px; margin: 0 auto; line-height: 1.65; }
+
+/* ── LAYOUT HELPERS ───────────────────────────────────────────── */
+.wrap  { max-width: 1280px; margin: 0 auto; padding: 0 36px; }
+.g2    { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+.g3    { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.g4    { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.g5    { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+.span2 { grid-column: span 2; }
+.span3 { grid-column: span 3; }
+.sec-block { padding: 40px 0 0; }
+.pb48 { padding-bottom: 48px; }
+.mb14 { margin-bottom: 14px; }
+.mb10 { margin-bottom: 10px; }
+.mb8  { margin-bottom: 8px; }
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── TYPOGRAPHY ───────────────────────────────────────────────── */
+.sec-lbl {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.62em; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 100px; margin-bottom: 12px;
+}
+/* Accent variants */
+.lbl-purple { background: var(--sa-purple-lt); color: var(--sa-purple); border: 1px solid var(--sa-purple-md); }
+.lbl-orange { background: var(--orange-lt);    color: var(--orange);    border: 1px solid rgba(224,92,58,0.2); }
+.lbl-green  { background: var(--green-lt);     color: var(--green);     border: 1px solid rgba(46,158,110,0.2); }
+.lbl-blue   { background: var(--blue-lt);      color: var(--blue);      border: 1px solid rgba(58,127,193,0.2); }
+.lbl-teal   { background: var(--teal-lt);      color: var(--teal);      border: 1px solid rgba(42,157,138,0.2); }
+.lbl-gold   { background: var(--gold-lt);      color: var(--gold);      border: 1px solid rgba(192,139,42,0.2); }
+.lbl-red    { background: var(--red-lt);       color: var(--red);       border: 1px solid rgba(192,57,43,0.2); }
+
+.sec-h   { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.35em; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 4px; line-height: 1.2; }
+.sec-sub { font-size: 0.78em; color: var(--muted); margin-bottom: 18px; line-height: 1.45; }
+.h3      { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95em; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.h4      { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.82em; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.sm      { font-size: 0.78em; color: var(--muted); line-height: 1.5; }
+.xsm     { font-size: 0.7em;  color: var(--muted); line-height: 1.45; }
+.mono    { font-family: 'JetBrains Mono', monospace; }
+.col-purple { color: var(--sa-purple); }
+.col-orange { color: var(--orange); }
+
+/* ── CARDS ────────────────────────────────────────────────────── */
+.card {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 22px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.card-sm { padding: 13px 15px; border-radius: 10px; }
+/* Top accent bar */
+.ct-purple { border-top: 3px solid var(--sa-purple); }
+.ct-orange { border-top: 3px solid var(--orange); }
+.ct-green  { border-top: 3px solid var(--green); }
+.ct-blue   { border-top: 3px solid var(--blue); }
+.ct-teal   { border-top: 3px solid var(--teal); }
+.ct-gold   { border-top: 3px solid var(--gold); }
+/* Left accent bar */
+.cl-purple { border-left: 3px solid var(--sa-purple); border-radius: 0 10px 10px 0; }
+.cl-orange { border-left: 3px solid var(--orange);    border-radius: 0 10px 10px 0; }
+.cl-green  { border-left: 3px solid var(--green);     border-radius: 0 10px 10px 0; }
+.cl-blue   { border-left: 3px solid var(--blue);      border-radius: 0 10px 10px 0; }
+.cl-teal   { border-left: 3px solid var(--teal);      border-radius: 0 10px 10px 0; }
+.cl-gold   { border-left: 3px solid var(--gold);      border-radius: 0 10px 10px 0; }
+.cl-purple2 { border-left: 3px solid var(--sa-purple-dk); border-radius: 0 10px 10px 0; }
+
+/* ── CODE BLOCKS ──────────────────────────────────────────────── */
+.code-blk {
+  background: var(--sa-dark); border-radius: 10px; overflow: hidden;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7em;
+  border: 1.5px solid rgba(255,255,255,0.06);
+  box-shadow: var(--shadow);
+}
+.code-hdr {
+  background: var(--sa-dark2); padding: 7px 14px;
+  font-size: 0.82em; color: #6B7280; border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 6px;
+}
+.code-hdr::before { content: '●'; color: var(--sa-purple); font-size: 0.9em; }
+.code-body { padding: 12px 14px; line-height: 1.9; color: #9CA3AF; }
+/* Syntax tokens */
+.c-h1  { color: #6EE7B7; font-weight: 600; }   /* green — headings/success */
+.c-h2  { color: #93C5FD; }                      /* blue — section headers */
+.c-key { color: #FCD34D; }                      /* yellow — keys */
+.c-val { color: #E5E7EB; }                      /* near white — values */
+.c-cmt { color: #7A8A9C; font-style: italic; }  /* muted — comments */
+.c-acc { color: #C4B5FD; }                      /* lavender — accents/SA */
+.c-teal{ color: #5EEAD4; }                      /* teal — commands */
+.c-warn{ color: #FCA5A5; }                      /* soft red — warnings */
+.c-org { color: #FDBA74; }                      /* orange — rules */
+
+/* ── TABLE ────────────────────────────────────────────────────── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl thead tr { background: var(--sa-purple-lt); border-bottom: 1.5px solid var(--sa-purple-md); }
+.tbl th { padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.6em; font-weight: 700; color: var(--sa-purple); text-transform: uppercase; letter-spacing: 0.08em; text-align: left; }
+.tbl td { padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 0.8em; vertical-align: middle; color: var(--ink2); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover { background: var(--cream); }
+.mono-cell { font-family: 'JetBrains Mono', monospace; color: var(--sa-purple); font-size: 0.9em; }
+
+/* ── PILLS ────────────────────────────────────────────────────── */
+.pill { display: inline-block; font-size: 0.64em; font-weight: 600; padding: 2px 9px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; border: 1px solid; }
+.p-purple { background: var(--sa-purple-lt); color: var(--sa-purple);    border-color: var(--sa-purple-md); }
+.p-orange { background: var(--orange-lt);    color: var(--orange);       border-color: rgba(224,92,58,0.25); }
+.p-green  { background: var(--green-lt);     color: var(--green);        border-color: rgba(46,158,110,0.25); }
+.p-blue   { background: var(--blue-lt);      color: var(--blue);         border-color: rgba(58,127,193,0.25); }
+.p-teal   { background: var(--teal-lt);      color: var(--teal);         border-color: rgba(42,157,138,0.25); }
+.p-gold   { background: var(--gold-lt);      color: var(--gold);         border-color: rgba(192,139,42,0.25); }
+.p-red    { background: var(--red-lt);       color: var(--red);          border-color: rgba(192,57,43,0.25); }
+
+/* ── FLOW STEPS ───────────────────────────────────────────────── */
+.flow-item { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+.flow-dot  {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.62em; font-weight: 700; color: #fff;
+}
+.flow-body strong { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.82em; font-weight: 700; display: block; color: var(--ink); margin-bottom: 2px; }
+.flow-body span   { font-size: 0.72em; color: var(--muted); line-height: 1.4; }
+.flow-cmd {
+  display: inline-block; margin-top: 3px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68em;
+  background: var(--cream); color: var(--sa-purple);
+  padding: 2px 8px; border-radius: 6px; border: 1px solid var(--sa-purple-md);
+}
+
+/* ── DOS & DON'TS ─────────────────────────────────────────────── */
+.dd-item { display: flex; gap: 7px; margin-bottom: 6px; font-size: 0.73em; line-height: 1.45; align-items: flex-start; color: var(--ink2); }
+.do-item::before   { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.dont-item::before { content: '✕'; color: var(--red);   font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.lbl-do   { display: inline-block; background: var(--green-lt); color: var(--green); border: 1px solid rgba(46,158,110,0.2); font-family: 'JetBrains Mono', monospace; font-size: 0.6em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 10px; }
+.lbl-dont { display: inline-block; background: var(--red-lt);   color: var(--red);   border: 1px solid rgba(192,57,43,0.2);  font-family: 'JetBrains Mono', monospace; font-size: 0.6em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 10px; }
+
+/* ── FILE TREE ────────────────────────────────────────────────── */
+.file-tree {
+  background: var(--sa-dark); border-radius: 12px; padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7em; line-height: 2.05;
+  border: 1.5px solid rgba(255,255,255,0.06); box-shadow: var(--shadow);
+}
+.ft-dir  { color: #FCD34D; }
+.ft-file { color: #93C5FD; }
+.ft-note { color: #7A8A9C; font-style: italic; font-size: 0.88em; }
+.ft-star { color: var(--sa-purple); font-weight: 700; }
+
+/* ── STACK NODES ──────────────────────────────────────────────── */
+.stack-flow { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; position: relative; }
+.stack-flow::before {
+  content: ''; position: absolute; top: 51px;
+  left: calc(12.5% + 16px); right: calc(12.5% + 16px);
+  height: 2px; background: linear-gradient(to right, var(--orange), var(--sa-purple), var(--teal), var(--green)); z-index: 0;
+}
+.stack-node { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 0 14px; text-align: center; }
+.node-ico   { width: 100px; height: 100px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2.4em; background: var(--white); box-shadow: var(--shadow); border: 1.5px solid var(--border); }
+.node-ico.n1 { border-color: var(--orange);    box-shadow: 0 0 0 4px rgba(224,92,58,0.08),    var(--shadow); }
+.node-ico.n2 { border-color: var(--sa-purple); box-shadow: 0 0 0 4px rgba(147,107,218,0.1),   var(--shadow); }
+.node-ico.n3 { border-color: var(--teal);      box-shadow: 0 0 0 4px rgba(42,157,138,0.08),   var(--shadow); }
+.node-ico.n4 { border-color: var(--green);     box-shadow: 0 0 0 4px rgba(46,158,110,0.08),   var(--shadow); }
+.node-lbl    { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1em; font-weight: 700; color: var(--ink); }
+.node-sub    { font-size: 0.72em; color: var(--muted); line-height: 1.4; }
+
+.think-row  { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 10px; }
+.think-bub  { padding: 0 14px; }
+.think-bub-inner { border-radius: 8px; padding: 9px 12px; font-size: 0.7em; color: var(--muted); text-align: center; border: 1px solid var(--border); background: var(--white); }
+
+/* ── MCP CARDS ────────────────────────────────────────────────── */
+.mcp-card { text-align: center; background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 20px 14px; box-shadow: var(--shadow-sm); }
+.mcp-icon { font-size: 2em; margin-bottom: 10px; display: block; }
+.mcp-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.88em; font-weight: 700; margin-bottom: 5px; color: var(--ink); }
+.mcp-desc { font-size: 0.7em; color: var(--muted); line-height: 1.45; margin-bottom: 10px; }
+
+/* ── TIPS ─────────────────────────────────────────────────────── */
+.tip-card  { display: flex; gap: 10px; align-items: flex-start; }
+.tip-ico   { font-size: 1.2em; flex-shrink: 0; line-height: 1.3; margin-top: 1px; }
+.tip-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.78em; font-weight: 700; display: block; margin-bottom: 2px; color: var(--ink); }
+.tip-body  { font-size: 0.7em; color: var(--muted); line-height: 1.45; }
+.tip-body code { background: var(--cream); color: var(--sa-purple); padding: 1px 4px; border-radius: 4px; font-size: 0.9em; border: 1px solid var(--sa-purple-md); }
+
+/* ── ISSUE CARDS ──────────────────────────────────────────────── */
+.issue-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; border-left: 3px solid var(--sa-purple); box-shadow: var(--shadow-sm); }
+.issue-card.ic-o { border-left-color: var(--orange); }
+.issue-card.ic-b { border-left-color: var(--blue); }
+.issue-card.ic-g { border-left-color: var(--green); }
+.issue-card.ic-t { border-left-color: var(--teal); }
+.issue-q { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.74em; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.issue-a { font-size: 0.7em; color: var(--muted); line-height: 1.45; padding-left: 10px; }
+.ic-cmd  { font-family: 'JetBrains Mono', monospace; background: var(--cream); color: var(--sa-purple); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; border: 1px solid var(--sa-purple-md); }
+
+/* ── MANTRA ───────────────────────────────────────────────────── */
+.mantra { background: var(--sa-dark); border-radius: 12px; padding: 18px 22px; text-align: center; box-shadow: var(--shadow); }
+.mantra p { font-size: 0.82em; color: #9CA3AF; line-height: 1.65; font-style: italic; }
+.mantra strong { color: #C4B5FD; font-style: normal; }
+
+/* ── SECTION SCROLL HINT ──────────────────────────────────────── */
+.scroll-hint { text-align: center; padding: 16px 0 32px; border-top: 1px solid var(--border); margin-top: 40px; }
+.scroll-hint span { font-family: 'JetBrains Mono', monospace; font-size: 0.68em; color: var(--muted2); }
+
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 1100px) { .g4,.g5 { grid-template-columns: repeat(2,1fr); } .stack-flow { grid-template-columns: repeat(2,1fr); } .stack-flow::before { display: none; } }
+@media (max-width: 760px)  { .g2,.g3,.g4,.g5 { grid-template-columns: 1fr; } .wrap { padding: 0 16px; } html { font-size: 12px; } }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ STICKY NAV ══════════════════════════ -->
+<nav class="shell-nav">
+  <div class="nav-logo">Agentic <span>Agency</span> <sub>Series</sub></div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" id="navSearchInput" type="text"
+      placeholder="Search commands, tips, workflows, files…" autocomplete="off" readonly>
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <nav class="nav-tabs">
+    <div class="nav-tab active" data-s="s1"><span class="tab-num">01</span>Setup Guide</div>
+    <div class="nav-tab" data-s="s2"><span class="tab-num">02</span>Daily Playbook</div>
+    <div class="nav-tab" data-s="s3"><span class="tab-num">03</span>Field Guide</div>
+  </nav>
+</nav>
+
+<!-- ════════════════════════ SEARCH OVERLAY ══════════════════════ -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-modal">
+    <div class="search-modal-input-wrap">
+      <span class="search-modal-icon">⌕</span>
+      <input class="search-modal-input" id="searchInput"
+        placeholder="Search commands, tips, workflows, files…" autocomplete="off">
+      <button class="search-close-btn" id="closeSearch">Esc</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-footer">
+      <div class="search-footer-key"><span class="key">↑↓</span> navigate</div>
+      <div class="search-footer-key"><span class="key">↵</span> jump to section</div>
+      <div class="search-footer-key"><span class="key">Esc</span> close</div>
+      <div style="margin-left:auto;font-size:0.65em;color:var(--muted2);font-family:'JetBrains Mono',monospace" id="searchCount"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+   SECTION 01 · COMMAND CENTER SETUP
+════════════════════════════════════════════════════════════════ -->
+<section class="section-page" id="s1">
+  <div class="s-hero">
+    <div class="s-hero-badge">◈ 01 · Agentic Agency Series</div>
+    <h1>Your <em>Command Center</em> Setup</h1>
+    <p>Warp + Claude Code + Search Atlas MCP + your agency tools — configured once, runs forever.</p>
+  </div>
+
+  <div class="wrap">
+
+    <!-- The Stack -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-orange">◈ The Stack</div>
+      <div class="sec-h">Four Layers That Power Your Agency</div>
+      <div class="sec-sub">Each layer builds on the one below — understand this and everything clicks</div>
+      <div class="stack-flow mb14">
+        <div class="stack-node"><div class="node-ico n1">⌨️</div><div><div class="node-lbl">Warp Terminal</div><div class="node-sub">AI-powered command interface. Plain English input.</div></div></div>
+        <div class="stack-node"><div class="node-ico n2">🤖</div><div><div class="node-lbl">Claude Code</div><div class="node-sub">The AI agent that plans and executes tasks.</div></div></div>
+        <div class="stack-node"><div class="node-ico n3">🔌</div><div><div class="node-lbl">MCP Layer</div><div class="node-sub">Claude's plugin system — USB ports for your tools.</div></div></div>
+        <div class="stack-node"><div class="node-ico n4">🛠️</div><div><div class="node-lbl">Your Tools</div><div class="node-sub">Search Atlas · ClickUp · Slack · Gmail · GCal</div></div></div>
+      </div>
+      <div class="think-row">
+        <div class="think-bub"><div class="think-bub-inner">The UI you see and type in</div></div>
+        <div class="think-bub"><div class="think-bub-inner">Your AI employee that never sleeps</div></div>
+        <div class="think-bub"><div class="think-bub-inner">Connects Claude to everything</div></div>
+        <div class="think-bub"><div class="think-bub-inner">All your work apps, automated</div></div>
+      </div>
+    </div>
+
+    <!-- Setup Steps -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-purple">✓ One-Time Setup</div>
+      <div class="sec-h">Do This Once — 15 Minutes Total</div>
+      <div class="g3 mb14">
+        <div class="card ct-orange"><div class="sec-lbl lbl-orange mb8" style="font-size:0.55em">Step 01</div><div class="h3">Install Warp Terminal</div><div class="sm mb10">Download at warp.dev — free to start. Sign in after installing. No black-box intimidation.</div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Free: 100 AI requests/month</span><br><span class="c-cmt"># Pro: unlimited — recommended</span><br><span class="c-cmt"># No coding knowledge needed</span></div></div></div>
+        <div class="card ct-purple"><div class="sec-lbl lbl-purple mb8" style="font-size:0.55em">Step 02</div><div class="h3">Install Claude Code</div><div class="sm mb10">Run this one command in Warp. Installs globally — use from any folder, any time.</div><div class="code-blk"><div class="code-body"><span class="c-teal">npm install -g @anthropic-ai/claude-code</span><br><span class="c-cmt"># Then start:</span><br><span class="c-teal">claude</span><br><span class="c-cmt"># Browser opens to log in</span></div></div></div>
+        <div class="card ct-teal"><div class="sec-lbl lbl-teal mb8" style="font-size:0.55em">Step 03</div><div class="h3">Connect Search Atlas MCP</div><div class="sm mb10">Gives Claude access to 60+ Search Atlas tools — SEO, GBP, content, PPC, reports.</div><div class="code-blk"><div class="code-body"><span class="c-teal">claude mcp add searchatlas \</span><br><span class="c-teal">&nbsp; --transport http \</span><br><span class="c-teal">&nbsp; https://mcp.searchatlas.com</span><br><span class="c-teal">&nbsp; /api/v1/mcp</span></div></div></div>
+        <div class="card ct-blue"><div class="sec-lbl lbl-blue mb8" style="font-size:0.55em">Step 04</div><div class="h3">Add Slack, ClickUp &amp; More</div><div class="sm mb10">Claude Code has built-in connectors for all major agency tools. Add from inside Claude.</div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Inside Claude, type:</span><br><span class="c-acc">/mcp</span><br><span class="c-cmt"># Browse &amp; add: Slack, ClickUp,</span><br><span class="c-cmt"># Gmail, Google Calendar</span></div></div></div>
+        <div class="card ct-gold"><div class="sec-lbl lbl-gold mb8" style="font-size:0.55em">Step 05</div><div class="h3">Install Agency Commands</div><div class="sm mb10">13 pre-built slash commands for SEO, GBP, PPC, content, and reporting. One-time setup.</div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Clone the command library</span><br><span class="c-teal">git clone [your-repo]</span><br><span class="c-teal">./setup.sh</span><br><span class="c-cmt"># Commands load as /run-seo etc.</span></div></div></div>
+        <div class="card ct-green"><div class="sec-lbl lbl-green mb8" style="font-size:0.55em">Step 06</div><div class="h3">Write Your CLAUDE.md</div><div class="sm mb10">Tell Claude about your agency — once. It reads this at the start of every session, forever.</div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Start Claude, then:</span><br><span class="c-acc">/init</span><br><span class="c-cmt"># Edit with your agency details</span><br><span class="c-acc">/memory</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- MCP Map -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-teal">🔌 MCP Connections</div>
+      <div class="sec-h">Every Tool Claude Can Reach</div>
+      <div class="g5 mb14">
+        <div class="mcp-card" style="border-top:3px solid var(--orange)"><span class="mcp-icon">🔍</span><div class="mcp-name">Search Atlas</div><div class="mcp-desc">SEO · GBP · PPC · Content · Reports · LLM Visibility · Press Releases</div><span class="pill p-orange">60+ Tools</span></div>
+        <div class="mcp-card" style="border-top:3px solid var(--green)"><span class="mcp-icon">✅</span><div class="mcp-name">ClickUp</div><div class="mcp-desc">Tasks · Projects · Time tracking · Reminders · Docs · Team management</div><span class="pill p-green">HTTP MCP</span></div>
+        <div class="mcp-card" style="border-top:3px solid var(--sa-purple)"><span class="mcp-icon">💬</span><div class="mcp-name">Slack</div><div class="mcp-desc">Post messages · Read channels · Reply threads · @Claude mentions</div><span class="pill p-purple">HTTP MCP</span></div>
+        <div class="mcp-card" style="border-top:3px solid var(--red)"><span class="mcp-icon">📧</span><div class="mcp-name">Gmail</div><div class="mcp-desc">Search emails · Read threads · Draft replies · Manage labels</div><span class="pill p-red">HTTP MCP</span></div>
+        <div class="mcp-card" style="border-top:3px solid var(--blue)"><span class="mcp-icon">📅</span><div class="mcp-name">Google Calendar</div><div class="mcp-desc">Create events · Find free time · Schedule calls · Respond to invites</div><span class="pill p-blue">HTTP MCP</span></div>
+      </div>
+    </div>
+
+    <!-- Verify -->
+    <div class="sec-block pb48">
+      <div class="sec-lbl lbl-blue">✓ Verify Connections</div>
+      <div class="sec-h">Check Before Every Important Session</div>
+      <div class="g4">
+        <div class="card"><div class="h4 mb8">From Terminal <span class="pill p-blue" style="margin-left:4px">CLI</span></div><div class="code-blk"><div class="code-body"><span class="c-teal">claude mcp list</span><br><span class="c-cmt">NAME        STATUS    TRANSPORT</span><br><span class="c-h1">✓ searchatlas connected</span><br><span class="c-h1">✓ slack      connected</span><br><span class="c-h1">✓ clickup    connected</span><br><span class="c-warn">⚠ gcal       auth needed</span></div></div></div>
+        <div class="card"><div class="h4 mb8">Inside Claude <span class="pill p-purple" style="margin-left:4px">In-App</span></div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Type inside Claude Code:</span><br><span class="c-acc">/mcp</span>  <span class="c-cmt">← panel + status</span><br><span class="c-acc">/status</span> <span class="c-cmt">← account + info</span><br><br><span class="c-cmt"># Ask Claude directly:</span><br><span class="c-teal">what MCP tools do you have?</span></div></div></div>
+        <div class="card"><div class="h4 mb8">Reconnect a Tool <span class="pill p-orange" style="margin-left:4px">Fix</span></div><div class="code-blk"><div class="code-body"><span class="c-teal">claude mcp remove searchatlas</span><br><span class="c-teal">claude mcp add searchatlas \</span><br><span class="c-cmt">&nbsp; --transport http [url]</span><br><br><span class="c-teal">claude doctor</span><br><span class="c-cmt"># ↑ full health check</span></div></div></div>
+        <div class="card"><div class="h4 mb8">Quick Test <span class="pill p-green" style="margin-left:4px">Search Atlas</span></div><div class="code-blk"><div class="code-body"><span class="c-cmt"># Start Claude, type:</span><br><span class="c-acc">/my-account</span><br><span class="c-cmt"># Lists your OTTO projects</span><br><br><span class="c-h1">✓ Returns projects = working</span><br><span class="c-warn">✗ "credentials not provided"</span><br><span class="c-warn">&nbsp;&nbsp;→ re-add with correct API key</span></div></div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="scroll-hint"><span>↓ continue to Daily Playbook ↓</span></div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+   SECTION 02 · DAILY PLAYBOOK
+════════════════════════════════════════════════════════════════ -->
+<section class="section-page" id="s2">
+  <div class="s-hero">
+    <div class="s-hero-badge">▶ 02 · Agentic Agency Series</div>
+    <h1>The <em>Daily Playbook</em></h1>
+    <p>Essential commands, agency workflows, power prompts, and best practices — all in one place.</p>
+  </div>
+
+  <div class="wrap">
+
+    <!-- Commands Table -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-purple">◈ Core Commands</div>
+      <div class="sec-h">Essential Claude Code Commands</div>
+      <div class="sec-sub">Type these inside a session after starting with <code style="background:var(--sa-purple-lt);color:var(--sa-purple);padding:2px 7px;border-radius:6px;border:1px solid var(--sa-purple-md);font-size:0.85em">claude</code> in Warp</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th style="width:165px">Command</th><th>What It Does</th><th style="width:105px">Category</th></tr></thead>
+          <tbody>
+            <tr><td><code class="mono-cell">/help</code></td><td class="sm">Show all available commands — your starting point every session</td><td><span class="pill p-purple">Navigate</span></td></tr>
+            <tr><td><code class="mono-cell">/clear</code></td><td class="sm">Start fresh — wipe conversation. <strong>Non-negotiable between clients.</strong></td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/mcp</code></td><td class="sm">Open MCP plugin panel — see status, add/remove tools, re-authenticate</td><td><span class="pill p-teal">MCP</span></td></tr>
+            <tr><td><code class="mono-cell">/memory</code></td><td class="sm">Edit your CLAUDE.md — permanent agency instructions every session reads</td><td><span class="pill p-green">Memory</span></td></tr>
+            <tr><td><code class="mono-cell">/status</code></td><td class="sm">View account, model version, and all connection statuses in one panel</td><td><span class="pill p-purple">Navigate</span></td></tr>
+            <tr><td><code class="mono-cell">/compact</code></td><td class="sm">Compress long session to free memory — use when things feel slow</td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/cost</code></td><td class="sm">See token and credit usage for this session</td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/rename</code></td><td class="sm">Name the session (e.g., "acme-q3-report") so you can find and resume it later</td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/resume</code></td><td class="sm">Pick up exactly where you left off — works across days and restarts</td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/plan</code></td><td class="sm">Enter Plan Mode — Claude thinks first, shows approach, you approve before it acts</td><td><span class="pill p-purple">Navigate</span></td></tr>
+            <tr><td><code class="mono-cell">/init</code></td><td class="sm">Create a CLAUDE.md in the current folder — permanent agency memory</td><td><span class="pill p-green">Memory</span></td></tr>
+            <tr><td><code class="mono-cell">/export</code></td><td class="sm">Export the conversation to a file — save reports, summaries, research outputs</td><td><span class="pill p-blue">Tools</span></td></tr>
+            <tr><td><code class="mono-cell">/model</code></td><td class="sm">Switch Claude model — Opus for complex analysis, Haiku for quick tasks</td><td><span class="pill p-orange">Session</span></td></tr>
+            <tr><td><code class="mono-cell">/doctor</code></td><td class="sm">Health check — diagnoses installation and connection issues automatically</td><td><span class="pill p-purple">Navigate</span></td></tr>
+            <tr><td><code class="mono-cell">/install-slack-app</code></td><td class="sm">Install Claude in your Slack workspace — trigger tasks with @Claude from any channel</td><td><span class="pill p-teal">MCP</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Agency Commands -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-orange">⚡ Agency Commands</div>
+      <div class="sec-h">Pre-Built Workflows — One Command Runs Everything</div>
+      <div class="g4 mb14">
+        <div class="card cl-blue"><div class="h4 col-purple mono">/my-account</div><div class="xsm">Show all Search Atlas projects, GBP locations, campaigns, quota. <strong>Start here every session.</strong></div></div>
+        <div class="card cl-blue"><div class="h4 col-purple mono">/onboard-client</div><div class="xsm">Guided wizard to set up a new client — creates projects, GBP, and task structure.</div></div>
+        <div class="card cl-blue"><div class="h4 col-purple mono">/business-report</div><div class="xsm">Full deep-dive on one client — SEO, backlinks, GBP, content, PPC, LLM visibility, recommendations.</div></div>
+        <div class="card cl-blue"><div class="h4 col-purple mono">/help</div><div class="xsm">List all available agency commands. Your quick reference inside any session.</div></div>
+        <div class="card cl-orange"><div class="h4 col-orange mono">/run-seo</div><div class="xsm">Monthly SEO maintenance — keyword tracking, audit fixes, schema markup, meta tags.</div></div>
+        <div class="card cl-green"><div class="h4 col-purple mono">/run-gbp</div><div class="xsm">GBP optimization — update info, generate posts, respond to reviews, check rankings.</div></div>
+        <div class="card cl-teal"><div class="h4 col-purple mono">/run-ppc</div><div class="xsm">Google Ads — keywords, ad copy, bid structure, negative keywords, audit.</div></div>
+        <div class="card cl-purple"><div class="h4 col-purple mono">/run-content</div><div class="xsm">AI content generation — topical maps, SEO articles, brand voice, publication.</div></div>
+        <div class="card cl-gold"><div class="h4 col-purple mono">/run-pr</div><div class="xsm">Press release creation and distribution — authority building, digital PR outreach.</div></div>
+        <div class="card cl-purple2"><div class="h4 col-purple mono">/run-visibility</div><div class="xsm">LLM visibility — track brand in ChatGPT, Perplexity, Gemini. Improve AI search presence.</div></div>
+        <div class="card cl-green"><div class="h4 col-purple mono">/send-slack</div><div class="xsm">Post results, reports, or wins to any Slack channel instantly.</div></div>
+        <div class="card cl-green"><div class="h4 col-purple mono">/send-email</div><div class="xsm">Send formatted client reports and updates via email automatically.</div></div>
+      </div>
+    </div>
+
+    <!-- Power Prompts -->
+    <div class="sec-block">
+      <div class="sec-lbl lbl-green">✎ Power Prompts</div>
+      <div class="sec-h">Copy, Customize, Use — These Get Great Results</div>
+      <div class="g3 mb14">
+        <div class="card ct-orange"><div class="sec-lbl lbl-orange mb8" style="font-size:0.55em">SEO Reporting</div><div class="code-blk"><div class="code-body">"Pull top <span class="c-h1">20 ranking keywords</span> for<br>acme.com from Search Atlas,<br>compare to last month, write<br><span class="c-h1">executive summary</span> for<br>a non-technical client."</div></div></div>
+        <div class="card ct-green"><div class="sec-lbl lbl-green mb8" style="font-size:0.55em">Local SEO / GBP</div><div class="code-blk"><div class="code-body">"Check GBP for all <span class="c-h1">12 locations</span><br>in Search Atlas. Flag<br><span class="c-h1">incomplete or low scores</span>,<br>create <span class="c-h1">ClickUp tasks</span><br>to fix them."</div></div></div>
+        <div class="card ct-purple"><div class="sec-lbl lbl-purple mb8" style="font-size:0.55em">Content Creation</div><div class="code-blk"><div class="code-body">"Using Content Genius, create<br><span class="c-h1">5 blog posts</span> targeting<br>@keywords.txt, matching<br>@brand-guidelines.md. Add as<br><span class="c-h1">ClickUp tasks for team</span>."</div></div></div>
+        <div class="card ct-blue"><div class="sec-lbl lbl-blue mb8" style="font-size:0.55em">Client Comms</div><div class="code-blk"><div class="code-body">"Read last <span class="c-h1">5 client emails</span>,<br>summarize open items,<br>draft responses to each,<br>create <span class="c-h1">ClickUp tasks</span> for<br>any commitments made."</div></div></div>
+        <div class="card ct-teal"><div class="sec-lbl lbl-teal mb8" style="font-size:0.55em">Scheduling</div><div class="code-blk"><div class="code-body">"Find a <span class="c-h1">45-min slot next week</span><br>when Sarah and I are free.<br>Create 'Q4 Planning',<br>invite Sarah, add<br><span class="c-h1">agenda to description</span>."</div></div></div>
+        <div class="card ct-gold"><div class="sec-lbl lbl-gold mb8" style="font-size:0.55em">AI Visibility</div><div class="code-blk"><div class="code-body">"LLM visibility check for<br>[client]. Show presence in<br><span class="c-h1">ChatGPT &amp; Perplexity</span><br>for top 10 keywords.<br><span class="c-h1">How do we improve</span>?"</div></div></div>
+      </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="sec-block pb48">
+      <div class="sec-lbl lbl-gold">◈ Best Practices</div>
+      <div class="sec-h">Habits That Drive 10× Productivity</div>
+      <div class="g4">
+        <div class="card ct-orange"><div class="h3 mb8">🎯 Better Prompts</div><div class="dd-item do-item">Name the client, tool, and output format</div><div class="dd-item do-item">Include "done" criteria in every prompt</div><div class="dd-item do-item">Use @file to reference documents</div><div class="dd-item do-item">Chain tasks: "then create ClickUp tasks"</div><div class="dd-item do-item">Paste screenshots — Claude reads images</div></div>
+        <div class="card ct-purple"><div class="h3 mb8">🗂️ Session Hygiene</div><div class="dd-item do-item">/rename before any real work starts</div><div class="dd-item do-item">/clear between every client — no exceptions</div><div class="dd-item do-item">/compact in long sessions before slowdown</div><div class="dd-item do-item">/export before closing important sessions</div><div class="dd-item dont-item">Never mix clients in one session</div></div>
+        <div class="card ct-teal"><div class="h3 mb8">⚡ Warp Habits</div><div class="dd-item do-item">Save commands to Warp Drive for reuse</div><div class="dd-item do-item">Type # + plain English for AI commands</div><div class="dd-item do-item">Right-click errors → "Ask Warp AI"</div><div class="dd-item do-item">Multiple panes for parallel clients</div><div class="dd-item dont-item">Never ignore MCP connection warnings</div></div>
+        <div class="card ct-red" style="border-top:3px solid var(--red)"><div class="h3 mb8">🚫 Common Mistakes</div><div class="dd-item dont-item">Vague prompts with no scope or client name</div><div class="dd-item dont-item">Pasting API keys into the chat</div><div class="dd-item dont-item">Approving without reading the plan</div><div class="dd-item dont-item">Correcting Claude 3× — /clear instead</div><div class="dd-item dont-item">CLAUDE.md files over 100 lines long</div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="scroll-hint"><span>↓ continue to Field Guide ↓</span></div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+   SECTION 03 · FIELD GUIDE
+════════════════════════════════════════════════════════════════ -->
+<section class="section-page" id="s3">
+  <div class="s-hero">
+    <div class="s-hero-badge">◈ 03 · Agentic Agency Series</div>
+    <h1>The <span class="accent-o">Field</span> <em>Guide</em></h1>
+    <p>Session flow · File structure · Your CLAUDE.md starter · Dos &amp; Don'ts · Back on track</p>
+  </div>
+
+  <div class="wrap">
+    <div class="g4 sec-block pb48">
+
+      <!-- Col 1: Session Flow -->
+      <div>
+        <div class="sec-lbl lbl-orange mb8">▶ Daily Session Flow</div>
+        <div class="sec-h">Every Session, Every Time</div>
+        <div class="sec-sub" style="margin-bottom:18px">30 seconds of discipline saves hours of pain</div>
+
+        <div class="flow-item"><div class="flow-dot" style="background:#6B7280">0</div><div class="flow-body"><strong>Open Warp in your project folder</strong><span>CLAUDE.md loads automatically — context is ready.</span><div class="flow-cmd">cd ~/agency</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:var(--orange)">1</div><div class="flow-body"><strong>Start &amp; name your session</strong><span>Always name it. You'll thank yourself at 11pm.</span><div class="flow-cmd">claude → /rename client-task-date</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:var(--blue)">2</div><div class="flow-body"><strong>Verify connections</strong><span>30 seconds now vs. broken session later.</span><div class="flow-cmd">/mcp → all green</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:var(--green)">3</div><div class="flow-body"><strong>Get your bearings</strong><span>Never assume state — always look up current data.</span><div class="flow-cmd">/my-account</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:var(--sa-purple)">4</div><div class="flow-body"><strong>Do the work — one client at a time</strong><span>Plain English. Drop @files. Paste screenshots.</span><div class="flow-cmd">"Run SEO for acme.com this month"</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:var(--gold)">5</div><div class="flow-body"><strong>Export + create tasks</strong><span>Save to /reports/. Convert follow-ups to ClickUp.</span><div class="flow-cmd">/export → "create ClickUp tasks"</div></div></div>
+        <div class="flow-item"><div class="flow-dot" style="background:#9CA3AF">6</div><div class="flow-body"><strong>Clear before next client</strong><span>Client A data must never appear in Client B's work.</span><div class="flow-cmd">/clear — every. single. time.</div></div></div>
+
+        <div class="divider"></div>
+        <div class="sec-lbl lbl-gold mb8">⌨ Shortcuts</div>
+        <div class="g2" style="gap:8px">
+          <div class="card card-sm"><div class="mono" style="font-size:0.7em;color:var(--sa-purple);margin-bottom:2px">Esc</div><div class="xsm">Stop Claude mid-task</div></div>
+          <div class="card card-sm"><div class="mono" style="font-size:0.7em;color:var(--sa-purple);margin-bottom:2px">Shift+Tab</div><div class="xsm">Enter plan mode</div></div>
+          <div class="card card-sm"><div class="mono" style="font-size:0.7em;color:var(--sa-purple);margin-bottom:2px">Ctrl+G</div><div class="xsm">Edit the plan</div></div>
+          <div class="card card-sm"><div class="mono" style="font-size:0.7em;color:var(--sa-purple);margin-bottom:2px"># + text</div><div class="xsm">Warp AI command</div></div>
+        </div>
+      </div>
+
+      <!-- Col 2: File Structure -->
+      <div>
+        <div class="sec-lbl lbl-teal mb8">📁 Project Structure</div>
+        <div class="sec-h">Set Up Once, Never Lose Anything Again</div>
+        <div class="sec-sub" style="margin-bottom:14px">Prevents data loss, context confusion, and "where is that report" forever</div>
+
+        <div class="file-tree" style="margin-bottom:16px">
+<span class="ft-dir">my-agency/</span>
+  <span class="ft-star">★</span> <span class="ft-file">CLAUDE.md</span>       <span class="ft-note">← AI reads this FIRST every session</span>
+  <span class="ft-star">★</span> <span class="ft-file">AI_RULES.md</span>     <span class="ft-note">← Non-negotiable AI behavior</span>
+  <span class="ft-star">★</span> <span class="ft-file">README.md</span>        <span class="ft-note">← What this is + how to use it</span>
+     <span class="ft-file">PRD.md</span>           <span class="ft-note">← Goals, KPIs, what "done" means</span>
+     <span class="ft-file">PLAN.md</span>          <span class="ft-note">← Current sprint priorities</span>
+     <span class="ft-file">.env</span>             <span class="ft-note">← API keys (NEVER commit this)</span>
+  <span class="ft-dir">clients/</span>
+    <span class="ft-dir">acme-corp/</span>
+      <span class="ft-file">brief.md</span>         <span class="ft-note">← Client context + goals</span>
+      <span class="ft-dir">reports/</span>         <span class="ft-note">← Date-stamped outputs</span>
+  <span class="ft-dir">reports/</span>           <span class="ft-note">← 2026-03-acme.md format</span>
+  <span class="ft-dir">assets/</span>            <span class="ft-note">← Logos, briefs, brand files</span>
+        </div>
+
+        <div class="g2" style="gap:8px">
+          <div class="card card-sm cl-orange"><div class="h4">CLAUDE.md</div><div class="xsm">Agency instructions every session reads. Persona, clients, tools, rules.</div></div>
+          <div class="card card-sm cl-purple"><div class="h4">AI_RULES.md</div><div class="xsm">Hard limits: never publish without approval, confirm before destructive actions.</div></div>
+          <div class="card card-sm cl-teal"><div class="h4">PRD.md</div><div class="xsm">Agency goals this quarter. What does success look like?</div></div>
+          <div class="card card-sm cl-blue"><div class="h4">README.md</div><div class="xsm">One page: gets any team member running in 10 minutes. Your north star.</div></div>
+          <div class="card card-sm cl-green span2"><div class="h4">Data Loss Rules</div><div style="display:flex;gap:16px;flex-wrap:wrap"><div class="dd-item do-item xsm">.env in .gitignore immediately</div><div class="dd-item do-item xsm">Reports as 2026-03-acme.md</div><div class="dd-item dont-item xsm">Never expose API keys in chat</div></div></div>
+        </div>
+      </div>
+
+      <!-- Col 3: CLAUDE.md Template + Dos/Donts -->
+      <div>
+        <div class="sec-lbl lbl-green mb8">✎ CLAUDE.md Starter</div>
+        <div class="sec-h">Copy → Edit → Save</div>
+        <div class="sec-sub" style="margin-bottom:12px">Your agency's permanent AI memory — tailor every field to you</div>
+
+        <div class="code-blk" style="margin-bottom:16px">
+          <div class="code-hdr">CLAUDE.md — Agency Operating Manual</div>
+          <div class="code-body" style="font-size:0.65em">
+<span class="c-h1"># Agency: [Name] | Claude Code Manual</span>
+
+<span class="c-h2">## Who I Am</span>
+<span class="c-val">You assist [Name], owner of [Agency],</span>
+<span class="c-val">a digital marketing agency. I am</span>
+<span class="c-val">non-technical. I prefer bullet points</span>
+<span class="c-val">and confirmation before any action.</span>
+
+<span class="c-h2">## My Preferences</span>
+<span class="c-key">Tone:</span>    <span class="c-val">Professional, direct, client-safe</span>
+<span class="c-key">Reports:</span> <span class="c-val">Executive summary, wins first</span>
+<span class="c-key">Actions:</span> <span class="c-val">Always confirm before publishing</span>
+
+<span class="c-h2">## My Clients</span>
+<span class="c-val">Acme Corp | acme.com | Local SEO</span>
+<span class="c-val">TechStart | techstart.io | B2B SaaS</span>
+
+<span class="c-h2">## Tools (preferred order)</span>
+<span class="c-val">1. Search Atlas — SEO/GBP/content</span>
+<span class="c-val">2. ClickUp — tasks &amp; time tracking</span>
+<span class="c-val">3. Google Calendar — scheduling</span>
+<span class="c-val">4. Slack — team + client updates</span>
+
+<span class="c-h2">## Non-Negotiable Rules</span>
+<span class="c-org">- Never publish without approval</span>
+<span class="c-org">- Never assume IDs — look up first</span>
+<span class="c-org">- Save to /reports/[client]/[month]/</span>
+<span class="c-org">- /clear between every client session</span>
+
+<span class="c-h2">## Don't Do This</span>
+<span class="c-cmt">- No walls of text — bullet points</span>
+<span class="c-cmt">- No guessing — ask me if uncertain</span>
+<span class="c-cmt">- No hardcoded API keys</span>
+          </div>
+        </div>
+
+        <div class="g2" style="gap:8px">
+          <div><div class="lbl-do">✓ Always Do</div><div class="dd-item do-item xsm">Name sessions before working</div><div class="dd-item do-item xsm">Check /mcp at start</div><div class="dd-item do-item xsm">Use @filename for references</div><div class="dd-item do-item xsm">/clear between clients</div><div class="dd-item do-item xsm">Save with date stamps</div><div class="dd-item do-item xsm">Read Claude's plan first</div></div>
+          <div><div class="lbl-dont">✕ Never Do</div><div class="dd-item dont-item xsm">Mix clients in one session</div><div class="dd-item dont-item xsm">Paste API keys in chat</div><div class="dd-item dont-item xsm">Approve without reading</div><div class="dd-item dont-item xsm">Correct Claude 3× in a row</div><div class="dd-item dont-item xsm">Skip the /clear</div><div class="dd-item dont-item xsm">Use vague prompts</div></div>
+        </div>
+      </div>
+
+      <!-- Col 4: Tips + Troubleshooting -->
+      <div>
+        <div class="sec-lbl lbl-gold mb8">💡 Power Tips</div>
+        <div class="card card-sm" style="margin-bottom:8px"><div class="tip-card"><div class="tip-ico">🖼</div><div><div class="tip-title">Paste screenshots directly</div><div class="tip-body">Drop dashboard images or designs into Claude — no describing needed.</div></div></div></div>
+        <div class="card card-sm" style="margin-bottom:8px"><div class="tip-card"><div class="tip-ico">📎</div><div><div class="tip-title">Reference files with @</div><div class="tip-body">Type <code>@brief.pdf</code> to pull any file into context instantly.</div></div></div></div>
+        <div class="card card-sm" style="margin-bottom:8px"><div class="tip-card"><div class="tip-ico">🔄</div><div><div class="tip-title">Resume cross-day sessions</div><div class="tip-body">Named sessions survive restarts. <code>/resume</code> brings full context back.</div></div></div></div>
+        <div class="card card-sm" style="margin-bottom:8px"><div class="tip-card"><div class="tip-ico">🧠</div><div><div class="tip-title">Plan mode before big tasks</div><div class="tip-body"><code>Shift+Tab</code> — Claude thinks first, shows approach, you approve.</div></div></div></div>
+        <div class="card card-sm" style="margin-bottom:16px"><div class="tip-card"><div class="tip-ico">⚡</div><div><div class="tip-title">Warp Drive for repeat tasks</div><div class="tip-body">Save monthly reporting flow to Warp Drive — one click to launch.</div></div></div></div>
+
+        <div class="sec-lbl lbl-purple mb8">🔧 Back on Track</div>
+        <div class="issue-card"><div class="issue-q">Wrong or confusing answers?</div><div class="issue-a"><code class="ic-cmd">/clear</code> and rewrite with a more specific prompt. You lost nothing — just context.</div></div>
+        <div class="issue-card ic-o"><div class="issue-q">A tool isn't connecting?</div><div class="issue-a">Type <code class="ic-cmd">/mcp</code> to check status. Remove and re-add the server. 30 seconds.</div></div>
+        <div class="issue-card ic-b"><div class="issue-q">Session feels slow or foggy?</div><div class="issue-a"><code class="ic-cmd">/compact</code> to free memory. Still bad? Export, clear, resume fresh.</div></div>
+        <div class="issue-card ic-g"><div class="issue-q">Can't find a report?</div><div class="issue-a">Ask Claude where it saved it. Going forward: always end with <code class="ic-cmd">/export</code> → /reports/.</div></div>
+        <div class="issue-card ic-t"><div class="issue-q">Feeling overwhelmed?</div><div class="issue-a">3 things only: <strong>Open Warp</strong> → type <code class="ic-cmd">claude</code> → describe what you need. That's it.</div></div>
+
+        <div class="mantra">
+          <p>You don't need to understand the code.<br>Just <strong>describe the outcome clearly</strong>.<br>Claude handles the rest — <strong>every time</strong>.</p>
+        </div>
+      </div>
+
+    </div><!-- /g4 -->
+  </div><!-- /wrap -->
+
+  <!-- Footer -->
+  <div style="border-top:1px solid var(--border);padding:16px 36px;display:flex;justify-content:space-between;align-items:center;background:var(--paper);flex-wrap:wrap;gap:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="pill p-orange">Open Warp → cd ~/agency</span>
+      <span class="pill p-purple">claude → /rename [session]</span>
+      <span class="pill p-teal">/mcp → verify green</span>
+      <span class="pill p-blue">/my-account → get context</span>
+      <span class="pill p-green">Do work → one client at a time</span>
+      <span class="pill p-gold">/export → ClickUp tasks</span>
+      <span class="pill p-orange">/clear → next client</span>
+      <span class="pill p-purple">Esc = stop · /compact = memory · /resume = tomorrow</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.65em;color:var(--muted2);text-align:right;flex-shrink:0">
+      claude.ai/code · searchatlas.com · warp.dev
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+   JAVASCRIPT — SEARCH ENGINE (unchanged)
+════════════════════════════════════════════════════════════════ -->
+<script>
+const DB = [
+  {t:'cmd', n:'claude',               d:'Start Claude Code interactive session in the current folder.',               s:'s1', tags:['start','open','launch','begin','terminal']},
+  {t:'cmd', n:'claude "prompt"',      d:'Start Claude with an initial prompt — skip the blank session.',             s:'s1', tags:['start','prompt','launch','quick']},
+  {t:'cmd', n:'claude -c',            d:'Resume the most recent conversation automatically.',                        s:'s2', tags:['resume','continue','last','previous']},
+  {t:'cmd', n:'claude update',        d:'Update Claude Code to the latest version.',                                 s:'s1', tags:['update','upgrade','version','latest']},
+  {t:'cmd', n:'claude --version',     d:'Show installed Claude Code version.',                                       s:'s1', tags:['version','check','info']},
+  {t:'cmd', n:'claude mcp list',      d:'List all configured MCP servers, their names, and connection status.',      s:'s1', tags:['mcp','list','connections','status','check']},
+  {t:'cmd', n:'claude mcp add',       d:'Add a new MCP plugin/server. Requires name, transport type, and URL.',      s:'s1', tags:['mcp','add','plugin','install','connect']},
+  {t:'cmd', n:'claude mcp remove',    d:'Remove an MCP server connection by name.',                                  s:'s1', tags:['mcp','remove','delete','disconnect']},
+  {t:'cmd', n:'claude doctor',        d:'Run a full health check — diagnoses installation and connection issues.',    s:'s1', tags:['doctor','health','fix','diagnose','broken']},
+  {t:'cmd', n:'claude --mcp-config',  d:'Load MCP servers from a JSON config file for team sharing.',                s:'s1', tags:['mcp','config','team','json','share']},
+  {t:'slash', n:'/help',              d:'Show all available commands and a description of each.',                    s:'s2', tags:['help','commands','list','all','reference']},
+  {t:'slash', n:'/clear',             d:'Wipe conversation and start fresh. Use between every client — no exceptions.',s:'s2',tags:['clear','reset','fresh','start','client','clean']},
+  {t:'slash', n:'/mcp',               d:'Open MCP management panel — see status, add/remove tools, re-authenticate.',s:'s1', tags:['mcp','connections','status','manage','tools']},
+  {t:'slash', n:'/memory',            d:'Edit your CLAUDE.md — the permanent agency instructions Claude reads every session.',s:'s2',tags:['memory','claude.md','instructions','edit','permanent']},
+  {t:'slash', n:'/status',            d:'View account info, model version, and all connection statuses in one panel.',s:'s1', tags:['status','account','info','version','connections']},
+  {t:'slash', n:'/compact',           d:'Compress the session to free up memory — use when things feel slow or response quality drops.',s:'s2',tags:['compact','memory','slow','compress','free']},
+  {t:'slash', n:'/cost',              d:'See how many tokens and credits you have used in this session.',             s:'s2', tags:['cost','tokens','usage','credits','spending']},
+  {t:'slash', n:'/rename',            d:'Name the current session (e.g. acme-q3-report) so you can find and resume it later.',s:'s3',tags:['rename','name','session','save','label']},
+  {t:'slash', n:'/resume',            d:'Pick up exactly where you left off — works across days and restarts.',       s:'s3', tags:['resume','continue','previous','session','return']},
+  {t:'slash', n:'/plan',              d:'Enter Plan Mode — Claude thinks through the approach first, you approve before it acts.',s:'s2',tags:['plan','mode','think','approve','review','before']},
+  {t:'slash', n:'/init',              d:'Create a CLAUDE.md in the current folder — sets up your permanent agency instructions.',s:'s3',tags:['init','setup','claude.md','create','memory']},
+  {t:'slash', n:'/export',            d:'Export the current conversation to a file — save reports, summaries, research.',s:'s3',tags:['export','save','file','report','download','output']},
+  {t:'slash', n:'/model',             d:'Switch AI model — Opus for complex analysis, Haiku for quick tasks.',       s:'s2', tags:['model','switch','opus','haiku','sonnet']},
+  {t:'slash', n:'/doctor',            d:'Run a health check on Claude Code — diagnoses config and connection issues.', s:'s1',tags:['doctor','health','fix','broken','check','diagnose']},
+  {t:'slash', n:'/install-slack-app', d:'Install Claude directly in your Slack workspace so you can trigger tasks with @Claude.',s:'s1',tags:['slack','install','app','workspace','@claude']},
+  {t:'agency', n:'/my-account',       d:'Show all Search Atlas projects, GBP locations, campaigns, and quota. Start here every session.',s:'s2',tags:['account','overview','projects','clients','dashboard','start']},
+  {t:'agency', n:'/onboard-client',   d:'Guided wizard to set up a new client — creates projects, GBP, and task structure.',s:'s2',tags:['onboard','new client','setup','wizard','add client']},
+  {t:'agency', n:'/business-report',  d:'Full deep-dive on one client — SEO, backlinks, GBP, content, PPC, LLM visibility, recommendations.',s:'s2',tags:['report','client','analysis','deep dive','seo','full']},
+  {t:'agency', n:'/run-seo',          d:'Monthly SEO maintenance — keyword tracking, audit fixes, schema markup, meta tags, scoring.',s:'s2',tags:['seo','monthly','maintenance','keywords','audit','schema']},
+  {t:'agency', n:'/run-gbp',          d:'Google Business Profile optimization — update info, generate posts, respond to reviews.',s:'s2',tags:['gbp','google business','local seo','profile','reviews','posts']},
+  {t:'agency', n:'/run-ppc',          d:'Launch or optimize Google Ads campaigns — keywords, ad copy, bid structure, negative keywords.',s:'s2',tags:['ppc','google ads','advertising','campaigns','keywords','ads']},
+  {t:'agency', n:'/run-content',      d:'AI content generation — topical maps, SEO-optimized articles, brand voice, publication.',s:'s2',tags:['content','articles','topical','writing','generate','seo']},
+  {t:'agency', n:'/run-pr',           d:'Press release creation and distribution — authority building, digital PR outreach.',s:'s2',tags:['pr','press release','authority','links','distribution','outreach']},
+  {t:'agency', n:'/run-visibility',   d:'LLM visibility audit — track brand mentions in ChatGPT, Perplexity, Gemini.',s:'s2',tags:['llm','visibility','ai search','chatgpt','perplexity','brand','monitoring']},
+  {t:'agency', n:'/send-slack',       d:'Post results, reports, or updates to any Slack channel instantly.',          s:'s2', tags:['slack','post','message','share','team','channel']},
+  {t:'agency', n:'/send-email',       d:'Send formatted client reports and updates via email automatically.',         s:'s2', tags:['email','send','report','client','deliver']},
+  {t:'agency', n:'/send-discord',     d:'Post results or updates to a Discord channel via webhook.',                  s:'s2', tags:['discord','post','message','share','webhook']},
+  {t:'tip', n:'Paste screenshots',    d:'Drop any image (dashboard, design, error) directly into Claude — it reads images, no describing needed.',s:'s3',tags:['screenshot','image','photo','visual','paste','dashboard']},
+  {t:'tip', n:'@filename reference',  d:'Type @filename.pdf or @keywords.txt to pull any file into Claude\'s context instantly.',s:'s3',tags:['@','file','reference','pdf','attach','context']},
+  {t:'tip', n:'Cross-day sessions',   d:'Name sessions with /rename, then /resume anytime to bring back full context — works across restarts.',s:'s3',tags:['resume','session','continue','cross-day','next day','persist']},
+  {t:'tip', n:'Plan mode',            d:'Press Shift+Tab or type /plan before complex tasks — Claude shows the approach, you approve before it acts.',s:'s3',tags:['plan','mode','review','approve','think','before','strategy']},
+  {t:'tip', n:'/btw side questions',  d:'Ask a quick side question without adding to the conversation: /btw what does canonical URL mean?',s:'s2',tags:['btw','question','aside','quick','without context','side']},
+  {t:'tip', n:'Warp Drive workflows', d:'Save your most-used claude commands to Warp Drive for one-click reuse — great for monthly reporting runs.',s:'s1',tags:['warp','drive','save','workflow','shortcut','repeat','monthly']},
+  {t:'tip', n:'Natural language in Warp',d:'In Warp, type # followed by plain English — AI converts it to the right command automatically.',s:'s1',tags:['warp','natural language','#','command','plain english','ai']},
+  {t:'workflow', n:'Website Creation',d:'Brief intake → competitor research → keyword strategy → content generation → schema → GBP → ClickUp tasks → client email.',s:'s2',tags:['website','build','launch','create','content','seo','new site']},
+  {t:'workflow', n:'Monthly Reporting',d:'Pull ranking data → compare MoM → executive summaries → draft emails → schedule review calls → create action tasks.',s:'s2',tags:['report','monthly','rankings','summary','email','schedule','recurring']},
+  {t:'workflow', n:'Client Onboarding',d:'Questionnaire intake → /onboard-client → ClickUp project → initial SEO audit → GBP setup → first report.',s:'s2',tags:['onboard','new client','setup','kickoff','start','project']},
+  {t:'workflow', n:'Daily Standup',   d:'Summarize ClickUp tasks completed yesterday → open items today → unread client emails → draft responses.',s:'s3',tags:['standup','daily','morning','tasks','review','email','client']},
+  {t:'workflow', n:'Billing Prep',    d:'Pull ClickUp time logs for all clients → summarize billable hours by category → create invoice draft.',s:'s3',tags:['billing','invoicing','time','hours','clickup','monthly','payment']},
+  {t:'trouble', n:'Wrong or confusing answers',d:'Use /clear and rewrite with a more specific prompt. You haven\'t lost work — just conversation context.',s:'s3',tags:['wrong','confusing','bad answer','fix','clear','reset']},
+  {t:'trouble', n:'Tool not connecting',d:'Type /mcp inside Claude to check status. Red = disconnected. Remove and re-add the server.',s:'s1',tags:['mcp','disconnect','not working','broken','reconnect','fix','error']},
+  {t:'trouble', n:'Session is slow',  d:'Use /compact to summarize and free memory. If still bad, export outputs then /clear and resume fresh.',s:'s3',tags:['slow','foggy','memory','compact','performance','quality']},
+  {t:'trouble', n:'Can\'t find a report',d:'Ask Claude: "Where did you save the last report?" Going forward: always end sessions by saving to /reports/ with /export.',s:'s3',tags:['lost','report','find','save','export','missing','output']},
+  {t:'trouble', n:'Auth or credentials error',d:'Type /mcp and click to re-authenticate the specific server. For Search Atlas: check your API key in .env.',s:'s1',tags:['auth','credentials','api key','login','error','authentication']},
+  {t:'trouble', n:'Feeling overwhelmed',d:'3 things only: 1) Open Warp 2) type claude 3) describe what you need in plain English. Everything else is optional.',s:'s3',tags:['overwhelmed','lost','confused','help','stuck','simple','start']},
+  {t:'trouble', n:'Claude repeats the same mistake',d:'Don\'t correct it 3 times. /clear and rewrite the prompt including the constraint that kept failing.',s:'s3',tags:['mistake','repeat','same error','fix','clear','prompt']},
+  {t:'file', n:'CLAUDE.md',           d:'The file Claude reads at the start of every session. Contains agency persona, clients, tool preferences, and rules.',s:'s3',tags:['claude.md','memory','instructions','agency','persona','session']},
+  {t:'file', n:'AI_RULES.md',         d:'Non-negotiable AI behavior rules: never publish without approval, confirm before destructive actions, never expose keys.',s:'s3',tags:['ai rules','limits','safety','behavior','rules','constraints']},
+  {t:'file', n:'README.md',           d:'Project overview — what the folder is, how to start, where things live. Gets any team member running in 10 minutes.',s:'s3',tags:['readme','overview','onboarding','documentation','guide','start']},
+  {t:'file', n:'PRD.md',              d:'Product/Project Requirements Doc — agency goals, KPIs, what "done" looks like this quarter.',s:'s3',tags:['prd','goals','requirements','kpis','success','quarter','objectives']},
+  {t:'file', n:'PLAN.md',             d:'Current sprint or 30-day plan — what\'s being worked on, by whom, and by when.',s:'s3',tags:['plan','sprint','priorities','tasks','schedule','quarter']},
+  {t:'file', n:'.env',                d:'API keys and secrets. Add to .gitignore immediately. Never paste contents into chat or share.',s:'s3',tags:['.env','api key','secrets','credentials','security','gitignore']},
+  {t:'file', n:'clients/ folder',     d:'Per-client folders with brief.md, keywords, reports, and assets. One folder per client.',s:'s3',tags:['clients','folder','structure','brief','reports','assets']},
+  {t:'file', n:'reports/ folder',     d:'Date-stamped output files — format: 2026-03-acme.md. Always save here for easy retrieval.',s:'s3',tags:['reports','output','save','date','stamped','folder']},
+  {t:'mcp', n:'Search Atlas MCP',     d:'60+ SEO tools — OTTO, GBP, keyword research, site audit, content generation, PPC, digital PR, LLM visibility, reports.',s:'s1',tags:['search atlas','seo','otto','gbp','content','ppc','keywords','reports']},
+  {t:'mcp', n:'ClickUp MCP',          d:'Create/update tasks, manage projects, track time, assign work, set reminders, create documents.',s:'s1',tags:['clickup','tasks','projects','time tracking','assign','management']},
+  {t:'mcp', n:'Slack MCP',            d:'Post messages, read channels, reply to threads, get user profiles, @Claude trigger support.',s:'s1',tags:['slack','messages','channels','post','team','notifications']},
+  {t:'mcp', n:'Gmail MCP',            d:'Search emails, read threads, create drafts, list labels — full inbox management via Claude.',s:'s1',tags:['gmail','email','inbox','draft','search','thread','reply']},
+  {t:'mcp', n:'Google Calendar MCP',  d:'Create events, list upcoming meetings, find free time slots, respond to invites, schedule client calls.',s:'s1',tags:['calendar','google calendar','events','schedule','meeting','availability']},
+];
+
+const TYPE_META = {
+  cmd:      { label:'CLI Command',      badge:'badge-cmd' },
+  slash:    { label:'Slash Command',    badge:'badge-slash' },
+  agency:   { label:'Agency Command',   badge:'badge-agency' },
+  tip:      { label:'Tip',              badge:'badge-tip' },
+  workflow: { label:'Workflow',         badge:'badge-workflow' },
+  trouble:  { label:'Troubleshoot',     badge:'badge-trouble' },
+  file:     { label:'File / Structure', badge:'badge-file' },
+  mcp:      { label:'MCP Tool',         badge:'badge-mcp' },
+};
+const SECTION_NAMES = { s1:'Setup Guide', s2:'Daily Playbook', s3:'Field Guide' };
+
+function scoreItem(item, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return 0;
+  let score = 0;
+  for (const w of words) {
+    if (item.n.toLowerCase().includes(w)) score += 10;
+    else if (item.d.toLowerCase().includes(w)) score += 4;
+    else if ((item.tags||[]).some(t => t.includes(w))) score += 6;
+    else if ([item.n,item.d,...(item.tags||[])].join(' ').toLowerCase().includes(w)) score += 2;
+  }
+  return score;
+}
+function highlight(text, q) {
+  if (!q) return text;
+  const words = q.trim().split(/\s+/).filter(Boolean);
+  let out = text;
+  for (const w of words) {
+    const re = new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    out = out.replace(re, '<mark>$1</mark>');
+  }
+  return out;
+}
+function renderResults(q) {
+  const container = document.getElementById('searchResults');
+  const countEl   = document.getElementById('searchCount');
+  if (!q.trim()) { container.innerHTML = ''; countEl.textContent = ''; return; }
+  const scored = DB.map(item => ({item, score: scoreItem(item, q)}))
+    .filter(x => x.score > 0).sort((a,b) => b.score - a.score).slice(0, 24);
+  if (!scored.length) {
+    container.innerHTML = '<div class="search-no-results">No results for "' + q + '" — try different keywords</div>';
+    countEl.textContent = '0 results'; return;
+  }
+  countEl.textContent = scored.length + (scored.length === 24 ? '+' : '') + ' results';
+  const groups = {};
+  for (const {item} of scored) { if (!groups[item.t]) groups[item.t] = []; groups[item.t].push(item); }
+  let html = '';
+  for (const [type, items] of Object.entries(groups)) {
+    const meta = TYPE_META[type] || {label:type,badge:'badge-cmd'};
+    html += `<div class="result-group"><div class="result-group-label">${meta.label}</div>`;
+    for (const item of items) {
+      html += `<div class="result-item" data-section="${item.s}" onclick="goToSection('${item.s}')">
+        <span class="result-badge ${meta.badge}">${meta.label.split('/')[0].trim()}</span>
+        <div class="result-content">
+          <div class="result-name">${highlight(item.n, q)}</div>
+          <div class="result-desc">${highlight(item.d, q)}</div>
+        </div>
+        <div class="result-section">${SECTION_NAMES[item.s]}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  selectedIdx = -1;
+}
+let selectedIdx = -1;
+function goToSection(sid) {
+  closeOverlay();
+  const el = document.getElementById(sid);
+  if (el) { el.scrollIntoView({behavior:'smooth'}); updateTabs(sid); }
+}
+function openOverlay(prefill) {
+  const overlay = document.getElementById('searchOverlay');
+  const input   = document.getElementById('searchInput');
+  overlay.classList.add('open');
+  input.value = prefill || ''; input.focus();
+  if (prefill) renderResults(prefill);
+  else { document.getElementById('searchResults').innerHTML = ''; document.getElementById('searchCount').textContent = ''; }
+  selectedIdx = -1;
+}
+function closeOverlay() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('navSearchInput').value = '';
+}
+document.getElementById('searchInput').addEventListener('input', e => { renderResults(e.target.value); selectedIdx = -1; });
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  const items = document.querySelectorAll('#searchResults .result-item');
+  if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = Math.min(selectedIdx+1, items.length-1); items.forEach((el,i) => el.classList.toggle('selected', i===selectedIdx)); if (items[selectedIdx]) items[selectedIdx].scrollIntoView({block:'nearest'}); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = Math.max(selectedIdx-1, 0); items.forEach((el,i) => el.classList.toggle('selected', i===selectedIdx)); if (items[selectedIdx]) items[selectedIdx].scrollIntoView({block:'nearest'}); }
+  else if (e.key === 'Enter' && selectedIdx >= 0 && items[selectedIdx]) items[selectedIdx].click();
+});
+document.getElementById('closeSearch').addEventListener('click', closeOverlay);
+document.getElementById('searchOverlay').addEventListener('click', e => { if (e.target === document.getElementById('searchOverlay')) closeOverlay(); });
+document.getElementById('navSearchInput').addEventListener('click', () => openOverlay());
+document.getElementById('navSearchInput').addEventListener('keydown', e => { if (e.key !== 'Tab') openOverlay(e.key.length === 1 ? e.key : ''); });
+document.addEventListener('keydown', e => {
+  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); document.getElementById('searchOverlay').classList.contains('open') ? closeOverlay() : openOverlay(); }
+  if (e.key==='Escape' && document.getElementById('searchOverlay').classList.contains('open')) closeOverlay();
+});
+function updateTabs(activeId) { document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.s===activeId)); }
+document.querySelectorAll('.nav-tab').forEach(tab => { tab.addEventListener('click', () => { goToSection(tab.dataset.s); updateTabs(tab.dataset.s); }); });
+const sections = ['s1','s2','s3'].map(id => document.getElementById(id));
+const observer = new IntersectionObserver(entries => { for (const entry of entries) { if (entry.isIntersecting && entry.intersectionRatio > 0.4) updateTabs(entry.target.id); } }, {threshold:0.4});
+sections.forEach(s => s && observer.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Agency — Daily Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:       #080c14;
+    --surface:  #0d1526;
+    --surface2: #111d35;
+    --border:   #1e3052;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --cyan:     #38bdf8;
+    --green:    #34d399;
+    --orange:   #fb923c;
+    --purple:   #a78bfa;
+    --pink:     #f472b6;
+    --yellow:   #fbbf24;
+    --red:      #f87171;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ─── HERO ─────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, #0a1628 0%, #120a2a 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 64px 40px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(167,139,250,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--purple);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2em, 5vw, 3.4em);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 span { color: var(--purple); }
+  .hero p {
+    font-size: 1.15em;
+    color: #94a3b8;
+    max-width: 640px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 2em; font-weight: 900; color: #fff; line-height: 1; }
+  .stat-label { font-size: 0.75em; color: var(--muted); margin-top: 4px; }
+
+  /* ─── WRAPPER ───────────────────────────────────── */
+  .wrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* ─── SECTION HEADER ────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 60px 0 28px;
+  }
+  .section-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .section-header h2 {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .section-header p { font-size: 0.9em; color: var(--muted); margin-top: 2px; }
+  .divider { flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+
+  /* ─── COMMANDS TABLE ────────────────────────────── */
+  .cmd-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .cmd-table thead tr {
+    background: rgba(167,139,250,0.1);
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-table th {
+    padding: 14px 20px;
+    font-size: 0.72em;
+    font-weight: 700;
+    color: var(--purple);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .cmd-table td {
+    padding: 13px 20px;
+    border-bottom: 1px solid rgba(30,48,82,0.6);
+    font-size: 0.85em;
+    vertical-align: middle;
+  }
+  .cmd-table tr:last-child td { border-bottom: none; }
+  .cmd-table tbody tr:hover { background: var(--surface2); }
+  .cmd-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9em;
+    color: var(--cyan);
+    background: rgba(56,189,248,0.08);
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .cmd-desc { color: #94a3b8; }
+  .cmd-cat {
+    font-size: 0.65em;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .cat-nav    { background: rgba(56,189,248,0.1);  color: var(--cyan);   border: 1px solid rgba(56,189,248,0.2); }
+  .cat-memory { background: rgba(52,211,153,0.1);  color: var(--green);  border: 1px solid rgba(52,211,153,0.2); }
+  .cat-session{ background: rgba(251,146,60,0.1);  color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+  .cat-mcp    { background: rgba(167,139,250,0.1); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .cat-tools  { background: rgba(244,114,182,0.1); color: var(--pink);   border: 1px solid rgba(244,114,182,0.2); }
+
+  /* ─── SLASH COMMANDS GRID ───────────────────────── */
+  .slash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .slash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+    border-left: 3px solid transparent;
+  }
+  .slash-card.c-seo    { border-left-color: var(--cyan); }
+  .slash-card.c-gbp    { border-left-color: var(--green); }
+  .slash-card.c-ppc    { border-left-color: var(--orange); }
+  .slash-card.c-cont   { border-left-color: var(--purple); }
+  .slash-card.c-pr     { border-left-color: var(--pink); }
+  .slash-card.c-vis    { border-left-color: var(--yellow); }
+  .slash-card.c-rep    { border-left-color: #60a5fa; }
+  .slash-card.c-comm   { border-left-color: #34d399; }
+  .slash-card .slash-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .slash-card .slash-desc {
+    font-size: 0.75em;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .slash-card .slash-tag {
+    display: inline-block;
+    font-size: 0.62em;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+  }
+
+  /* ─── WORKFLOW CARDS ────────────────────────────── */
+  .workflow-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .workflow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .wf-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .wf-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    flex-shrink: 0;
+  }
+  .wf-title { font-size: 0.95em; font-weight: 700; color: #fff; }
+  .wf-subtitle { font-size: 0.75em; color: var(--muted); margin-top: 2px; }
+  .wf-body { padding: 20px 24px; }
+  .wf-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .wf-step:last-child { margin-bottom: 0; }
+  .wf-step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65em;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .wf-step-text { font-size: 0.78em; color: #94a3b8; line-height: 1.5; }
+  .wf-step-text strong { color: var(--text); font-weight: 600; }
+  .wf-prompt {
+    margin-top: 16px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    color: #a5f3fc;
+    line-height: 1.6;
+  }
+  .wf-prompt .label {
+    font-size: 0.75em;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+
+  /* ─── POWER PROMPTS ─────────────────────────────── */
+  .prompts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .prompt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .prompt-card::before {
+    content: '"';
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    font-size: 6em;
+    color: rgba(255,255,255,0.03);
+    font-family: Georgia, serif;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .prompt-use {
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .prompt-text {
+    background: rgba(0,0,0,0.4);
+    border-left: 3px solid transparent;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 0.82em;
+    color: #94a3b8;
+    line-height: 1.7;
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .prompt-text strong { color: var(--cyan); font-style: normal; font-weight: 500; }
+  .prompt-why {
+    font-size: 0.72em;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .prompt-why strong { color: var(--text); }
+
+  /* ─── BEST PRACTICES ────────────────────────────── */
+  .bp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .bp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .bp-card .icon { font-size: 1.8em; margin-bottom: 14px; }
+  .bp-card h4 { font-size: 0.95em; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .bp-list { list-style: none; }
+  .bp-list li {
+    font-size: 0.8em;
+    color: #94a3b8;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(30,48,82,0.5);
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .bp-list li:last-child { border-bottom: none; }
+  .bp-list li::before { content: '→'; color: var(--green); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+
+  .dont-card {
+    background: rgba(248,113,113,0.05);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 14px;
+    padding: 24px;
+    grid-column: span 3;
+  }
+  .dont-card h4 { font-size: 0.95em; font-weight: 700; color: var(--red); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .dont-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .dont-item {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.8em;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .dont-item .bad  { color: var(--red);   margin-bottom: 6px; display: flex; gap: 6px; }
+  .dont-item .good { color: var(--green); margin-top: 6px;    display: flex; gap: 6px; }
+  .dont-item .bad::before  { content: '✗'; flex-shrink: 0; }
+  .dont-item .good::before { content: '✓'; flex-shrink: 0; }
+
+  /* ─── CLAUDE MD TEMPLATE ────────────────────────── */
+  .claudemd-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .claudemd-header {
+    background: rgba(52,211,153,0.08);
+    border-bottom: 1px solid rgba(52,211,153,0.2);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--green);
+    font-weight: 600;
+  }
+  .claudemd-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .claudemd-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .claudemd-section h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .claudemd-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75em;
+    line-height: 1.8;
+    color: #94a3b8;
+  }
+  .claudemd-code .h1 { color: var(--green); font-weight: 600; }
+  .claudemd-code .h2 { color: var(--cyan); }
+  .claudemd-code .val { color: #e2e8f0; }
+  .claudemd-code .comment { color: #475569; font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <span>▶</span> Infographic 2 of 2 — Agentic Agency Series
+  </div>
+  <h1>Claude Code<br><span>Daily Playbook</span></h1>
+  <p>The essential commands, power prompts, and workflows marketing agency owners use every day — no coding required.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" style="color:var(--cyan)">13</div><div class="stat-label">Agency Slash Commands</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--green)">20+</div><div class="stat-label">Essential Commands</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--orange)">60+</div><div class="stat-label">Search Atlas Tools</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--purple)">∞</div><div class="stat-label">Plain English Prompts</div></div>
+  </div>
+</div>
+
+<div class="wrapper">
+
+  <!-- ═══════════════════════════════ SECTION 1: ESSENTIAL COMMANDS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(167,139,250,0.15);color:var(--purple)">01</div>
+    <div>
+      <h2>Essential Claude Code Commands</h2>
+      <p>Type these inside a Claude Code session (after typing <code style="font-family:JetBrains Mono,monospace;color:var(--cyan);background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px">claude</code> in Warp)</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <table class="cmd-table">
+    <thead>
+      <tr>
+        <th style="width:180px">Command</th>
+        <th>What It Does</th>
+        <th style="width:110px">Category</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="cmd-mono">/help</span></td>
+        <td class="cmd-desc">Show all available commands and a summary of what each does</td>
+        <td><span class="cmd-cat cat-nav">Navigation</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/clear</span></td>
+        <td class="cmd-desc">Start fresh — wipe the conversation. Use between different clients to avoid context bleed</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/mcp</span></td>
+        <td class="cmd-desc">Open the MCP plugin panel — see connection status, add/remove tools, re-authenticate</td>
+        <td><span class="cmd-cat cat-mcp">MCP</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/memory</span></td>
+        <td class="cmd-desc">Edit your CLAUDE.md — your permanent agency instructions that Claude reads every session</td>
+        <td><span class="cmd-cat cat-memory">Memory</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/status</span></td>
+        <td class="cmd-desc">Show your account, model version, and all connection statuses in one view</td>
+        <td><span class="cmd-cat cat-nav">Navigation</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/compact</span></td>
+        <td class="cmd-desc">Compress a long session to free up memory without losing the thread — use in long work sessions</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/cost</span></td>
+        <td class="cmd-desc">See how many tokens and credits you've used in this session</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/rename</span></td>
+        <td class="cmd-desc">Name the current session (e.g., "acme-q3-report") so you can find and resume it later</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/resume</span></td>
+        <td class="cmd-desc">Pick up exactly where you left off — even across days</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/plan</span></td>
+        <td class="cmd-desc">Enter Plan Mode — Claude thinks through the approach without doing anything yet. Great for complex requests</td>
+        <td><span class="cmd-cat cat-nav">Navigation</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/init</span></td>
+        <td class="cmd-desc">Create a CLAUDE.md in the current folder — set your agency's permanent instructions</td>
+        <td><span class="cmd-cat cat-memory">Memory</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/doctor</span></td>
+        <td class="cmd-desc">Run a health check on your Claude Code installation — diagnoses connection and config issues</td>
+        <td><span class="cmd-cat cat-nav">Navigation</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/export</span></td>
+        <td class="cmd-desc">Export the current conversation to a file — save reports, summaries, or research outputs</td>
+        <td><span class="cmd-cat cat-tools">Tools</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/model</span></td>
+        <td class="cmd-desc">Switch between Claude models — use Opus for complex analysis, Haiku for quick tasks</td>
+        <td><span class="cmd-cat cat-session">Session</span></td>
+      </tr>
+      <tr>
+        <td><span class="cmd-mono">/install-slack-app</span></td>
+        <td class="cmd-desc">Install Claude directly into your Slack workspace so you can trigger tasks with @Claude</td>
+        <td><span class="cmd-cat cat-mcp">MCP</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════ SECTION 2: AGENCY SLASH COMMANDS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">02</div>
+    <div>
+      <h2>Agency Slash Commands</h2>
+      <p>Pre-built workflows for the Agentic Marketing Mastermind — run entire campaigns with one command</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slash-grid">
+
+    <div class="slash-card c-rep">
+      <div class="slash-cmd">/my-account</div>
+      <div class="slash-desc">Show all your Search Atlas projects, GBP locations, campaigns, and quota usage at a glance</div>
+      <span class="slash-tag" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2)">Start Here</span>
+    </div>
+
+    <div class="slash-card c-rep">
+      <div class="slash-cmd">/onboard-client</div>
+      <div class="slash-desc">Guided wizard to set up a new client — creates projects, GBP connections, and initial tasks</div>
+      <span class="slash-tag" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2)">Onboarding</span>
+    </div>
+
+    <div class="slash-card c-rep">
+      <div class="slash-cmd">/business-report</div>
+      <div class="slash-desc">Full deep-dive on one client — SEO health, backlinks, GBP, content, PPC, LLM visibility, recommendations</div>
+      <span class="slash-tag" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2)">Reports</span>
+    </div>
+
+    <div class="slash-card c-seo">
+      <div class="slash-cmd">/run-seo</div>
+      <div class="slash-desc">Monthly SEO maintenance — keyword tracking, audit fixes, schema markup, meta tags, holistic scoring</div>
+      <span class="slash-tag" style="background:rgba(56,189,248,0.1);color:var(--cyan);border:1px solid rgba(56,189,248,0.2)">SEO</span>
+    </div>
+
+    <div class="slash-card c-gbp">
+      <div class="slash-cmd">/run-gbp</div>
+      <div class="slash-desc">Google Business Profile optimization — update info, generate posts, respond to reviews, check rankings</div>
+      <span class="slash-tag" style="background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2)">Local SEO</span>
+    </div>
+
+    <div class="slash-card c-ppc">
+      <div class="slash-cmd">/run-ppc</div>
+      <div class="slash-desc">Launch or optimize Google Ads campaigns — keywords, ad copy, bid structure, negative keywords</div>
+      <span class="slash-tag" style="background:rgba(251,146,60,0.1);color:var(--orange);border:1px solid rgba(251,146,60,0.2)">PPC</span>
+    </div>
+
+    <div class="slash-card c-cont">
+      <div class="slash-cmd">/run-content</div>
+      <div class="slash-desc">AI content generation — topical maps, SEO-optimized articles, brand voice matching, publication</div>
+      <span class="slash-tag" style="background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2)">Content</span>
+    </div>
+
+    <div class="slash-card c-pr">
+      <div class="slash-cmd">/run-pr</div>
+      <div class="slash-desc">Press release creation and distribution — authority building, link building, digital PR outreach</div>
+      <span class="slash-tag" style="background:rgba(244,114,182,0.1);color:var(--pink);border:1px solid rgba(244,114,182,0.2)">PR</span>
+    </div>
+
+    <div class="slash-card c-vis">
+      <div class="slash-cmd">/run-visibility</div>
+      <div class="slash-desc">LLM visibility audit — track client mentions in ChatGPT, Perplexity, Gemini answers. Improve AI presence</div>
+      <span class="slash-tag" style="background:rgba(251,191,36,0.1);color:var(--yellow);border:1px solid rgba(251,191,36,0.2)">AI Search</span>
+    </div>
+
+    <div class="slash-card c-comm">
+      <div class="slash-cmd">/send-slack</div>
+      <div class="slash-desc">Post results, reports, or updates to any Slack channel — share wins with the team instantly</div>
+      <span class="slash-tag" style="background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2)">Comms</span>
+    </div>
+
+    <div class="slash-card c-comm">
+      <div class="slash-cmd">/send-email</div>
+      <div class="slash-desc">Send client reports, updates, or summaries via email — automatically formatted and delivered</div>
+      <span class="slash-tag" style="background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2)">Comms</span>
+    </div>
+
+    <div class="slash-card c-comm">
+      <div class="slash-cmd">/help</div>
+      <div class="slash-desc">List all available commands with descriptions — your quick reference inside any session</div>
+      <span class="slash-tag" style="background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2)">Reference</span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 3: CORE WORKFLOWS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(52,211,153,0.15);color:var(--green)">03</div>
+    <div>
+      <h2>Core Agency Workflows</h2>
+      <p>The three highest-value daily use cases — run entirely in plain English</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="workflow-tabs">
+
+    <!-- Website Creation -->
+    <div class="workflow-card">
+      <div class="wf-header">
+        <div class="wf-icon" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2)">🌐</div>
+        <div>
+          <div class="wf-title">Website Creation</div>
+          <div class="wf-subtitle">Warp → Claude → Search Atlas → Deliver</div>
+        </div>
+      </div>
+      <div class="wf-body">
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">1</div>
+          <div class="wf-step-text"><strong>Brief Intake:</strong> Drop the client PDF or paste the brief. "Read this and summarize website requirements."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">2</div>
+          <div class="wf-step-text"><strong>Competitor Research:</strong> "Use Search Atlas to analyze our top 3 competitors' best-ranking pages."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">3</div>
+          <div class="wf-step-text"><strong>Keyword Strategy:</strong> "Run keyword research and create a site architecture recommendation."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">4</div>
+          <div class="wf-step-text"><strong>Content Generation:</strong> "Using Content Genius, write SEO-optimized copy for the homepage and 5 service pages."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">5</div>
+          <div class="wf-step-text"><strong>Launch Tasks:</strong> "Create ClickUp tasks for the remaining launch checklist and assign to the team."</div>
+        </div>
+        <div class="wf-prompt">
+          <div class="label">Example Prompt</div>
+          "Based on @client-brief.pdf, run keyword research for [industry] and create SEO-optimized homepage copy in our brand voice. Then create ClickUp tasks for the dev team."
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Building -->
+    <div class="workflow-card">
+      <div class="wf-header">
+        <div class="wf-icon" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2)">📊</div>
+        <div>
+          <div class="wf-title">Monthly Report Building</div>
+          <div class="wf-subtitle">Pull data → analyze → format → deliver</div>
+        </div>
+      </div>
+      <div class="wf-body">
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(52,211,153,0.15);color:var(--green)">1</div>
+          <div class="wf-step-text"><strong>Pull Data:</strong> "Get this month's keyword rankings for all clients from Search Atlas."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(52,211,153,0.15);color:var(--green)">2</div>
+          <div class="wf-step-text"><strong>Analyze:</strong> "Compare to last month. Identify the top 5 wins and top 3 concerns for each client."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(52,211,153,0.15);color:var(--green)">3</div>
+          <div class="wf-step-text"><strong>Format:</strong> "Create executive summary reports for each client in /reports/[month]/."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(52,211,153,0.15);color:var(--green)">4</div>
+          <div class="wf-step-text"><strong>Email Drafts:</strong> "Draft individualized client update emails for each report."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(52,211,153,0.15);color:var(--green)">5</div>
+          <div class="wf-step-text"><strong>Schedule Reviews:</strong> "Find open slots this week and create Google Calendar review calls for all clients."</div>
+        </div>
+        <div class="wf-prompt">
+          <div class="label">Example Prompt</div>
+          "Pull ranking data for all clients from Search Atlas, compare MoM, write executive summaries, draft client emails, and schedule review calls in my calendar."
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Management -->
+    <div class="workflow-card">
+      <div class="wf-header">
+        <div class="wf-icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.2)">👥</div>
+        <div>
+          <div class="wf-title">Day-to-Day Client Ops</div>
+          <div class="wf-subtitle">Slack · ClickUp · Gmail · GCal</div>
+        </div>
+      </div>
+      <div class="wf-body">
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">1</div>
+          <div class="wf-step-text"><strong>Morning Standup:</strong> "Summarize all ClickUp tasks completed yesterday and open items due today."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">2</div>
+          <div class="wf-step-text"><strong>Email Triage:</strong> "Find unread client emails from this week and draft responses to any open questions."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">3</div>
+          <div class="wf-step-text"><strong>Issue Response:</strong> "A client's rankings dropped — pull their data, find the cause, create a ClickUp task with fix steps."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">4</div>
+          <div class="wf-step-text"><strong>Billing Prep:</strong> "Pull ClickUp time logs for Client X this month and summarize billable hours by category."</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">5</div>
+          <div class="wf-step-text"><strong>Slack Update:</strong> "Post a weekly wins summary to the #client-updates Slack channel."</div>
+        </div>
+        <div class="wf-prompt">
+          <div class="label">Example Prompt</div>
+          "Check my Gmail for any client feedback from this week, create ClickUp tasks for action items, and schedule a call with anyone who needs a response."
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 4: POWER PROMPTS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">04</div>
+    <div>
+      <h2>Power Prompts That Work</h2>
+      <p>Copy, customize, and use — these are high-signal prompts that get great results</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="prompts-grid">
+
+    <div class="prompt-card" style="border-top:3px solid var(--cyan)">
+      <div class="prompt-use" style="color:var(--cyan)">FOR SEO REPORTING</div>
+      <div class="prompt-text" style="border-left-color:var(--cyan)">
+        "Pull the top <strong>20 ranking keywords</strong> for acme.com from Search Atlas, compare to last month, and write a <strong>2-paragraph executive summary</strong> of ranking progress suitable for a non-technical client."
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> Specifies the data source, scope (20 keywords), comparison period, and output format (executive summary, non-technical tone). Claude has everything it needs.</div>
+    </div>
+
+    <div class="prompt-card" style="border-top:3px solid var(--green)">
+      <div class="prompt-use" style="color:var(--green)">FOR LOCAL SEO / GBP</div>
+      <div class="prompt-text" style="border-left-color:var(--green)">
+        "Check the GBP profiles for all <strong>12 locations</strong> of [client] in Search Atlas. Identify any with <strong>incomplete info or low optimization scores</strong>, then create <strong>prioritized ClickUp tasks</strong> to fix them."
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> Scopes the work (12 locations), defines the filter (incomplete/low score), specifies the output (prioritized ClickUp tasks), and chains two tools together.</div>
+    </div>
+
+    <div class="prompt-card" style="border-top:3px solid var(--purple)">
+      <div class="prompt-use" style="color:var(--purple)">FOR CONTENT CREATION</div>
+      <div class="prompt-text" style="border-left-color:var(--purple)">
+        "Using Content Genius, create <strong>5 blog posts</strong> targeting the keywords in @keyword-list.txt, matching the brand voice in @brand-guidelines.md. Add them as <strong>ClickUp tasks assigned to the content team</strong>."
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> References specific files with @, sets the quantity (5), specifies the tool (Content Genius), and ends with a clear action (ClickUp tasks assigned).</div>
+    </div>
+
+    <div class="prompt-card" style="border-top:3px solid var(--orange)">
+      <div class="prompt-use" style="color:var(--orange)">FOR CLIENT COMMUNICATION</div>
+      <div class="prompt-text" style="border-left-color:var(--orange)">
+        "Read the last <strong>5 emails from client@company.com</strong>, summarize the <strong>open items</strong>, draft a <strong>professional response</strong> to each, and create ClickUp tasks for any <strong>commitments we made</strong>."
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> Scopes to recent emails (last 5), asks for a summary, response draft, and task creation — a full loop from inbox to action.</div>
+    </div>
+
+    <div class="prompt-card" style="border-top:3px solid var(--pink)">
+      <div class="prompt-use" style="color:var(--pink)">FOR SCHEDULING</div>
+      <div class="prompt-text" style="border-left-color:var(--pink)">
+        "Find a <strong>45-minute slot next week</strong> when both Sarah and I are free, create a 'Q4 Strategy Planning' event, invite Sarah, and add an <strong>agenda to the event description</strong>."
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> Sets duration, time horizon, attendees, event name, and asks for a bonus (agenda) — all the details needed to create the calendar event without back-and-forth.</div>
+    </div>
+
+    <div class="prompt-card" style="border-top:3px solid var(--yellow)">
+      <div class="prompt-use" style="color:var(--yellow)">FOR AI SEARCH VISIBILITY</div>
+      <div class="prompt-text" style="border-left-color:var(--yellow)">
+        "Run an LLM visibility check for [client]. Show where they <strong>appear (or don't)</strong> in ChatGPT and Perplexity answers for their top 10 keywords. <strong>What should we do to improve</strong> their AI search presence?"
+      </div>
+      <div class="prompt-why"><strong>Why it works:</strong> Names the tools (ChatGPT, Perplexity), scopes the query (top 10 keywords), and asks for analysis AND actionable recommendations in one go.</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 5: CLAUDE.MD TEMPLATE -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(52,211,153,0.15);color:var(--green)">05</div>
+    <div>
+      <h2>Your CLAUDE.md — Agency Memory Template</h2>
+      <p>Write this once in your folder. Claude reads it at the start of every session. Set it and forget it.</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="claudemd-block">
+    <div class="claudemd-header">
+      <div class="dot" style="background:var(--red);opacity:0.8"></div>
+      <div class="dot" style="background:var(--yellow);opacity:0.8"></div>
+      <div class="dot" style="background:var(--green);opacity:0.8"></div>
+      <span style="margin-left:8px">CLAUDE.md — Your Agency's Permanent Instructions</span>
+      <span style="margin-left:auto;font-size:0.8em;color:var(--muted)">Created with /init · Edit with /memory</span>
+    </div>
+    <div class="claudemd-body">
+      <div class="claudemd-section">
+        <h5>Agency Identity</h5>
+        <div class="claudemd-code">
+          <span class="h1"># Agency: Bright Digital Marketing</span><br>
+          <span class="h2">## Tone</span><br>
+          <span class="val">Professional, concise, client-friendly.</span><br>
+          <span class="val">Reports use executive summary format.</span><br>
+          <span class="val">Always include MoM comparison.</span><br>
+          <br>
+          <span class="h2">## Reporting Rules</span><br>
+          <span class="val">- Keep summaries under 3 paragraphs</span><br>
+          <span class="val">- Highlight wins before concerns</span><br>
+          <span class="val">- End every report with Next Steps</span><br>
+          <br>
+          <span class="comment"># Claude applies these rules everywhere</span>
+        </div>
+      </div>
+      <div class="claudemd-section">
+        <h5>Client Roster</h5>
+        <div class="claudemd-code">
+          <span class="h2">## Clients</span><br>
+          <br>
+          <span class="h1">### Acme Corp</span><br>
+          <span class="val">Domain: acme.com</span><br>
+          <span class="val">Focus: Local SEO, GBP (12 locations)</span><br>
+          <span class="val">Contact: Jane @ jane@acme.com</span><br>
+          <span class="val">Plan: Full-service SEO + PPC</span><br>
+          <br>
+          <span class="h1">### TechStart Inc</span><br>
+          <span class="val">Domain: techstart.io</span><br>
+          <span class="val">Focus: B2B SaaS, content + LinkedIn</span><br>
+          <span class="val">Contact: Mark @ mark@techstart.io</span><br>
+          <span class="val">Plan: Content + LLM visibility</span>
+        </div>
+      </div>
+      <div class="claudemd-section">
+        <h5>Tools &amp; Workflow Rules</h5>
+        <div class="claudemd-code">
+          <span class="h2">## Tool Preferences</span><br>
+          <span class="val">- SEO data: always use Search Atlas</span><br>
+          <span class="val">- Tasks: always create in ClickUp</span><br>
+          <span class="val">- Scheduling: use Google Calendar</span><br>
+          <span class="val">- Team updates: post to #wins Slack</span><br>
+          <br>
+          <span class="h2">## Before Any Client Work</span><br>
+          <span class="val">Run /my-account to get current data.</span><br>
+          <span class="val">Never assume project IDs — look them up.</span><br>
+          <span class="val">Confirm before publishing content.</span><br>
+          <br>
+          <span class="comment"># This protects against costly mistakes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 6: BEST PRACTICES -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(244,114,182,0.15);color:var(--pink)">06</div>
+    <div>
+      <h2>Best Practices &amp; What to Avoid</h2>
+      <p>The habits that separate agencies getting 10× productivity from those struggling with Claude Code</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="bp-grid">
+
+    <div class="bp-card" style="border-top:3px solid var(--cyan)">
+      <div class="icon">🎯</div>
+      <h4>Write Better Prompts</h4>
+      <ul class="bp-list">
+        <li>Be specific: name the client, the tool, the output format</li>
+        <li>Include "done" criteria: "confirm all 10 keywords have data"</li>
+        <li>Use @file to reference existing docs and briefs</li>
+        <li>Paste screenshots of dashboards or designs directly</li>
+        <li>Chain tasks: "then create a ClickUp task for each item"</li>
+      </ul>
+    </div>
+
+    <div class="bp-card" style="border-top:3px solid var(--green)">
+      <div class="icon">🗂️</div>
+      <h4>Manage Sessions Well</h4>
+      <ul class="bp-list">
+        <li>Use /clear between different clients — avoid context bleed</li>
+        <li>Use /rename to save sessions (e.g., "acme-q3-report")</li>
+        <li>Use /compact in long sessions before running out of memory</li>
+        <li>Use /resume to pick up cross-day work without re-explaining</li>
+        <li>Run one client per session for clean outputs</li>
+      </ul>
+    </div>
+
+    <div class="bp-card" style="border-top:3px solid var(--orange)">
+      <div class="icon">⚡</div>
+      <h4>Work Faster with Warp</h4>
+      <ul class="bp-list">
+        <li>Save common claude commands to Warp Drive workflows</li>
+        <li>Use # + plain English to generate terminal commands</li>
+        <li>Right-click any error → "Ask Warp AI" for instant help</li>
+        <li>Open multiple Warp panes for parallel client sessions</li>
+        <li>Set up Warp workflows for your monthly reporting run</li>
+      </ul>
+    </div>
+
+    <div class="dont-card">
+      <h4>⚠️ Common Mistakes to Avoid</h4>
+      <div class="dont-row">
+        <div class="dont-item">
+          <div class="bad">Mixing clients in one session</div>
+          <div class="good">Use /clear between clients — Claude will mix up data otherwise</div>
+        </div>
+        <div class="dont-item">
+          <div class="bad">Vague prompts with no scope</div>
+          <div class="good">"Update the Q3 report for Acme with the top 10 keyword rankings from this month"</div>
+        </div>
+        <div class="dont-item">
+          <div class="bad">Giant CLAUDE.md files</div>
+          <div class="good">Keep it under 100 lines — long instructions are ignored. Be concise and specific.</div>
+        </div>
+        <div class="dont-item">
+          <div class="bad">Not checking MCP status before a big session</div>
+          <div class="good">Run /mcp or claude mcp list before important client work to verify all tools are live</div>
+        </div>
+        <div class="dont-item">
+          <div class="bad">Correcting Claude over and over</div>
+          <div class="good">If you've corrected twice, /clear and rewrite the prompt with what you learned</div>
+        </div>
+        <div class="dont-item">
+          <div class="bad">Approving actions without reading them</div>
+          <div class="good">Claude asks before publishing or creating in external tools — always review the plan first</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;max-width:1280px;margin:64px auto 0">
+  <div>
+    <div style="font-size:1em;font-weight:800;color:#fff;letter-spacing:-0.01em">Agentic <span style="color:var(--purple)">Agency</span> Series</div>
+    <p style="font-size:0.8em;color:var(--muted);margin-top:4px">Infographic 2 of 2 — Daily Playbook</p>
+  </div>
+  <div style="text-align:center;font-size:0.8em;color:var(--muted)">
+    Powered by <strong style="color:#fff">Claude Code</strong> · <strong style="color:#fff">Search Atlas MCP</strong> · <strong style="color:#fff">Warp</strong>
+  </div>
+  <div style="display:flex;gap:24px;font-size:0.75em;color:var(--muted);font-family:'JetBrains Mono',monospace">
+    <span>warp.dev</span>
+    <span>searchatlas.com</span>
+    <span>claude.ai/code</span>
+  </div>
+</div>
+
+</body>
+</html>
