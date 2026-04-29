@@ -8,6 +8,7 @@
 set -e
 
 REPO_URL="https://github.com/jodutoro/AMM-SA.git"
+QUICKSTART_URL="https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh"
 
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
@@ -32,43 +33,86 @@ echo "  This sets up your full agentic workspace from scratch."
 echo "  Estimated time: 5–10 minutes. You'll only need to do this once."
 echo ""
 
-# ── 0a: Workspace Naming ─────────────────────────────────────────────────────
+# ── Preflight: Xcode (must pass before any prompts) ──────────────────────────
+# Check this first so the script never exits mid-questionnaire.
+if ! xcode-select -p &>/dev/null; then
+  hr
+  warn "Xcode Command Line Tools not found — installing..."
+  xcode-select --install 2>/dev/null || true
+  echo ""
+  echo "  A macOS dialog just opened — click Install and wait for it to finish."
+  echo "  Then re-run this script:"
+  echo ""
+  echo "  /bin/bash -c \"\$(curl -fsSL $QUICKSTART_URL)\""
+  echo ""
+  exit 0
+fi
+ok "Xcode Command Line Tools"
+echo ""
+
+# ── Workspace detection / naming ─────────────────────────────────────────────
 hr
 echo ""
-echo -e "  ${BOLD}Step 1 of 2 — Name your workspace${NC}"
-echo ""
-echo "  This is the root folder where everything lives:"
-echo "  your toolkit, client folders, and AI memory."
-echo "  Name it after your agency so it's easy to find."
-echo ""
-echo "  Examples:  CoastalMedia-AMM  |  SunriseAgency-AI  |  AMM-Workspace"
-echo ""
-echo -n "  Workspace name (Enter for 'AMM-Workspace'): "
-read -r WORKSPACE_NAME </dev/tty
-WORKSPACE_NAME="${WORKSPACE_NAME:-AMM-Workspace}"
-WORKSPACE_DIR="$HOME/$WORKSPACE_NAME"
+
+# Scan $HOME for any existing AMM workspace (has CLAUDE.md + AMM-SA/ inside)
+EXISTING=()
+for dir in "$HOME"/*/; do
+  [[ -f "${dir}CLAUDE.md" && -d "${dir}AMM-SA" ]] && EXISTING+=("${dir%/}")
+done
+
+if [[ ${#EXISTING[@]} -eq 1 ]]; then
+  WORKSPACE_DIR="${EXISTING[0]}"
+  WORKSPACE_NAME="$(basename "$WORKSPACE_DIR")"
+  ok "Found existing workspace: $WORKSPACE_DIR"
+  echo "  Updating it instead of creating a new one."
+elif [[ ${#EXISTING[@]} -gt 1 ]]; then
+  echo -e "  ${BOLD}Multiple workspaces found — pick one to update:${NC}"
+  echo ""
+  for i in "${!EXISTING[@]}"; do
+    echo "  $((i+1)). ${EXISTING[$i]}"
+  done
+  echo ""
+  echo -n "  Enter number (Enter for 1): "
+  read -r WS_NUM </dev/tty
+  WS_NUM="${WS_NUM:-1}"
+  if ! [[ "$WS_NUM" =~ ^[0-9]+$ ]] || (( WS_NUM < 1 || WS_NUM > ${#EXISTING[@]} )); then
+    WS_NUM=1
+  fi
+  WORKSPACE_DIR="${EXISTING[$((WS_NUM-1))]}"
+  WORKSPACE_NAME="$(basename "$WORKSPACE_DIR")"
+  ok "Using: $WORKSPACE_DIR"
+else
+  echo -e "  ${BOLD}Name your workspace${NC}"
+  echo ""
+  echo "  This is the root folder where everything lives."
+  echo "  Name it after your agency so it's easy to find."
+  echo ""
+  echo "  Examples:  CoastalMedia-AMM  |  SunriseAgency-AI  |  AMM-Workspace"
+  echo ""
+  echo -n "  Workspace name (Enter for 'AMM-Workspace'): "
+  read -r WORKSPACE_NAME </dev/tty
+  WORKSPACE_NAME="${WORKSPACE_NAME:-AMM-Workspace}"
+  WORKSPACE_DIR="$HOME/$WORKSPACE_NAME"
+  ok "Workspace → $WORKSPACE_DIR"
+fi
+
 REPO_DIR="$WORKSPACE_DIR/AMM-SA"
-
-echo ""
-ok "Workspace → $WORKSPACE_DIR"
 echo ""
 
-# ── 0b: IDE / Terminal Selection ─────────────────────────────────────────────
+# ── IDE / Terminal Selection ──────────────────────────────────────────────────
 hr
 echo ""
-echo -e "  ${BOLD}Step 2 of 2 — Choose your coding environment${NC}"
+echo -e "  ${BOLD}Choose your coding environment${NC}"
 echo ""
 echo "  You only need one. We'll detect what you already have"
 echo "  and suggest it — or you can pick a different one to download."
 echo ""
 
-# Fixed list of supported options (priority order for recommendation)
 IDE_NAMES=("Cursor" "Warp" "VS Code" "Windsurf" "iTerm2" "Terminal (built-in)")
 IDE_URLS=("https://cursor.com" "https://www.warp.dev" "https://code.visualstudio.com" "https://windsurf.com" "https://iterm2.com" "")
 IDE_OPEN_CMDS=('cursor "$WORKSPACE_DIR"' 'open -a Warp "$WORKSPACE_DIR"' 'code "$WORKSPACE_DIR"' 'windsurf "$WORKSPACE_DIR"' 'open -a iTerm "$WORKSPACE_DIR"' '')
 IDE_STATUS=()
 
-# Detect which are installed
 for i in "${!IDE_NAMES[@]}"; do
   case "${IDE_NAMES[$i]}" in
     "Cursor")
@@ -92,7 +136,6 @@ for i in "${!IDE_NAMES[@]}"; do
   esac
 done
 
-# Find best already-installed option (in priority order, Terminal is last resort)
 REC_IDX=5
 REC_NAME="Terminal (built-in)"
 for i in 0 1 2 3 4; do
@@ -103,7 +146,6 @@ for i in 0 1 2 3 4; do
   fi
 done
 
-# Contextual intro based on what's found
 if [[ "$REC_NAME" == "Terminal (built-in)" ]]; then
   echo "  You don't have a dedicated coding environment installed yet."
   echo "  We recommend Cursor — it's built for AI-assisted work."
@@ -115,7 +157,6 @@ fi
 
 echo ""
 
-# Display all options with status and recommendation marker
 for i in "${!IDE_NAMES[@]}"; do
   name="${IDE_NAMES[$i]}"
   status="${IDE_STATUS[$i]}"
@@ -171,24 +212,8 @@ fi
 echo ""
 hr
 
-# ── Step 1: Xcode Command Line Tools ────────────────────────────────────────
-step "1/5" "Xcode Command Line Tools"
-
-if ! xcode-select -p &>/dev/null; then
-  warn "Not found — installing..."
-  xcode-select --install 2>/dev/null || true
-  echo ""
-  echo "  A macOS dialog just opened — click Install and wait for it to finish."
-  echo "  Then re-run this script:"
-  echo ""
-  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh)"'
-  echo ""
-  exit 0
-fi
-ok "Xcode Command Line Tools"
-
-# ── Step 2: Homebrew ─────────────────────────────────────────────────────────
-step "2/5" "Homebrew"
+# ── Step 1: Homebrew ──────────────────────────────────────────────────────────
+step "1/4" "Homebrew"
 
 if ! command -v brew &>/dev/null; then
   warn "Not found — installing..."
@@ -233,8 +258,8 @@ java_ok() {
   [[ "$m" -ge "$MIN_JAVA_MAJOR" ]]
 }
 
-# ── Step 3: Git + Node.js ────────────────────────────────────────────────────
-step "3/6" "Git + Node.js"
+# ── Step 2: Git + Node.js ─────────────────────────────────────────────────────
+step "2/4" "Git + Node.js"
 
 if ! command -v git &>/dev/null; then
   warn "Git not found — installing..."
@@ -254,29 +279,8 @@ elif ! node_ok; then
 fi
 ok "Node $(node --version) · npm $(npm --version)"
 
-# ── Step 4: Java ─────────────────────────────────────────────────────────────
-step "4/6" "Java (JDK $MIN_JAVA_MAJOR+ required)"
-
-if ! command -v java &>/dev/null; then
-  warn "Not found — installing OpenJDK 21..."
-  brew install openjdk@21
-  sudo ln -sfn "$(brew --prefix openjdk@21)/libexec/openjdk.jdk" \
-    /Library/Java/JavaVirtualMachines/openjdk-21.jdk 2>/dev/null || true
-  export PATH="$(brew --prefix openjdk@21)/bin:$PATH"
-  ok "Java $(java -version 2>&1 | head -1 | awk -F'"' '{print $2}')"
-elif ! java_ok; then
-  warn "Java version is below $MIN_JAVA_MAJOR — upgrading to OpenJDK 21..."
-  brew install openjdk@21 2>/dev/null || brew upgrade openjdk@21 2>/dev/null || true
-  sudo ln -sfn "$(brew --prefix openjdk@21)/libexec/openjdk.jdk" \
-    /Library/Java/JavaVirtualMachines/openjdk-21.jdk 2>/dev/null || true
-  export PATH="$(brew --prefix openjdk@21)/bin:$PATH"
-  ok "Java $(java -version 2>&1 | head -1 | awk -F'"' '{print $2}')"
-else
-  ok "Java $(java -version 2>&1 | head -1 | awk -F'"' '{print $2}') — up to date"
-fi
-
-# ── Step 5: Claude Code ──────────────────────────────────────────────────────
-step "5/6" "Claude Code"
+# ── Step 3: Claude Code ───────────────────────────────────────────────────────
+step "3/4" "Claude Code"
 
 if command -v claude &>/dev/null; then
   ok "Already installed — $(claude --version 2>/dev/null | head -1)"
@@ -286,16 +290,13 @@ else
   ok "Installed — $(claude --version 2>/dev/null | head -1)"
 fi
 
-# ── Step 6: Workspace + AMM-SA Toolkit ──────────────────────────────────────
-step "6/6" "Creating workspace + installing toolkit"
+# ── Step 4: Workspace + AMM-SA Toolkit ───────────────────────────────────────
+step "4/4" "Setting up workspace"
 
 mkdir -p "$WORKSPACE_DIR/clients" "$WORKSPACE_DIR/memory"
-info "Created: $WORKSPACE_DIR/"
-info "Created: $WORKSPACE_DIR/clients/"
-info "Created: $WORKSPACE_DIR/memory/"
 
 if [[ -d "$REPO_DIR" ]]; then
-  warn "AMM-SA already exists — pulling latest..."
+  info "Toolkit already present — pulling latest..."
   git -C "$REPO_DIR" pull origin main 2>/dev/null || true
 else
   info "Cloning AMM-SA toolkit..."
@@ -303,7 +304,7 @@ else
 fi
 ok "AMM-SA toolkit ready"
 
-# ── CLAUDE.md (workspace session contract) ───────────────────────────────────
+# ── CLAUDE.md ─────────────────────────────────────────────────────────────────
 if [[ ! -f "$WORKSPACE_DIR/CLAUDE.md" ]]; then
   cat > "$WORKSPACE_DIR/CLAUDE.md" <<CLAUDEMD
 # $WORKSPACE_NAME — Agentic Marketing Workspace
@@ -349,7 +350,7 @@ If you set up a second machine, run the quickstart again on that machine —
 your files sync but your MCP config does not carry over automatically.
 
 ## Workspace Layout
-- \`AMM-SA/\`      — toolkit: slash commands, workflows, scripts (do not edit)
+- \`AMM-SA/\`     — toolkit: slash commands, workflows, scripts (do not edit)
 - \`clients/\`   — one subfolder per client with brief.md + assets/
 - \`memory/\`    — persistent notes Claude reads and writes across sessions
 - \`.env\`        — API keys and webhook URLs (never committed to git)
@@ -357,7 +358,7 @@ CLAUDEMD
   info "Created: $WORKSPACE_DIR/CLAUDE.md"
 fi
 
-# ── memory/MEMORY.md (persistent context index) ──────────────────────────────
+# ── memory/MEMORY.md ──────────────────────────────────────────────────────────
 if [[ ! -f "$WORKSPACE_DIR/memory/MEMORY.md" ]]; then
   cat > "$WORKSPACE_DIR/memory/MEMORY.md" <<MEMORYMD
 # Memory Index
@@ -386,7 +387,7 @@ MEMORYMD
   info "Created: $WORKSPACE_DIR/memory/MEMORY.md"
 fi
 
-# ── .env scaffold (API keys, never committed) ─────────────────────────────────
+# ── .env scaffold ─────────────────────────────────────────────────────────────
 if [[ ! -f "$WORKSPACE_DIR/.env" ]]; then
   cat > "$WORKSPACE_DIR/.env" <<ENVFILE
 # Agentic Marketing Workspace — Environment Variables
@@ -408,18 +409,13 @@ ENVFILE
   info "Created: $WORKSPACE_DIR/.env"
 fi
 
-# ── .gitignore (protect secrets and local files) ─────────────────────────────
+# ── .gitignore ────────────────────────────────────────────────────────────────
 if [[ ! -f "$WORKSPACE_DIR/.gitignore" ]]; then
   cat > "$WORKSPACE_DIR/.gitignore" <<GITIGNORE
-# Secrets — never commit
 .env
 .env.*
 !.env.example
-
-# Client assets stay local (logos, docs, binaries)
 clients/*/assets/
-
-# Session logs and OS files
 memory/sessions/
 *.log
 .DS_Store
@@ -431,7 +427,7 @@ fi
 cd "$REPO_DIR"
 bash setup.sh
 
-# ── Done ─────────────────────────────────────────────────────────────────────
+# ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 hr
 echo ""
