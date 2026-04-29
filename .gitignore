@@ -14,6 +14,7 @@
 !/WHATS-NEW.md
 !/setup.sh
 !/.env.example
+!/.gitlab-ci.yml
 
 # ── Public folders (all contents allowed) ────────────────────────────────────
 
