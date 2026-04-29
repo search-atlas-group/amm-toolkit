@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Atlas MCP V2</title>
+<link rel="icon" href="https://www.searchatlas.com/favicon.ico">
+<script src="jd-memoji-faces.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fafafa;
+    color: #1d1d1f;
+  }
+
+  .hero {
+    background: linear-gradient(160deg, #0a1628 0%, #0f1f3d 50%, #141a2e 100%);
+    padding: 100px 32px 88px;
+    text-align: center;
+    border-bottom: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(147,107,218,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 15px;
+    font-weight: 500;
+    color: #936BDA;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .hero h1 {
+    font-size: clamp(56px, 10vw, 88px);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    color: #fff;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .hero-sub {
+    font-size: 21px;
+    font-weight: 300;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.48);
+    letter-spacing: -0.02em;
+    max-width: 520px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .section { padding: 80px 32px; max-width: 780px; margin: 0 auto; }
+  .section-alt { background: #fff; border-top: 1px solid rgba(0,0,0,0.04); border-bottom: 1px solid rgba(0,0,0,0.04); }
+
+  h2 {
+    font-size: clamp(32px, 5vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.04;
+    color: #1d1d1f;
+    margin-bottom: 32px;
+  }
+
+  h2 span { color: rgba(147,107,218,0.35); }
+
+  /* ── TABLE ── */
+  .compare { width: 100%; border-collapse: collapse; font-size: 16px; letter-spacing: -0.01em; }
+  .compare th { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(0,0,0,0.24); text-align: left; padding: 16px 0; border-bottom: 2px solid rgba(0,0,0,0.08); }
+  .compare td { padding: 18px 16px 18px 0; border-bottom: 1px solid rgba(0,0,0,0.05); vertical-align: top; line-height: 1.45; }
+  .compare td:first-child { font-weight: 600; color: #1d1d1f; width: 24%; font-size: 15px; }
+  .compare .v1 { color: rgba(0,0,0,0.30); font-weight: 300; }
+  .compare .v2 { color: #936BDA; font-weight: 500; }
+
+  /* ── PRODUCT CARDS ── */
+  .products { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+
+  .product { background: #fff; border-radius: 14px; padding: 28px 28px 24px; transition: box-shadow 0.2s; }
+  .product:hover { box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+  .product-soon { opacity: 0.5; cursor: default; }
+  .product-soon:hover { box-shadow: none; }
+  .product-soon .product-name { color: rgba(0,0,0,0.40); }
+
+  .product-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .product-name { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
+  .product-badge { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+  .product-badge.blue { color: #38bdf8; }
+  .product-badge.dim { color: rgba(0,0,0,0.32); }
+  .product-desc { font-size: 16px; font-weight: 300; color: rgba(0,0,0,0.48); line-height: 1.5; letter-spacing: -0.01em; margin-bottom: 12px; }
+
+  .product-tools-count {
+    font-size: 13px; font-weight: 500; color: rgba(0,0,0,0.32); letter-spacing: -0.01em;
+    cursor: pointer; transition: color 0.15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .product-tools-count:hover { color: #936BDA; }
+  .product-tools-count .arrow { transition: transform 0.2s; font-size: 10px; }
+  .product.open .product-tools-count .arrow { transform: rotate(90deg); }
+  .product.open .product-tools-count { color: #936BDA; }
+
+  .tool-drawer {
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+  }
+  .product.open .tool-drawer { max-height: 2000px; }
+
+  .tool-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 14px;
+  }
+
+  .tool-item {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; color: rgba(0,0,0,0.44); background: #f5f5f7;
+    padding: 7px 12px; border-radius: 6px; cursor: pointer;
+    transition: all 0.12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border: 1px solid transparent;
+  }
+  .tool-item:hover { color: #936BDA; background: rgba(147,107,218,0.06); border-color: rgba(147,107,218,0.12); }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(250,250,250,0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    padding: 16px 32px; border-bottom: 1px solid rgba(0,0,0,0.04);
+    display: none;
+    scroll-margin-top: 60px;
+  }
+  .search-wrap.visible { display: block; }
+
+  .search-box {
+    max-width: 780px; margin: 0 auto; position: relative;
+  }
+
+  .search-input {
+    width: 100%; font-family: inherit; font-size: 17px; font-weight: 400;
+    letter-spacing: -0.02em; padding: 14px 20px 14px 48px;
+    background: #fff; border: 2px solid rgba(147,107,218,0.50); border-radius: 12px;
+    color: #1d1d1f; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus { border-color: #936BDA; box-shadow: 0 0 0 3px rgba(147,107,218,0.10); }
+  .search-input::placeholder { color: rgba(0,0,0,0.24); }
+
+  .search-icon {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 18px; color: rgba(0,0,0,0.24); pointer-events: none;
+  }
+
+  .search-count {
+    position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; font-weight: 500; color: rgba(0,0,0,0.24);
+  }
+
+  /* ── CODE ── */
+  .code-block { background: #1d1d1f; border-radius: 14px; overflow: hidden; }
+  .code-header { padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+  .code-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.32); }
+  .copy-btn { font-family: inherit; font-size: 13px; font-weight: 500; background: none; border: 1px solid rgba(255,255,255,0.12); color: #38bdf8; padding: 5px 16px; border-radius: 980px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.20); }
+  .code-body { padding: 20px; overflow-x: auto; }
+  .code-body pre { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.84); margin: 0; }
+  .cmt { color: rgba(255,255,255,0.20); }
+  .str { color: #38bdf8; }
+  .key { color: rgba(255,255,255,0.56); }
+
+  /* ── EXAMPLES ── */
+  .examples { list-style: none; }
+  .examples li { padding: 20px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; gap: 20px; align-items: flex-start; }
+  .examples li:last-child { border-bottom: none; }
+  .ex-tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(0,0,0,0.22); min-width: 80px; padding-top: 4px; flex-shrink: 0; }
+  .ex-text { font-size: 18px; font-weight: 400; line-height: 1.5; letter-spacing: -0.02em; color: rgba(0,0,0,0.64); }
+
+  /* ── WORKFLOWS ── */
+  .wf-grid { display: flex; flex-direction: column; gap: 2px; }
+
+  .wf-card {
+    background: #fff; border-radius: 14px; padding: 28px; transition: box-shadow 0.2s;
+  }
+  .wf-card:hover { box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+
+  .wf-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .wf-name { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
+  .wf-freq { font-size: 13px; font-weight: 600; color: rgba(0,0,0,0.32); letter-spacing: -0.01em; }
+
+  .wf-desc { font-size: 16px; font-weight: 300; color: rgba(0,0,0,0.48); line-height: 1.5; letter-spacing: -0.01em; margin-bottom: 14px; }
+
+  .wf-steps {
+    list-style: none; display: flex; flex-wrap: wrap; gap: 6px;
+  }
+
+  .wf-step {
+    font-size: 13px; font-weight: 400; color: rgba(0,0,0,0.52);
+    background: #f5f5f7; padding: 5px 12px; border-radius: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── SIDE NAV ── */
+  .sidenav {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 200px;
+    padding: 32px 0; z-index: 200;
+    display: flex; flex-direction: column; gap: 2px;
+    background: linear-gradient(180deg, #0a1628 0%, #0f1f3d 100%);
+  }
+
+  .sidenav-logo {
+    padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .sidenav-logo img { width: 100%; height: auto; display: block; }
+
+  .sidenav-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: #936BDA;
+    text-align: center;
+  }
+
+  .sidenav a {
+    display: block; font-size: 13px; font-weight: 400; letter-spacing: -0.01em;
+    color: rgba(255,255,255,0.36); text-decoration: none;
+    padding: 7px 20px; border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .sidenav a:hover { color: rgba(255,255,255,0.72); }
+  .sidenav a.active { color: #38bdf8; font-weight: 500; border-left-color: #38bdf8; }
+
+  .main-content { margin-left: 200px; }
+
+  .foot { text-align: center; padding: 48px 32px; font-size: 14px; color: rgba(255,255,255,0.32); letter-spacing: -0.01em; background: linear-gradient(160deg, #0a1628, #0f1f3d); }
+
+  .hidden { display: none !important; }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex; gap: 0; margin-bottom: 20px;
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+  }
+  .tab-btn {
+    font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    color: rgba(0,0,0,0.28); background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 10px 20px; margin-bottom: -2px; cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn:hover { color: #936BDA; }
+  .tab-btn.active { color: #936BDA; border-bottom-color: #936BDA; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── MASCOT TIP ── */
+  .tip {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: #f5f5f7; border-radius: 14px; padding: 20px 24px; margin-top: 24px;
+    border-left: 3px solid #936BDA;
+  }
+  .tip-avatar {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    object-fit: cover;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
+  }
+  .tip-body { flex: 1; }
+  .tip-label {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #936BDA; margin-bottom: 4px;
+  }
+  .tip-text {
+    font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.56);
+    line-height: 1.55; letter-spacing: -0.01em;
+  }
+  .tip-text strong { color: #1d1d1f; font-weight: 500; }
+
+  /* ── RESOURCE LINKS ── */
+  .res-grid { display: flex; flex-direction: column; gap: 2px; }
+  .res-card {
+    background: #fff; border-radius: 14px; padding: 22px 28px;
+    text-decoration: none; display: flex; justify-content: space-between;
+    align-items: center; transition: box-shadow 0.2s;
+  }
+  .res-card:hover { box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+  .res-name { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #1d1d1f; }
+  .res-desc { font-size: 14px; font-weight: 300; color: rgba(0,0,0,0.40); margin-top: 2px; letter-spacing: -0.01em; }
+  .res-arrow { font-size: 18px; color: rgba(0,0,0,0.16); transition: color 0.15s; }
+  .res-card:hover .res-arrow { color: #38bdf8; }
+
+  @media (max-width: 900px) {
+    .sidenav { display: none; }
+    .main-content { margin-left: 0; }
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 72px 24px 64px; }
+    .section { padding: 56px 24px; }
+    .search-wrap { padding: 12px 16px; }
+    .tool-grid { grid-template-columns: 1fr; }
+    .product { padding: 22px 20px 18px; }
+    .product-top { flex-direction: column; gap: 2px; }
+    .examples li { gap: 14px; }
+    .ex-text { font-size: 16px; }
+    .ex-tag { min-width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDE NAV -->
+<nav class="sidenav" id="sidenav">
+  <div class="sidenav-logo">
+    <img src="https://searchatlas.com/wp-content/uploads/2023/12/white.svg" alt="Search Atlas">
+    <div class="sidenav-badge">MCP V2</div>
+  </div>
+  <a href="#top" class="active">Overview</a>
+  <a href="#changes">V1 vs V2</a>
+  <a href="#tools">Tool Explorer</a>
+  <a href="#config">Update Config</a>
+  <a href="#workflows">Workflows</a>
+  <a href="#examples">Try It</a>
+  <a href="#tips">Tips</a>
+  <a href="#resources">Resources</a>
+</nav>
+
+<div class="main-content">
+
+<div class="hero" id="top">
+  <p class="hero-eyebrow">Search Atlas MCP &middot; April 2026</p>
+  <h1>Search Atlas MCP V2<br>is live.</h1>
+  <p class="hero-sub">Hundreds of tools across every major module.<br>Complete schemas. Reliable endpoints. Faster everything.</p>
+</div>
+
+<!-- COMPARISON -->
+<div class="section" id="changes">
+  <h2>What changed <span>from V1.</span></h2>
+  <table class="compare">
+    <thead><tr><th></th><th>V1</th><th>V2</th></tr></thead>
+    <tbody>
+      <tr><td>Schemas</td><td class="v1">Incomplete &mdash; agents often confused</td><td class="v2">Full schemas across all tools</td></tr>
+      <tr><td>Reliability</td><td class="v1">Some tools listed but didn't execute</td><td class="v2">Tools validated before being exposed</td></tr>
+      <tr><td>Speed</td><td class="v1">Slower responses, occasional timeouts</td><td class="v2">Faster execution across the board</td></tr>
+      <tr><td>Content</td><td class="v1">Core working, some limitations</td><td class="v2">V2 engine &mdash; half cost, 2x speed</td></tr>
+      <tr><td>Endpoint</td><td class="v1">/api/v1/mcp</td><td class="v2">/mcp/</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    <img class="tip-avatar jd-face" data-face="2" src="" alt="JD">
+    <div class="tip-body">
+      <div class="tip-label">JD says</div>
+      <div class="tip-text">If you're still on V1, your agent is basically sending emails to an address that moved. <strong>Update your endpoint first</strong> &mdash; everything else is a bonus.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH BAR -->
+<div class="search-wrap visible" id="searchBar">
+  <div class="search-box">
+    <span class="search-icon">&#x1F50D;</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search tools... e.g. &quot;create project&quot;, &quot;otto&quot;, &quot;publish&quot;">
+    <span class="search-count" id="searchCount"></span>
+  </div>
+</div>
+
+<!-- TOOLS BY PRODUCT -->
+<div class="section-alt">
+  <div class="section" id="toolsSection">
+    <h2 id="tools">Every module, <span>every tool.</span></h2>
+    <ul class="products" id="productList"></ul>
+  </div>
+</div>
+
+<!-- UPDATE -->
+<div class="section" id="config">
+  <h2>Update <span>your config.</span></h2>
+
+  <p style="font-size:17px;font-weight:300;color:rgba(0,0,0,0.56);line-height:1.6;letter-spacing:-0.01em;margin-bottom:32px;">V2 uses <strong style="color:#1d1d1f;font-weight:600;">OAuth authentication</strong>. Pick one method below &mdash; both do the same thing.</p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('json',this)">Config File</button>
+    <button class="tab-btn" onclick="switchTab('cli',this)">CLI Command</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-json">
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-label">Add to .mcp.json or ~/.claude.json</span>
+        <button class="copy-btn" onclick="copyConfig(this)">Copy</button>
+      </div>
+      <div class="code-body">
+<pre><span class="key">"searchatlas"</span>: {
+  <span class="key">"type"</span>: <span class="str">"http"</span>,
+  <span class="key">"url"</span>: <span class="str">"https://mcp.searchatlas.com/mcp/"</span>
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-cli">
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-label">Run in your terminal</span>
+        <button class="copy-btn" onclick="copyCli(this)">Copy</button>
+      </div>
+      <div class="code-body">
+<pre>claude mcp add searchatlas --transport http "https://mcp.searchatlas.com/mcp/"</pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;background:#fff;border-radius:14px;padding:24px 28px;">
+    <div style="font-size:16px;font-weight:300;color:rgba(0,0,0,0.56);line-height:1.55;letter-spacing:-0.01em;">
+      <strong style="color:#1d1d1f;font-weight:500;">Then authenticate:</strong> On your next tool call, Claude will prompt you to open an OAuth link in your browser. Log in with your Search Atlas account and authorize &mdash; tools are live immediately.
+    </div>
+  </div>
+
+  <div style="margin-top:20px;background:#1d1d1f;border-radius:14px;padding:22px 28px;display:flex;gap:16px;align-items:center;">
+    <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.28);min-width:72px;">Rate limit</span>
+    <span style="font-size:16px;font-weight:400;color:rgba(255,255,255,0.72);letter-spacing:-0.01em;"><strong style="color:#fff;font-weight:600;">30 API calls per minute</strong> across all tools. Batch operations (bulk apply, bulk generate) count as a single call. Plan workflows accordingly &mdash; heavy sequences may need short pauses between steps.</span>
+  </div>
+
+  <div class="tip">
+    <img class="tip-avatar jd-face" data-face="5" src="" alt="JD">
+    <div class="tip-body">
+      <div class="tip-label">JD says</div>
+      <div class="tip-text">OAuth tokens refresh automatically &mdash; you authenticate once and forget about it. If Claude ever asks you to re-auth, just open the link again. <strong>No keys to rotate, no secrets to leak.</strong> Your IT guy can finally sleep.</div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOWS -->
+<div class="section-alt">
+  <div class="section">
+    <h2 id="workflows">Ready-made <span>workflows.</span></h2>
+    <div class="wf-grid">
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">New Client SEO Onboarding</span>
+          <span class="wf-freq">One-time</span>
+        </div>
+        <div class="wf-desc">Full onboarding in one session. Sets up OTTO, runs a site audit, creates the brand vault, builds keyword research, generates a topical map, and writes your first batch of articles.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">OTTO project setup</li>
+          <li class="wf-step">Site audit</li>
+          <li class="wf-step">Brand vault + voice</li>
+          <li class="wf-step">Keyword research</li>
+          <li class="wf-step">Topical map</li>
+          <li class="wf-step">First article batch</li>
+        </ul>
+      </div>
+
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">Monthly SEO Maintenance</span>
+          <span class="wf-freq">Recurring</span>
+        </div>
+        <div class="wf-desc">Run every month for existing clients. Reviews and applies OTTO suggestions, deploys schemas, fixes indexing issues, expands the topical map, generates new articles, and grades existing content.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">Apply OTTO suggestions</li>
+          <li class="wf-step">Deploy schemas</li>
+          <li class="wf-step">Fix indexing</li>
+          <li class="wf-step">Expand topical map</li>
+          <li class="wf-step">Generate articles</li>
+          <li class="wf-step">Grade content</li>
+        </ul>
+      </div>
+
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">GBP Profile Optimization</span>
+          <span class="wf-freq">One-time</span>
+        </div>
+        <div class="wf-desc">Deep cleanup for Google Business Profiles. Generates and applies AI recommendations, fixes categories, adds services and attributes, writes an AI description, and deploys everything to Google.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">AI recommendations</li>
+          <li class="wf-step">Fix categories</li>
+          <li class="wf-step">Add services</li>
+          <li class="wf-step">Set attributes</li>
+          <li class="wf-step">AI description</li>
+          <li class="wf-step">Deploy to Google</li>
+        </ul>
+      </div>
+
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">GBP Monthly</span>
+          <span class="wf-freq">Recurring</span>
+        </div>
+        <div class="wf-desc">Monthly GBP cycle. AI-replies to reviews, bulk generates posts for the month, configures automated posting, and pulls a performance summary.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">Reply to reviews</li>
+          <li class="wf-step">Generate posts</li>
+          <li class="wf-step">Auto-posting setup</li>
+          <li class="wf-step">Performance report</li>
+        </ul>
+      </div>
+
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">Authority Building</span>
+          <span class="wf-freq">As needed</span>
+        </div>
+        <div class="wf-desc">Press release creation and distribution, cloud stack publishing, digital PR outreach campaigns, and backlink monitoring. Full authority pipeline in one run.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">Write press release</li>
+          <li class="wf-step">Distribute</li>
+          <li class="wf-step">Build cloud stack</li>
+          <li class="wf-step">Launch PR outreach</li>
+          <li class="wf-step">Monitor backlinks</li>
+        </ul>
+      </div>
+
+      <div class="wf-card">
+        <div class="wf-top">
+          <span class="wf-name">Website &rarr; CMS</span>
+          <span class="wf-freq">Per project</span>
+        </div>
+        <div class="wf-desc">Build in Website Studio, refine with Claude Code, then publish directly to Webflow or WordPress via CMS MCP. Works for landing pages and blog posts.</div>
+        <ul class="wf-steps">
+          <li class="wf-step">Website Studio build</li>
+          <li class="wf-step">Claude Code refine</li>
+          <li class="wf-step">CMS MCP export</li>
+          <li class="wf-step">Webflow / WordPress</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="0" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">These workflows are starting points, not scripts. Mix and match steps across workflows &mdash; Claude is smart enough to figure out the order. <strong>The best workflow is the one you actually run.</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXAMPLES -->
+<div class="section">
+    <h2 id="examples">Try asking <span>this.</span></h2>
+    <ul class="examples">
+      <li><span class="ex-tag">SEO</span><span class="ex-text">"Run a full keyword research report for [client domain] and identify the top 20 opportunities by search volume."</span></li>
+      <li><span class="ex-tag">Content</span><span class="ex-text">"Write an optimized blog post targeting [keyword] using Content Genius, then publish it to my WordPress site."</span></li>
+      <li><span class="ex-tag">GBP</span><span class="ex-text">"Audit my Google Business Profile for [business name] and fix any missing fields or inconsistencies."</span></li>
+      <li><span class="ex-tag">Websites</span><span class="ex-text">"Build a PPC landing page for [service] using Website Studio, then export it to Webflow."</span></li>
+      <li><span class="ex-tag">Digital PR</span><span class="ex-text">"Find link-building opportunities for [client] and generate outreach templates for the top 10 prospects."</span></li>
+      <li><span class="ex-tag">Reporting</span><span class="ex-text">"Pull my client's Site Explorer data and build a monthly performance summary."</span></li>
+      <li><span class="ex-tag">Brand</span><span class="ex-text">"Check brand mention sentiment across the web for [brand name] and flag any negative coverage."</span></li>
+    </ul>
+</div>
+
+<!-- TIPS -->
+<div class="section-alt">
+  <div class="section">
+    <h2 id="tips">Before you go, <span>read this.</span></h2>
+
+    <div class="tip" style="margin-top:0;">
+      <img class="tip-avatar jd-face" data-face="2" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">Claude doesn't remember your MCP tools between sessions unless the config is saved. <strong>Always add searchatlas to your project config</strong> (.mcp.json in your repo root), not just global settings &mdash; that way every session starts with tools loaded.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="5" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">Be specific with your prompts. "Run an audit" makes Claude guess which client. <strong>"Run an OTTO audit on clientdomain.com and show me the top 10 critical issues"</strong> gets you results in one shot. The more context, the fewer round trips &mdash; and the fewer of those 30 calls/min you burn.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="3" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">Set up your <strong>Brand Vault before writing content</strong>. Claude uses it to match your client's voice, tone, and terminology. Without it, you'll get generic copy and spend more time editing than you saved. Think of it as teaching Claude who the client actually is.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="1" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text"><strong>Warp is your best friend.</strong> It keeps your terminal history, lets you search past commands, and formats output cleanly. If you're still using the default Mac terminal, you're making life harder than it needs to be.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="6" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">Hitting the rate limit? <strong>Use batch tools.</strong> <code style="font-family:'SF Mono',Menlo,monospace;font-size:13px;background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">otto_generate_bulk_recommendations</code> does in 1 call what 50 individual calls would. Same for <code style="font-family:'SF Mono',Menlo,monospace;font-size:13px;background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">gbp_bulk_generate_posts</code> and <code style="font-family:'SF Mono',Menlo,monospace;font-size:13px;background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">cg_schedule_article_batch</code>.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <img class="tip-avatar jd-face" data-face="0" src="" alt="JD">
+      <div class="tip-body">
+        <div class="tip-label">JD says</div>
+        <div class="tip-text">Keep your working directory organized. Clone the mastermind repo, keep your skills in a <code style="font-family:'SF Mono',Menlo,monospace;font-size:13px;background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">/skills</code> folder, and <strong>don't scatter .env files across your desktop</strong>. Future you will thank present you. Present you never thanks past you, but that's life.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESOURCES -->
+<div class="section">
+  <h2 id="resources">More from <span>the hub.</span></h2>
+  <div class="res-grid">
+    <a class="res-card" href="Setup-Guide.html">
+      <div>
+        <div class="res-name">Setup Guide</div>
+        <div class="res-desc">Full walkthrough &mdash; Warp, Claude Code, MCP, repo clone, .env</div>
+      </div>
+      <span class="res-arrow">&rarr;</span>
+    </a>
+    <a class="res-card" href="AMM-Knowledge-Hub.html">
+      <div>
+        <div class="res-name">Knowledge Hub</div>
+        <div class="res-desc">Playbooks, skills, templates, and everything shared in sessions</div>
+      </div>
+      <span class="res-arrow">&rarr;</span>
+    </a>
+    <a class="res-card" href="Mastermind-Hub.html">
+      <div>
+        <div class="res-name">Mastermind Hub</div>
+        <div class="res-desc">Session recordings, member profiles, progress tracker</div>
+      </div>
+      <span class="res-arrow">&rarr;</span>
+    </a>
+    <a class="res-card" href="MMA-Cheat-Sheet.html">
+      <div>
+        <div class="res-name">MCP Cheat Sheet</div>
+        <div class="res-desc">Quick reference for the most-used tool commands</div>
+      </div>
+      <span class="res-arrow">&rarr;</span>
+    </a>
+    <a class="res-card" href="Infographic-4-Skills-Catchup.html">
+      <div>
+        <div class="res-name">Skills Catchup</div>
+        <div class="res-desc">Visual overview of the 4 core skill areas</div>
+      </div>
+      <span class="res-arrow">&rarr;</span>
+    </a>
+  </div>
+
+  <div class="tip">
+    <img class="tip-avatar jd-face" data-face="4" src="" alt="JD">
+    <div class="tip-body">
+      <div class="tip-label">JD says</div>
+      <div class="tip-text">You made it to the bottom. That already puts you ahead of most people who bookmark things and never read them. <strong>Now go break something &mdash; preferably a competitor's rankings.</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">AMM Internal &middot; Questions? DM JD directly &mdash; skip support.</div>
+
+</div><!-- /main-content -->
+
+<script>
+const TOOLS = [
+  {g:"OTTO SEO",s:"Fully agentic",d:"Auto-suggestions, bulk apply, technical fixes, schema markup, internal linking, page-level optimization",n:66,t:["otto_create_audit","otto_engage_project","otto_find_project_by_hostname","otto_get_project_details","otto_get_project_issues_summary","otto_get_site_audit","otto_list_projects","otto_generate_bulk_recommendations","otto_generate_single_recommendation","otto_count_recommendation_status","otto_edit_suggestion","otto_edit_suggestions_bulk","otto_delete_suggestion","otto_export_suggestions","otto_deploy_seo_fixes","otto_preview_deployment","otto_execute_deployment","otto_rollback_seo_fixes","otto_deploy_domain_schema","otto_deploy_page_schema","otto_generate_page_schema","otto_edit_page_schema","otto_delete_page_schema","otto_get_schema_detail","otto_list_domain_schemas","otto_list_page_schemas","otto_deploy_wildfire_link","otto_undeploy_wildfire_link","otto_list_wildfire_links","otto_list_wildfire_backlinks","otto_list_wildfire_outlinks","otto_list_pending_outlinks","otto_get_knowledge_graph","otto_update_knowledge_graph","otto_add_custom_indexing_urls","otto_delete_custom_indexing_url","otto_get_custom_indexing_urls","otto_add_indexing_sitemap","otto_delete_indexing_sitemap","otto_get_indexing_sitemaps","otto_select_urls_for_indexing","otto_toggle_sitemap_indexing","otto_trigger_recrawl","otto_update_crawl_settings","otto_freeze_project","otto_unfreeze_project","otto_disengage_project","otto_get_quota","otto_show_quota","otto_get_installation_guide","otto_verify_installation","otto_get_issues_by_type","otto_export_work_summary","otto_get_public_share_url","otto_get_task_status","otto_manual_reprocess_autopilot","otto_update_refine_prompt","otto_upload_image","otto_list_pixel_installed_projects","otto_check_cloudflare_worker_status","otto_get_cloudflare_installation_guide","otto_install_cloudflare_worker","otto_uninstall_cloudflare_worker","otto_list_custom_html_content","otto_update_custom_html_content","otto_wait"]},
+  {g:"Content Genius",s:"V2 engine",d:"Research, outline, write, optimize, publish end to end. Half the cost, 2x speed",n:73,t:["cg_list_projects","cg_fetch_project_details","cg_list_articles","cg_get_article_details","cg_get_article_summary","cg_auto_generate_article","cg_generate_article_with_review","cg_generate_complete_article","cg_regenerate_article","cg_edit_article_content","cg_update_article_headings","cg_update_article_status","cg_manage_article_keywords","cg_insert_article_links","cg_run_content_grader","cg_search_articles","cg_count_articles","cg_filter_articles_by_status","cg_filter_articles_by_tags","cg_advanced_filter_articles","cg_get_assigned_articles","cg_get_high_quality_articles","cg_get_published_articles","cg_get_recent_articles","cg_list_published_articles","cg_list_trash_articles","cg_topic_suggestions","cg_start_headings_outline","cg_poll_headings_outline","cg_start_information_retrieval","cg_poll_information_retrieval","cg_create_topical_map","cg_search_topical_maps","cg_tm_create_topical_map","cg_tm_search_topical_maps","cg_publish_wordpress_article","cg_draft_wordpress_article","cg_schedule_wordpress_article","cg_cancel_wordpress_article","cg_get_wordpress_options","cg_publish_cms_article","cg_draft_cms_article","cg_schedule_cms_article","cg_cancel_cms_article","cg_get_cms_connectors","cg_get_cms_form_schema","cg_get_cms_dynamic_field_schema","cg_get_article_publication_status","cg_export_to_google_doc","cg_schedule_article_batch","cg_list_scheduled_articles","cg_get_scheduled_articles","cg_get_scheduled_content","cg_get_project_articles","cg_create_content_instance","cg_create_brand_vault","cg_get_brand_vault_by_id","cg_get_brand_vault_details","cg_get_brand_vault_for_domain","cg_list_brand_vaults","cg_reassign_brand_vault","cg_dkn_bulk_generate_articles","cg_dkn_generate_article","cg_dkn_get_article_status","cg_dkn_get_filter_options","cg_dkn_get_node","cg_dkn_get_overview","cg_dkn_list_nodes","cg_dkn_update_node","cg_dkn_bulk_update_nodes","cg_dkn_create_vibe_transaction","cg_dkn_get_vibe_result","cg_get_current_datetime"]},
+  {g:"Google Business Profile",s:"62 tools",d:"Profile audit, categories, services, attributes, AI descriptions, posts, Q&A, review management",n:62,t:["gbp_list_locations","gbp_get_location","gbp_update_location","gbp_search_places","gbp_set_location_lock","gbp_update_open_hours","gbp_update_open_info","gbp_add_special_hours","gbp_remove_special_hours","gbp_list_categories","gbp_add_additional_categories","gbp_remove_categories","gbp_replace_primary_category","gbp_list_services","gbp_upsert_standard_services","gbp_upsert_custom_services","gbp_remove_services","gbp_suggest_service_description","gbp_list_attributes","gbp_upsert_attributes","gbp_remove_attributes","gbp_add_service_areas","gbp_remove_service_areas","gbp_update_service_area_type","gbp_suggest_description","gbp_list_posts","gbp_get_post","gbp_update_post","gbp_delete_post","gbp_publish_post","gbp_unpublish_post","gbp_approve_post","gbp_unapprove_post","gbp_bulk_generate_posts","gbp_bulk_publish_posts","gbp_bulk_copy_post","gbp_regenerate_post_content","gbp_regenerate_post_image","gbp_get_automated_posting_settings","gbp_update_automated_posting","gbp_list_media","gbp_get_location_stats","gbp_bulk_refresh_location_stats","gbp_generate_location_recommendations","gbp_get_location_recommendations","gbp_bulk_apply_recommendations","gbp_delete_recommendation","gbp_create_audit_report_external","gbp_get_audit_report","gbp_get_audit_status","gbp_list_audit_reports","gbp_delete_audit_report","gbp_retry_audit_report","gbp_export_audit_pdf","gbp_bulk_create_audit_reports","gbp_bulk_deploy_locations","gbp_list_available_locations","gbp_manage_connections","gbp_list_facebook_pages","gbp_list_instagram_accounts","gbp_generate_location_share_hash","gbp_generate_photo_upload_hash"]},
+  {g:"Site Explorer",s:"45 tools",d:"Backlink analysis, referring domains, anchor text, competitor gap analysis, keyword research, historical data",n:45,t:["se_create_project","se_delete_project","se_list_sites","se_get_details","se_get_backlinks","se_get_referring_domains","se_get_referring_ips","se_get_anchor_text","se_get_outgoing_links","se_get_outgoing_domains","se_get_indexed_pages","se_get_organic_keywords","se_get_organic_pages","se_get_organic_subdomains","se_get_organic_competitors","se_get_organic_position_changes","se_get_adwords_keywords","se_get_adwords_pages","se_get_adwords_subdomains","se_get_adwords_competitors","se_get_adwords_copies","se_get_adwords_ad_history","se_get_adwords_ad_trend","se_get_adwords_position_changes","se_get_position_distribution","se_get_historical_trends","se_get_holistic_seo_scores","se_get_serp_features","se_get_serp_overview","se_get_brand_signals","se_submit_brand_signals","se_get_link_network_graph","se_get_educational_backlinks","se_get_keyword_intent","se_analyze_keyword_gap","se_get_keyword_gap_results","se_list_keyword_gap_analyses","se_create_keyword_research","se_delete_keyword_research","se_update_keyword_research","se_get_keyword_research_details","se_list_keyword_research_projects","se_search_keyword_research_projects","se_lookup_keyword","se_compare_multiple_competitors"]},
+  {g:"Keywords (KRT)",s:"16 tools",d:"Rank tracking, competitor analysis, keyword management, performance reports",n:16,t:["krt_create_project","krt_update_project","krt_list_projects","krt_add_keywords","krt_bulk_add_keywords","krt_remove_keywords","krt_delete_all_keywords","krt_delete_keywords_by_text","krt_get_keywords_details","krt_get_rankings","krt_get_ranking_performance","krt_get_date_range","krt_ranking_report","krt_refresh_rankings","krt_analyze_competitors","krt_analyze_competitors_by_visibility"]},
+  {g:"Link Library",s:"24 tools",d:"Guest post marketplace, article creation, publication management, order checkout",n:24,t:["ll_create_project","ll_delete_project","ll_get_project_details","ll_list_projects","ll_update_project","ll_create_article","ll_delete_article","ll_get_article_details","ll_list_articles","ll_update_article","ll_list_publications","ll_get_publication_details","ll_list_categories","ll_list_orders","ll_get_order_details","ll_cart_view","ll_cart_add","ll_cart_remove","ll_cart_update","ll_cart_clear","ll_cart_checkout","ll_cart_validate_content","ll_cart_get_hdc_balance","ll_cart_list_payment_methods"]},
+  {g:"Digital PR",s:"20 tools",d:"Press outreach campaigns, email templates, prospect management, inbox monitoring",n:20,t:["dpr_create_campaign","dpr_get_campaign","dpr_update_campaign","dpr_toggle_campaign","dpr_list_campaigns","dpr_list_projects","dpr_create_template","dpr_get_template","dpr_update_template","dpr_list_templates","dpr_list_opportunities","dpr_toggle_opportunity","dpr_schedule_bulk","dpr_list_sent_items","dpr_monitor_inbox","dpr_get_email_thread","dpr_reply_to_email","dpr_list_linked_emails","dpr_get_settings","dpr_update_settings"]},
+  {g:"Brand Vault",s:"22 tools",d:"Brand knowledge base, voice profiles, business info, source management",n:22,t:["bv_create","bv_list","bv_get_details","bv_get_overview","bv_update","bv_archive","bv_restore","bv_list_archived","bv_get_business_info","bv_update_business_info","bv_get_knowledge_graph","bv_update_knowledge_graph","bv_get_index_status","bv_get_source","bv_get_source_content","bv_list_sources","bv_list_uploads","bv_list_images","bv_list_voice_profiles","bv_list_voice_templates","bv_select_voice_profile","bv_ask"]},
+  {g:"Press Release",s:"14 tools",d:"Create, write, distribute press releases with category targeting",n:14,t:["pr_create","pr_create_and_write","pr_write","pr_update","pr_delete","pr_get","pr_list","pr_publish","pr_get_categories","pr_list_content_types","pr_get_distribution_options","pr_get_distribution_status","pr_list_distributions","pr_get_quota"]},
+  {g:"Cloud Stack",s:"12 tools",d:"Multi-site publishing network, templates, build and deploy",n:12,t:["cs_create","cs_create_and_build","cs_build","cs_update","cs_delete","cs_publish","cs_list","cs_list_templates","cs_get_content","cs_get_providers","cs_get_quota","cs_get_status"]},
+  {g:"DKN",s:"7 tools",d:"Domain knowledge network, bulk article generation, node management",n:7,t:["dkn_create","dkn_get_overview","dkn_list_nodes","dkn_update_node","dkn_generate_article","dkn_bulk_generate_articles","dkn_generate_phase2"]},
+  {g:"Indexer",s:"6 tools",d:"Batch URL indexing, status checks, quota management",n:6,t:["indexer_submit_batch","indexer_check_status","indexer_view_details","indexer_list_batches","indexer_download_report","indexer_get_quota"]},
+  {g:"PPC / Google Ads",s:"Coming soon",d:"75 tools — campaign creation, keyword clusters, bid strategy, performance reporting, Google Ads sync",soon:true,t:[]},
+  {g:"LLM Visibility",s:"Coming soon",d:"30 tools — track how your brand appears in AI answers across ChatGPT, Gemini, Perplexity, Claude",soon:true,t:[]},
+  {g:"Search Console (GSC)",s:"Coming soon",d:"10 tools — performance data, keyword tracking, page analysis, site events",soon:true,t:[]},
+  {g:"Report Builder",s:"Coming soon",d:"4 tools — custom report generation and data source management",soon:true,t:[]},
+];
+
+const totalTools = TOOLS.reduce((a, m) => a + m.t.length, 0);
+
+function render(filter) {
+  const list = document.getElementById('productList');
+  const q = (filter || '').toLowerCase().trim();
+  let html = '', matchCount = 0;
+
+  TOOLS.forEach(m => {
+    const words = q ? q.split(/\s+/).filter(Boolean) : [];
+    const gName = m.g.toLowerCase() + ' ' + m.d.toLowerCase();
+    const filtered = words.length
+      ? m.t.filter(t => {
+          const hay = t + ' ' + t.replace(/_/g, ' ') + ' ' + gName;
+          return words.every(w => hay.includes(w));
+        })
+      : m.t;
+    if (words.length && filtered.length === 0) return;
+    matchCount += filtered.length;
+
+    const toolsHtml = filtered.map(t =>
+      `<div class="tool-item" onclick="cc(this,'${t}')" title="${t}">${t}</div>`
+    ).join('');
+
+    if (m.soon) {
+      if (q) return;
+      html += `
+        <li class="product product-soon">
+          <div class="product-top">
+            <span class="product-name">${m.g}</span>
+            <span class="product-badge dim">${m.s}</span>
+          </div>
+          <div class="product-desc">${m.d}</div>
+        </li>`;
+      return;
+    }
+
+    const isOpen = q ? ' open' : '';
+    html += `
+      <li class="product${isOpen}" onclick="this.classList.toggle('open')">
+        <div class="product-top">
+          <span class="product-name">${m.g}</span>
+          <span class="product-badge blue">${m.s}</span>
+        </div>
+        <div class="product-desc">${m.d}</div>
+        <span class="product-tools-count">${filtered.length} tools <span class="arrow">&#x25B6;</span></span>
+        <div class="tool-drawer" onclick="event.stopPropagation()">
+          <div class="tool-grid">${toolsHtml}</div>
+        </div>
+      </li>`;
+  });
+
+  list.innerHTML = html;
+  document.getElementById('searchCount').textContent = q ? `${matchCount} of ${totalTools}` : `${totalTools} tools`;
+}
+
+document.getElementById('searchInput').addEventListener('input', e => render(e.target.value));
+render('');
+
+function copyConfig(btn) {
+  const t = `"searchatlas": {\n  "type": "http",\n  "url": "https://mcp.searchatlas.com/mcp/"\n}`;
+  navigator.clipboard.writeText(t).then(() => { btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1400); });
+}
+
+function copyCli(btn) {
+  navigator.clipboard.writeText('claude mcp add searchatlas --transport http "https://mcp.searchatlas.com/mcp/"').then(() => { btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1400); });
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function cc(el, cmd) {
+  event.stopPropagation();
+  navigator.clipboard.writeText(cmd).then(() => { const o = el.textContent; el.textContent = 'copied'; setTimeout(() => el.textContent = o, 1200); });
+}
+
+// Scroll spy for sidenav
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.sidenav a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`.sidenav a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+
+['top','changes','tools','config','workflows','examples','tips','resources'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) spy.observe(el);
+});
+
+// Load JD memoji faces into tip avatars
+document.querySelectorAll('.jd-face').forEach(img => {
+  const fi = parseInt(img.dataset.face, 10);
+  if (typeof JD_FACES !== 'undefined' && JD_FACES[fi]) {
+    img.src = JD_FACES[fi].src;
+  }
+});
+</script>
+</body>
+</html>

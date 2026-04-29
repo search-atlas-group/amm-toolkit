@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Marketing Mastermind — Setup Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 2px solid #1e293b;
+    margin-bottom: 50px;
+  }
+  .header h1 {
+    font-size: 2.4em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    font-size: 1.2em;
+    color: #38bdf8;
+    font-weight: 500;
+  }
+  .header .meta {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: 0.9em;
+  }
+
+  /* Steps */
+  .step {
+    margin-bottom: 48px;
+    padding: 32px;
+    background: #1a243b;
+    border-radius: 12px;
+    border-left: 4px solid #38bdf8;
+  }
+  .step:nth-child(even) { border-left-color: #34d399; }
+  .step:nth-child(3n) { border-left-color: #fb923c; }
+
+  .step-label {
+    display: inline-block;
+    background: #38bdf8;
+    color: #0f172a;
+    font-size: 0.75em;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .step:nth-child(even) .step-label { background: #34d399; }
+  .step:nth-child(3n) .step-label { background: #fb923c; }
+
+  .step h2 {
+    font-size: 1.5em;
+    color: #fff;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .step p, .step li {
+    color: #cbd5e1;
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+
+  .step ol, .step ul {
+    padding-left: 24px;
+    margin: 12px 0;
+  }
+
+  .step li { margin-bottom: 6px; }
+
+  /* Code blocks */
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.95em;
+    color: #38bdf8;
+  }
+
+  /* Links */
+  a {
+    color: #38bdf8;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  a:hover { border-bottom-color: #38bdf8; }
+
+  /* Callout boxes */
+  .callout {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .callout.tip { border-left: 3px solid #34d399; }
+  .callout.warn { border-left: 3px solid #fb923c; }
+  .callout .callout-label {
+    font-weight: 600;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .callout.tip .callout-label { color: #34d399; }
+  .callout.warn .callout-label { color: #fb923c; }
+
+  /* Two-column layout */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .col {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .col h4 {
+    color: #38bdf8;
+    margin-bottom: 10px;
+    font-size: 1em;
+  }
+  .col:nth-child(2) h4 { color: #34d399; }
+
+  /* Command table */
+  .cmd-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+  .cmd-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #334155;
+  }
+  .cmd-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .cmd-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    color: #38bdf8;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .cmd-table tr:hover { background: rgba(56, 189, 248, 0.05); }
+
+  /* Category labels in table */
+  .cat {
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .cat-report { background: #1e3a5f; color: #38bdf8; }
+  .cat-workflow { background: #3b2508; color: #fb923c; }
+  .cat-comm { background: #2d1b4e; color: #a78bfa; }
+
+  /* Links section */
+  .link-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .link-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 14px 18px;
+    transition: border-color 0.2s;
+  }
+  .link-card:hover { border-color: #38bdf8; }
+  .link-card .link-label {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95em;
+  }
+  .link-card .link-url {
+    color: #38bdf8;
+    font-size: 0.85em;
+    margin-top: 2px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 0 20px;
+    border-top: 1px solid #1e293b;
+    margin-top: 50px;
+    color: #475569;
+    font-size: 0.85em;
+  }
+
+  /* Print styles */
+  @media print {
+    body { background: #fff; color: #1e293b; padding: 20px; }
+    .step { background: #f8fafc; border-color: #3b82f6; }
+    pre, code, .col, .callout, .link-card { background: #f1f5f9; border-color: #e2e8f0; }
+    code, pre code, a, .cmd-table td:first-child { color: #2563eb; }
+    .step h2, .header h1 { color: #0f172a; }
+    .step p, .step li { color: #334155; }
+    .step-label { color: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <h1>Agentic Marketing Mastermind</h1>
+  <div class="subtitle">New User Setup Guide</div>
+  <div class="meta">Setup time: ~15 minutes &nbsp;·&nbsp; Mac & Windows &nbsp;·&nbsp; All links are clickable</div>
+</div>
+
+<!-- ═══ STEP 1 ═══ -->
+<div class="step">
+  <div class="step-label">Step 1</div>
+  <h2>Get a Claude Subscription</h2>
+  <p>You need a <strong>Claude Pro</strong> ($20/mo) or <strong>Claude Max</strong> ($100/mo) plan to use Claude Code.</p>
+  <ol>
+    <li>Go to <a href="https://claude.ai" target="_blank">claude.ai</a></li>
+    <li>Sign up or log in</li>
+    <li>Click <strong>Upgrade to Pro</strong> (or Max)</li>
+    <li>Complete payment</li>
+  </ol>
+  <div class="callout tip">
+    <div class="callout-label">Which plan?</div>
+    <p><strong>Pro</strong> is fine for getting started. <strong>Max</strong> gives 5x more usage — recommended if you run workflows daily for multiple clients.</p>
+  </div>
+</div>
+
+<!-- ═══ STEP 2 ═══ -->
+<div class="step">
+  <div class="step-label">Step 2</div>
+  <h2>Install Warp Terminal</h2>
+  <p>Warp is a modern terminal that works great with Claude Code. Free to use.</p>
+  <div class="columns">
+    <div class="col">
+      <h4>Mac</h4>
+      <ol>
+        <li>Go to <a href="https://www.warp.dev/" target="_blank">warp.dev</a></li>
+        <li>Click <strong>Download for Mac</strong></li>
+        <li>Open the <code>.dmg</code> and drag to Applications</li>
+        <li>Open Warp and sign up</li>
+      </ol>
+    </div>
+    <div class="col">
+      <h4>Windows</h4>
+      <ol>
+        <li>Go to <a href="https://www.warp.dev/" target="_blank">warp.dev</a></li>
+        <li>Click <strong>Download for Windows</strong></li>
+        <li>Run the installer</li>
+        <li>Open Warp and sign up</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STEP 3 ═══ -->
+<div class="step">
+  <div class="step-label">Step 3</div>
+  <h2>Install Claude Code</h2>
+  <p>Open Warp and run:</p>
+  <pre><code>npm install -g @anthropic-ai/claude-code</code></pre>
+  <p>Verify it installed:</p>
+  <pre><code>claude --version</code></pre>
+  <div class="callout warn">
+    <div class="callout-label">Don't have npm?</div>
+    <p>Install Node.js first from <a href="https://nodejs.org/" target="_blank">nodejs.org</a> (LTS version). This gives you both <code>node</code> and <code>npm</code>. Restart Warp after installing.</p>
+  </div>
+</div>
+
+<!-- ═══ STEP 4 ═══ -->
+<div class="step">
+  <div class="step-label">Step 4</div>
+  <h2>Create Your Working Directory</h2>
+  <p>This is where all your client work will live. Open Warp and run:</p>
+  <pre><code>mkdir -p ~/agency</code></pre>
+  <div class="callout tip">
+    <div class="callout-label">Tip</div>
+    <p>You can name this anything — <code>~/agency</code>, <code>~/clients</code>, <code>~/marketing</code> — whatever makes sense to you.</p>
+  </div>
+</div>
+
+<!-- ═══ STEP 5 ═══ -->
+<div class="step">
+  <div class="step-label">Step 5</div>
+  <h2>Clone the Repository</h2>
+  <p>This downloads the entire marketing toolkit to your computer:</p>
+  <pre><code>cd ~/agency
+git clone https://github.com/manickbhan/agentic-mastermind.git
+cd agentic-mastermind</code></pre>
+  <div class="callout warn">
+    <div class="callout-label">git not found?</div>
+    <p><strong>Mac:</strong> Run <code>xcode-select --install</code> in Warp<br>
+    <strong>Windows:</strong> Install from <a href="https://git-scm.com/" target="_blank">git-scm.com</a></p>
+  </div>
+</div>
+
+<!-- ═══ STEP 6 ═══ -->
+<div class="step">
+  <div class="step-label">Step 6</div>
+  <h2>Run the Setup Wizard</h2>
+  <pre><code>bash setup.sh</code></pre>
+  <p>The wizard walks you through 3 steps:</p>
+  <ol>
+    <li><strong>SearchAtlas API Key</strong> (required) — Go to <a href="https://searchatlas.com" target="_blank">searchatlas.com</a> → Settings → API Keys → Copy your key. Paste it when prompted (it won't show on screen — that's normal, it's hidden for security).</li>
+    <li><strong>Communication Channels</strong> (optional) — Choose which channels you use to share results with clients:
+      <ul>
+        <li><strong>Slack</strong> — needs a webhook URL (<a href="https://api.slack.com/messaging/webhooks" target="_blank">create one here</a>)</li>
+        <li><strong>Discord</strong> — needs a webhook URL (Server Settings → Integrations → Webhooks)</li>
+        <li><strong>Email</strong> — needs a Resend API key (<a href="https://resend.com" target="_blank">sign up free here</a>)</li>
+        <li><strong>Circle</strong> — needs an API key from your Circle community settings</li>
+      </ul>
+      You can skip this and set them up later.
+    </li>
+    <li><strong>MCP Server Configuration</strong> — happens automatically. The wizard connects Claude Code to SearchAtlas for you.</li>
+  </ol>
+</div>
+
+<!-- ═══ STEP 7 ═══ -->
+<div class="step">
+  <div class="step-label">Step 7</div>
+  <h2>Launch Claude Code</h2>
+  <p>Make sure you're inside the project directory, then start Claude Code:</p>
+  <pre><code>claude</code></pre>
+  <p>Claude Code will start up and connect to SearchAtlas via MCP automatically.</p>
+</div>
+
+<!-- ═══ STEP 8 ═══ -->
+<div class="step">
+  <div class="step-label">Step 8</div>
+  <h2>Set Permissions to Bypass Mode</h2>
+  <p>Once Claude Code is running, type:</p>
+  <pre><code>/permissions</code></pre>
+  <p>Select <strong>"Bypass permissions"</strong> — this allows Claude Code to run all tools without asking for confirmation on every API call.</p>
+  <div class="callout tip">
+    <div class="callout-label">Why bypass?</div>
+    <p>Marketing workflows call many SearchAtlas tools in sequence. Without bypass mode, you'd have to manually approve every single API call, which makes workflows unusable. You can toggle permissions anytime with <strong>Shift+Ctrl+P</strong> (Win) or <strong>Shift+Cmd+P</strong> (Mac).</p>
+  </div>
+</div>
+
+<!-- ═══ STEP 9 ═══ -->
+<div class="step">
+  <div class="step-label">Step 9</div>
+  <h2>Verify Everything Works</h2>
+  <p>Test that commands are installed:</p>
+  <pre><code>/help</code></pre>
+  <p>You should see all 14 commands listed. Then test your SearchAtlas connection:</p>
+  <pre><code>/my-account</code></pre>
+  <p>This should list your businesses, projects, campaigns, and GBP locations. If you see data, you're all set.</p>
+</div>
+
+<!-- ═══ STEP 10 ═══ -->
+<div class="step">
+  <div class="step-label">Step 10</div>
+  <h2>Onboard Your First Client</h2>
+  <pre><code>/onboard-client</code></pre>
+  <p>This guided wizard walks you through:</p>
+  <ol>
+    <li>Creating an OTTO project for the client's domain</li>
+    <li>Setting up a Brand Vault (brand voice, logos, target audience)</li>
+    <li>Running an initial SEO audit</li>
+    <li>Connecting their Google Business Profile (if applicable)</li>
+    <li>Setting up PPC campaigns (if applicable)</li>
+  </ol>
+</div>
+
+<!-- ═══ COMMAND REFERENCE ═══ -->
+<div class="step" style="border-left-color: #a78bfa;">
+  <div class="step-label" style="background: #a78bfa;">Quick Reference</div>
+  <h2>All 14 Commands</h2>
+  <table class="cmd-table">
+    <thead>
+      <tr><th>Command</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>/my-account</td><td>See all clients, projects, campaigns, GBP locations <span class="cat cat-report">Report</span></td></tr>
+      <tr><td>/business-report</td><td>Deep dive report on a single business <span class="cat cat-report">Report</span></td></tr>
+      <tr><td>/onboard-client</td><td>Guided new client setup wizard <span class="cat cat-report">Report</span></td></tr>
+      <tr><td>/run-seo</td><td>SEO onboarding or monthly maintenance <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/run-gbp</td><td>Google Business Profile optimization <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/run-ppc</td><td>Build and launch a PPC campaign <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/run-content</td><td>Generate articles from topical maps <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/run-pr</td><td>Press releases + authority building <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/run-visibility</td><td>LLM visibility and sentiment analysis <span class="cat cat-workflow">Workflow</span></td></tr>
+      <tr><td>/send-slack</td><td>Post to Slack (supports multiple channels) <span class="cat cat-comm">Comms</span></td></tr>
+      <tr><td>/send-discord</td><td>Post to Discord via webhook <span class="cat cat-comm">Comms</span></td></tr>
+      <tr><td>/send-email</td><td>Send email report via Resend <span class="cat cat-comm">Comms</span></td></tr>
+      <tr><td>/send-circle</td><td>Post to Circle community <span class="cat cat-comm">Comms</span></td></tr>
+      <tr><td>/help</td><td>List all available commands</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ LINKS ═══ -->
+<div class="step" style="border-left-color: #64748b;">
+  <div class="step-label" style="background: #64748b;">Resources</div>
+  <h2>All Links</h2>
+  <div class="link-grid">
+    <a href="https://github.com/manickbhan/agentic-mastermind" target="_blank" class="link-card">
+      <div class="link-label">Toolkit Repository</div>
+      <div class="link-url">github.com/manickbhan/agentic-mastermind</div>
+    </a>
+    <a href="https://claude.ai" target="_blank" class="link-card">
+      <div class="link-label">Claude AI (subscription)</div>
+      <div class="link-url">claude.ai</div>
+    </a>
+    <a href="https://www.warp.dev/" target="_blank" class="link-card">
+      <div class="link-label">Warp Terminal</div>
+      <div class="link-url">warp.dev</div>
+    </a>
+    <a href="https://nodejs.org/" target="_blank" class="link-card">
+      <div class="link-label">Node.js (for npm)</div>
+      <div class="link-url">nodejs.org</div>
+    </a>
+    <a href="https://searchatlas.com" target="_blank" class="link-card">
+      <div class="link-label">SearchAtlas</div>
+      <div class="link-url">searchatlas.com</div>
+    </a>
+    <a href="https://api.slack.com/messaging/webhooks" target="_blank" class="link-card">
+      <div class="link-label">Slack Webhooks</div>
+      <div class="link-url">api.slack.com/messaging/webhooks</div>
+    </a>
+    <a href="https://resend.com" target="_blank" class="link-card">
+      <div class="link-label">Resend (Email API)</div>
+      <div class="link-url">resend.com</div>
+    </a>
+    <a href="https://git-scm.com/" target="_blank" class="link-card">
+      <div class="link-label">Git (Windows install)</div>
+      <div class="link-url">git-scm.com</div>
+    </a>
+  </div>
+</div>
+
+<!-- ═══ UPDATING ═══ -->
+<div class="step" style="border-left-color: #64748b;">
+  <div class="step-label" style="background: #64748b;">Maintenance</div>
+  <h2>Updating the Toolkit</h2>
+  <p>When new features are added, run:</p>
+  <pre><code>cd ~/agency/agentic-mastermind
+git pull origin main
+bash setup.sh</code></pre>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  Agentic Marketing Mastermind &nbsp;·&nbsp; Powered by SearchAtlas &nbsp;·&nbsp; Need help? Reach out to your account manager.
+</div>
+
+</div>
+</body>
+</html>
