@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Scanner — AMM Toolkit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+
+  .container { max-width: 800px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 2px solid #1e293b;
+    margin-bottom: 50px;
+  }
+  .header .badge {
+    display: inline-block;
+    background: #936BDA20;
+    border: 1px solid #936BDA60;
+    color: #936BDA;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-size: 2.4em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .header .subtitle {
+    font-size: 1.1em;
+    color: #936BDA;
+    font-weight: 500;
+  }
+  .header .meta {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: .88em;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    padding: 32px;
+    background: #1a243b;
+    border-radius: 12px;
+    border-left: 4px solid #936BDA;
+  }
+  .section.cyan  { border-left-color: #38bdf8; }
+  .section.green { border-left-color: #34d399; }
+  .section.orange { border-left-color: #fb923c; }
+  .section.red  { border-left-color: #f87171; }
+
+  .sec-label {
+    display: inline-block;
+    background: #936BDA;
+    color: #fff;
+    font-size: .72em;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 10px;
+  }
+  .section.cyan  .sec-label { background: #38bdf8; color: #0f172a; }
+  .section.green .sec-label { background: #34d399; color: #0f172a; }
+  .section.orange .sec-label { background: #fb923c; color: #0f172a; }
+  .section.red   .sec-label { background: #f87171; color: #0f172a; }
+
+  h2 {
+    font-size: 1.45em;
+    color: #fff;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 1.05em;
+    color: #cbd5e1;
+    font-weight: 600;
+    margin: 20px 0 8px;
+  }
+
+  p, li {
+    color: #cbd5e1;
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin-bottom: 6px; }
+
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .9em;
+  }
+  pre {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: .95em;
+    color: #38bdf8;
+  }
+
+  .command-block {
+    background: #0f172a;
+    border: 1px solid #936BDA50;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    text-align: center;
+  }
+  .command-block code {
+    font-size: 1.15em;
+    color: #936BDA;
+    background: none;
+    padding: 0;
+  }
+  .command-block .cmd-hint {
+    font-size: .78em;
+    color: #64748b;
+    margin-top: 8px;
+  }
+
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  @media (max-width: 560px) { .verdict-grid { grid-template-columns: 1fr; } }
+
+  .verdict-card {
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+  }
+  .verdict-card.safe   { background: #14532d20; border-color: #34d39950; }
+  .verdict-card.care   { background: #92400e20; border-color: #fb923c50; }
+  .verdict-card.wait   { background: #7c2d1220; border-color: #f9731650; }
+  .verdict-card.danger { background: #7f1d1d20; border-color: #f8717150; }
+
+  .verdict-icon { font-size: 1.5em; margin-bottom: 6px; }
+  .verdict-title { font-size: .82em; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .verdict-desc  { font-size: .78em; color: #94a3b8; line-height: 1.55; }
+
+  .layer {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #1e293b;
+  }
+  .layer:last-child { border-bottom: none; }
+  .layer-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #936BDA20;
+    border: 1px solid #936BDA60;
+    color: #936BDA;
+    font-size: .75em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layer-body { flex: 1; }
+  .layer-title { font-size: .9em; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .layer-desc  { font-size: .82em; color: #94a3b8; line-height: 1.6; }
+
+  .faq-item { margin-bottom: 20px; }
+  .faq-q { font-size: .9em; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .faq-a { font-size: .85em; color: #94a3b8; line-height: 1.65; }
+
+  .tool-pill {
+    display: inline-block;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: .78em;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin: 3px 2px;
+  }
+
+  .callout {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: .88em;
+    color: #94a3b8;
+  }
+  .callout.tip  { border-left: 3px solid #34d399; }
+  .callout.warn { border-left: 3px solid #fb923c; }
+  .callout-label { font-weight: 700; color: #fff; font-size: .75em; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: .82em;
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color .2s;
+  }
+  .back-link:hover { color: #936BDA; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a href="../index.html" class="back-link">&#8592; Back to Knowledge Hub</a>
+
+  <div class="header">
+    <div class="badge">Security</div>
+    <h1>&#128737; Security Scanner</h1>
+    <div class="subtitle">/security-scan — Scan any repo before you run it</div>
+    <div class="meta">AMM Toolkit &mdash; Plain-English Guide</div>
+  </div>
+
+  <!-- THE PROBLEM -->
+  <div class="section">
+    <div class="sec-label">Why This Matters</div>
+    <h2>The Problem This Solves</h2>
+    <p>When someone says "install this library" or "clone this repo," they're asking you to run code written by someone you've never met. Most of the time that's fine. But occasionally, that code is designed to:</p>
+    <ul>
+      <li><strong>Steal your passwords or API keys</strong> stored on your computer</li>
+      <li><strong>Mine cryptocurrency</strong> silently in the background (your electricity, their profit)</li>
+      <li><strong>Create a backdoor</strong> that lets a stranger control your computer remotely</li>
+      <li><strong>Send your files</strong> to someone else's server</li>
+    </ul>
+    <p>This tool checks for all of that <em>before</em> you run anything. You don't need to understand what it's checking — Claude will tell you what it found in plain English.</p>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div class="section cyan">
+    <div class="sec-label">How To Use It</div>
+    <h2>Run This in Claude Code</h2>
+    <p>Open Claude Code, type this, and press Enter:</p>
+    <div class="command-block">
+      <code>/security-scan https://github.com/owner/repo-name</code>
+      <div class="cmd-hint">Replace the URL with the repo you want to check.</div>
+    </div>
+    <p>Claude will do the rest and give you a plain-English answer.</p>
+
+    <div class="callout tip">
+      <div class="callout-label">Also works with</div>
+      <code>/security-scan owner/repo</code> &nbsp;&mdash;&nbsp; short form<br>
+      <code>/security-scan /path/to/local/folder</code> &nbsp;&mdash;&nbsp; for repos already on your machine
+    </div>
+
+    <h3>Flags You Can Add</h3>
+    <ul>
+      <li><code>--quick</code> — Skip the sandbox, static checks only. Done under 2 minutes.</li>
+      <li><code>--sandbox</code> — Force sandbox even if the scan looks clean.</li>
+      <li><code>--share</code> — Send the report to your default Slack channel when done.</li>
+      <li><code>--no-install</code> — Skip the tool install offer; work with what's already available.</li>
+    </ul>
+  </div>
+
+  <!-- VERDICTS -->
+  <div class="section green">
+    <div class="sec-label">Results</div>
+    <h2>What the Verdict Means</h2>
+    <div class="verdict-grid">
+      <div class="verdict-card safe">
+        <div class="verdict-icon">&#9989;</div>
+        <div class="verdict-title">SAFE TO USE</div>
+        <div class="verdict-desc">No meaningful risks found. Proceed normally.</div>
+      </div>
+      <div class="verdict-card care">
+        <div class="verdict-icon">&#9888;&#65039;</div>
+        <div class="verdict-title">USE WITH CARE</div>
+        <div class="verdict-desc">Minor concerns (outdated library, code smell). Read the details before installing.</div>
+      </div>
+      <div class="verdict-card wait">
+        <div class="verdict-icon">&#128310;</div>
+        <div class="verdict-title">DO NOT RUN YET</div>
+        <div class="verdict-desc">Real concerns found. Don't install until someone technical has reviewed it.</div>
+      </div>
+      <div class="verdict-card danger">
+        <div class="verdict-icon">&#10060;</div>
+        <div class="verdict-title">DO NOT INSTALL</div>
+        <div class="verdict-desc">Confirmed threat. Delete any copy immediately and follow Claude's recovery steps.</div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:.85em;color:#64748b;">Every verdict comes with a plain-English explanation and a concrete action list. No jargon.</p>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section">
+    <div class="sec-label">How It Works</div>
+    <h2>The Scan Runs in Layers</h2>
+    <p style="margin-bottom:20px;">From fastest to most thorough — each layer adds coverage:</p>
+
+    <div class="layer">
+      <div class="layer-num">1</div>
+      <div class="layer-body">
+        <div class="layer-title">Before touching any code</div>
+        <div class="layer-desc">Claude checks the repo's public profile: How old is it? How many people use it? A brand-new repo with zero users claiming to be a popular tool is an immediate red flag.</div>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-num">2</div>
+      <div class="layer-body">
+        <div class="layer-title">Reading the code</div>
+        <div class="layer-desc">Claude reads the code like a security analyst would — looking for code that connects to outside servers during install, reads your SSH keys or passwords, is intentionally scrambled to look harmless, or hides programs inside what should be text files.</div>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-num">3</div>
+      <div class="layer-body">
+        <div class="layer-title">Automated security tools <span style="font-size:.75em;color:#64748b;">(optional, free)</span></div>
+        <div class="layer-desc">Checks against a database of known vulnerabilities, scans the entire commit history for leaked passwords, and runs professional-grade code analysis. Claude will offer to install these tools in about 2 minutes if you don't have them.</div>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-num">4</div>
+      <div class="layer-body">
+        <div class="layer-title">Sandbox test <span style="font-size:.75em;color:#64748b;">(optional, no extra install)</span></div>
+        <div class="layer-desc">Runs the code inside a completely sealed-off zone on your Mac — no internet access, can't touch your real files. Claude watches what the code tries to do and reports anything unusual. Your Mac has this built in; no Docker required.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section orange">
+    <div class="sec-label">FAQ</div>
+    <h2>Common Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;I'm not technical. Can I still use this?&#34;</div>
+      <div class="faq-a">Yes. Claude explains everything in plain English. You don't need to know what "SAST" or "CVE" means — Claude will translate.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;How long does it take?&#34;</div>
+      <div class="faq-a">AI-only: 1–2 minutes &nbsp;&bull;&nbsp; With tools: 3–5 minutes &nbsp;&bull;&nbsp; With sandbox: 5–8 minutes</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;Does it slow down my computer?&#34;</div>
+      <div class="faq-a">No. The scan runs on code that hasn't been installed yet — nothing is active on your machine while it runs.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;Can I scan a repo I already cloned?&#34;</div>
+      <div class="faq-a">Yes. Run <code>/security-scan /full/path/to/the/folder</code> instead of a URL.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;What if the repo is private?&#34;</div>
+      <div class="faq-a">The surface reputation check won't work, but Layers 2–4 still work once you have a local copy. Pass the folder path instead of a URL.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;Should I scan every repo I use?&#34;</div>
+      <div class="faq-a">Scan anything from a source you don't know personally, haven't used before, or that someone sent you unexpectedly. You don't need to scan major open-source projects like React or Django — but do scan any small utility, plugin, or tool shared in a Discord, Slack, or email.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">&#34;What if Claude says it can't check something?&#34;</div>
+      <div class="faq-a">That's honest — it means a specific check wasn't possible. The verdict will reflect what was actually checked, and Claude will tell you what it couldn't verify.</div>
+    </div>
+  </div>
+
+  <!-- OPTIONAL TOOLS -->
+  <div class="section">
+    <div class="sec-label">Optional Setup</div>
+    <h2>Security Tools (Free, One-Time Install)</h2>
+    <p>For the most thorough scans, install the security tools once. Claude will offer to do this for you the first time you run <code>/security-scan</code>.</p>
+    <p style="margin-top:16px;font-size:.9em;color:#64748b;">What gets installed:</p>
+    <div style="margin:12px 0 20px;">
+      <span class="tool-pill">&#128737; Trivy — dependency vulnerability database</span>
+      <span class="tool-pill">&#128273; Gitleaks — committed secret detection</span>
+      <span class="tool-pill">&#128270; TruffleHog — full history secret scan</span>
+      <span class="tool-pill">&#128202; Semgrep — professional code analysis</span>
+    </div>
+    <div class="callout tip">
+      <div class="callout-label">Privacy</div>
+      None of these tools send your code anywhere. They all run locally on your machine.
+    </div>
+  </div>
+
+  <!-- IF YOU FIND SOMETHING -->
+  <div class="section red">
+    <div class="sec-label">Emergency</div>
+    <h2>If You Find Something Dangerous</h2>
+    <ol>
+      <li><strong>Don't panic.</strong> Finding it before running it means it didn't do anything yet.</li>
+      <li><strong>Don't install it.</strong> Close the terminal window / folder.</li>
+      <li><strong>Report it</strong> using the "Report repository" button on GitHub (flag icon on the repo page).</li>
+      <li><strong>Tell your team</strong> — if this was shared in a work channel, others might have already installed it.</li>
+      <li><strong>If you already ran it:</strong> change any API keys or passwords you've used in the last 24 hours. Claude will give you a specific list of what to revoke.</li>
+    </ol>
+  </div>
+
+  <div style="text-align:center;padding:40px 0 20px;color:#334155;font-size:.8em;">
+    AMM Toolkit &mdash; <a href="../index.html" style="color:#936BDA;text-decoration:none;">Knowledge Hub</a>
+  </div>
+
+</div>
+</body>
+</html>
