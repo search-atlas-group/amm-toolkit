@@ -217,7 +217,22 @@ step "1/4" "Homebrew"
 
 if ! command -v brew &>/dev/null; then
   warn "Not found — installing..."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if ! NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+    echo ""
+    echo "  ✗  Homebrew installation failed."
+    echo ""
+    echo "  This usually means your Mac account doesn't have Administrator access."
+    echo "  Homebrew requires admin rights to install."
+    echo ""
+    echo "  To fix this, ask your Mac admin to either:"
+    echo "    1. Go to System Settings → Users & Groups and make your account an Administrator"
+    echo "    2. Or open Terminal themselves and run:"
+    echo "       NONINTERACTIVE=1 /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    echo ""
+    echo "  Then re-run this setup script."
+    echo ""
+    exit 1
+  fi
 
   if [[ "$(uname -m)" == "arm64" ]]; then
     BREW_PREFIX="/opt/homebrew"
