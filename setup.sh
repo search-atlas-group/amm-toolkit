@@ -40,7 +40,7 @@ chmod +x "$SCRIPT_DIR/Scripts/"*.sh 2>/dev/null || true
 
 # ── 2c. Stamp toolkit path into the security scanner UI ──────────────────────
 
-SCANNER_HTML="$SCRIPT_DIR/projects/security/index.html"
+SCANNER_HTML="$SCRIPT_DIR/tools/security/index.html"
 if [ -f "$SCANNER_HTML" ]; then
     sed -i.bak "s|__TOOLKIT_PATH__|$SCRIPT_DIR|g" "$SCANNER_HTML" && rm -f "$SCANNER_HTML.bak"
     echo "Security scanner configured for: $SCRIPT_DIR"

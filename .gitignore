@@ -34,6 +34,10 @@
 !/Scripts/**
 Scripts/__pycache__/
 
+!/tools/
+!/tools/**
+tools/**/__pycache__/
+
 # ── docs/ — explicitly list allowed files, block everything else ─────────────
 
 !/docs/

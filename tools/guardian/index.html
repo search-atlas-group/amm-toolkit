@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMM Guardian</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='none' stroke='%23936BDA' stroke-width='2'/><path d='M10 6v5l3 2' stroke='%23936BDA' stroke-width='1.5' stroke-linecap='round' fill='none'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'Inter',system-ui,sans-serif;--tight:'Inter Tight',system-ui,sans-serif;--mono:'JetBrains Mono','Consolas',monospace;--r:14px;--r-sm:8px;--nav-h:60px;--max:1060px}
+[data-theme="dark"]{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2236;--surf:#131b2e;
+  --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.15);
+  --text:#f0f0f0;--text2:rgba(240,240,240,.6);--text3:rgba(240,240,240,.3);
+  --purple:#936BDA;--purple-lt:rgba(147,107,218,.12);
+  --green:#34d399;--green-lt:rgba(52,211,153,.1);
+  --yellow:#fbbf24;--yellow-lt:rgba(251,191,36,.1);
+  --red:#f87171;--red-lt:rgba(248,113,113,.1);
+  --blue:#60a5fa;--blue-lt:rgba(96,165,250,.1);
+  --code-bg:rgba(255,255,255,.07);--hover:rgba(255,255,255,.04);
+}
+[data-theme="light"]{
+  --bg:#fff;--bg2:#f8f8fc;--bg3:#f0eefa;--surf:#fff;
+  --bdr:rgba(147,107,218,.1);--bdr2:rgba(147,107,218,.22);
+  --text:#1a0a2e;--text2:#4b4468;--text3:#9e8fc0;
+  --purple:#7c3aed;--purple-lt:rgba(124,58,237,.08);
+  --green:#16a34a;--green-lt:rgba(22,163,74,.08);
+  --yellow:#b45309;--yellow-lt:rgba(180,83,9,.08);
+  --red:#dc2626;--red-lt:rgba(220,38,38,.08);
+  --blue:#2563eb;--blue-lt:rgba(37,99,235,.08);
+  --code-bg:rgba(124,58,237,.06);--hover:rgba(124,58,237,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:10px}
+code{font-family:var(--mono);font-size:.82em;background:var(--code-bg);padding:2px 7px;border-radius:5px}
+[data-theme="dark"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(147,107,218,.07) 0%,transparent 70%)}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:100;background:rgba(11,15,26,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);border-top:3px solid var(--purple);display:flex;align-items:center;padding:0 28px;gap:0}
+[data-theme="light"] .nav{background:rgba(255,255,255,.95)}
+.nav-logo{display:flex;align-items:center;gap:9px;margin-right:auto}
+.nav-icon{width:20px;height:20px;flex-shrink:0}
+.nav-title{font-family:var(--tight);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--purple)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.status-dot.ok{background:var(--green)}
+.status-dot.warn{background:var(--yellow)}
+.status-dot.err{background:var(--red)}
+.status-label{font-size:.7rem;color:var(--text3)}
+.refresh-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;font-size:.7rem;font-weight:600;color:var(--text2);border:1px solid var(--bdr);border-radius:var(--r-sm);background:var(--code-bg);cursor:pointer;transition:all .2s;letter-spacing:.02em}
+.refresh-btn:hover{background:var(--hover);border-color:var(--bdr2);color:var(--text)}
+.refresh-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.theme-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--bdr);background:var(--code-bg);cursor:pointer;color:var(--text2);transition:background .2s;position:relative;overflow:hidden}
+.theme-btn:hover{background:var(--hover)}
+.theme-btn svg{width:14px;height:14px;position:absolute;transition:all .3s;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[data-theme="dark"] .icon-sun{transform:scale(1);opacity:1}[data-theme="dark"] .icon-moon{transform:scale(.4);opacity:0}
+[data-theme="light"] .icon-sun{transform:scale(.4);opacity:0}[data-theme="light"] .icon-moon{transform:scale(1);opacity:1}
+
+/* LAYOUT */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px;position:relative;z-index:1}
+.page{padding-top:calc(var(--nav-h) + 36px);padding-bottom:80px;display:flex;flex-direction:column;gap:36px}
+
+/* RUN STATUS BAR */
+.run-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.run-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:14px}
+.run-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.run-dot.ok{background:var(--green);box-shadow:0 0 0 3px var(--green-lt)}
+.run-dot.warn{background:var(--yellow);box-shadow:0 0 0 3px var(--yellow-lt)}
+.run-dot.idle{background:var(--text3)}
+.run-info{flex:1;min-width:0}
+.run-label{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
+.run-time{font-family:var(--mono);font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run-meta{font-size:.7rem;color:var(--text3);margin-top:2px}
+.run-badge{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.run-badge.running{background:var(--yellow-lt);color:var(--yellow)}
+.run-badge.done{background:var(--green-lt);color:var(--green)}
+.run-badge.never{background:var(--code-bg);color:var(--text3)}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.sec-tag{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+.sec-h{font-family:var(--tight);font-size:1.05rem;font-weight:800;letter-spacing:-.02em}
+.sec-count{font-size:.75rem;color:var(--text3);font-weight:500}
+
+/* SIGNAL GRID */
+.source-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.source-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;transition:border-color .2s,box-shadow .2s}
+.source-card:hover{border-color:var(--bdr2);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.source-name{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.source-icon{width:14px;height:14px;opacity:.5}
+.source-total{font-family:var(--tight);font-size:1.5rem;font-weight:800;letter-spacing:-.04em;color:var(--text);margin-bottom:8px}
+.source-bars{display:flex;flex-direction:column;gap:4px}
+.sbar{display:flex;align-items:center;gap:7px;font-size:.67rem}
+.sbar-label{color:var(--text3);width:66px;flex-shrink:0}
+.sbar-val{font-family:var(--mono);font-size:.67rem;color:var(--text2);min-width:20px}
+.sbar-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-acted{background:var(--green)}
+.dot-analyzed{background:var(--purple)}
+.dot-collected{background:var(--yellow)}
+.dot-error{background:var(--red)}
+.dot-skipped{background:var(--text3)}
+
+/* SUGGESTIONS TABLE */
+.suggestions-wrap{overflow-x:auto}
+.suggestions-table{width:100%;border-collapse:collapse}
+.suggestions-table th{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr)}
+.suggestions-table td{padding:10px 12px;border-bottom:1px solid var(--bdr);font-size:.78rem;vertical-align:top}
+.suggestions-table tr:last-child td{border-bottom:none}
+.suggestions-table tr:hover td{background:var(--hover)}
+.conf-bar{display:inline-block;height:4px;background:var(--purple);border-radius:2px;vertical-align:middle;margin-right:5px}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.badge-pending{background:var(--yellow-lt);color:var(--yellow)}
+.badge-executed{background:var(--green-lt);color:var(--green)}
+.badge-skipped{background:var(--code-bg);color:var(--text3)}
+.badge-approved{background:var(--blue-lt);color:var(--blue)}
+.badge-pr{background:var(--purple-lt);color:var(--purple)}
+.badge-issue{background:var(--blue-lt);color:var(--blue)}
+.badge-digest{background:var(--yellow-lt);color:var(--yellow)}
+.badge-internal{background:var(--code-bg);color:var(--text3)}
+.gh-link{color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:.7rem}
+.gh-link:hover{text-decoration:underline}
+
+/* SIGNALS TABLE */
+.signals-filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-select{font-family:var(--sans);font-size:.72rem;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r-sm);background:var(--bg2);color:var(--text);cursor:pointer;outline:none}
+.filter-select:focus{border-color:var(--purple)}
+.signals-table{width:100%;border-collapse:collapse}
+.signals-table th{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--bdr)}
+.signals-table td{padding:8px 10px;border-bottom:1px solid var(--bdr);font-size:.75rem;font-family:var(--mono);color:var(--text2)}
+.signals-table td.td-title{font-family:var(--sans);color:var(--text);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.signals-table tr:last-child td{border-bottom:none}
+.signals-table tr:hover td{background:var(--hover)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:.82rem}
+.empty svg{width:36px;height:36px;stroke:var(--text3);fill:none;stroke-width:1.5;margin-bottom:10px;opacity:.5}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--text3);font-size:.82rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.spinner{width:16px;height:16px;border:2px solid var(--bdr);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SECTION CONTAINER */
+.section-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:20px 24px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <svg class="nav-icon" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="8" stroke="var(--purple)" stroke-width="1.5"/>
+      <path d="M10 6v4.5l2.5 1.5" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-title">AMM Guardian</span>
+  </div>
+  <div class="nav-right">
+    <div class="status-dot" id="conn-dot"></div>
+    <span class="status-label" id="conn-label">connecting…</span>
+    <button class="refresh-btn" onclick="loadAll()">
+      <svg viewBox="0 0 14 14"><path d="M13 2v4H9"/><path d="M1 12V8h4"/><path d="M2.5 5A6 6 0 0 1 12.5 9"/><path d="M11.5 9A6 6 0 0 1 1.5 5"/></svg>
+      Refresh
+    </button>
+    <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="wrap page">
+
+  <!-- RUN STATUS -->
+  <div>
+    <div class="sec-hdr"><span class="sec-tag">System</span><span class="sec-h">Agent Status</span></div>
+    <div class="run-bar" id="run-bar">
+      <div class="run-card"><div class="run-dot idle"></div><div class="run-info"><div class="run-label">Collector</div><div class="run-time">—</div></div></div>
+      <div class="run-card"><div class="run-dot idle"></div><div class="run-info"><div class="run-label">Analyzer</div><div class="run-time">—</div></div></div>
+    </div>
+  </div>
+
+  <!-- SIGNAL OVERVIEW -->
+  <div>
+    <div class="sec-hdr">
+      <span class="sec-tag">Signals</span>
+      <span class="sec-h">By Source</span>
+      <span class="sec-count" id="sig-total"></span>
+    </div>
+    <div class="source-grid" id="source-grid">
+      <div class="loading"><div class="spinner"></div>Loading…</div>
+    </div>
+  </div>
+
+  <!-- SUGGESTIONS -->
+  <div>
+    <div class="sec-hdr">
+      <span class="sec-tag">Output</span>
+      <span class="sec-h">Suggestions</span>
+      <span class="sec-count" id="sug-count"></span>
+    </div>
+    <div class="section-box">
+      <div id="suggestions-area" class="loading"><div class="spinner"></div>Loading…</div>
+    </div>
+  </div>
+
+  <!-- SIGNALS FEED -->
+  <div>
+    <div class="sec-hdr">
+      <span class="sec-tag">Feed</span>
+      <span class="sec-h">Recent Signals</span>
+    </div>
+    <div class="section-box">
+      <div class="signals-filters">
+        <select class="filter-select" id="filter-source" onchange="loadSignals()">
+          <option value="">All sources</option>
+          <option value="transcripts">Transcripts</option>
+          <option value="circle">Circle</option>
+          <option value="clickup_amm">ClickUp AMM</option>
+          <option value="gmail">Gmail</option>
+          <option value="releases">Releases</option>
+          <option value="repo_audit">Repo Audit</option>
+        </select>
+        <select class="filter-select" id="filter-status" onchange="loadSignals()">
+          <option value="">All statuses</option>
+          <option value="collected">Collected</option>
+          <option value="analyzed">Analyzed</option>
+          <option value="acted_on">Acted On</option>
+          <option value="error">Error</option>
+          <option value="skipped">Skipped</option>
+        </select>
+      </div>
+      <div id="signals-area" class="loading"><div class="spinner"></div>Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:7433';
+
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('guardian-theme', t);
+}
+(function(){const t=localStorage.getItem('guardian-theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
+
+function relTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const diff = Math.floor((Date.now() - d) / 1000);
+  if (diff < 60)  return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function statusBadge(s) {
+  const map = {pending:'badge-pending',executed:'badge-executed',skipped:'badge-skipped',approved:'badge-approved'};
+  return `<span class="badge ${map[s]||'badge-skipped'}">${s}</span>`;
+}
+
+function typeBadge(t) {
+  const map = {pr:'badge-pr',issue:'badge-issue',digest:'badge-digest',internal:'badge-internal'};
+  return `<span class="badge ${map[t]||'badge-internal'}">${t}</span>`;
+}
+
+function sourceDotClass(status) {
+  const map = {acted_on:'dot-acted',analyzed:'dot-analyzed',collected:'dot-collected',error:'dot-error',skipped:'dot-skipped'};
+  return map[status] || 'dot-analyzed';
+}
+
+async function loadStatus() {
+  try {
+    const r = await fetch(`${API}/api/status`);
+    const data = await r.json();
+
+    if (data.error) {
+      setConn('err', data.error);
+      return;
+    }
+    setConn('ok', `Connected · ${relTime(new Date().toISOString())}`);
+
+    // Run bar
+    renderRunBar(data.last_runs || {});
+
+    // Signal total
+    document.getElementById('sig-total').textContent = `${data.total_signals || 0} total`;
+
+    // Source grid
+    renderSourceGrid(data.signals_by_source || {});
+
+    // Suggestions count
+    const pc = data.pending_suggestions || 0;
+    document.getElementById('sug-count').textContent =
+      pc > 0 ? `${pc} pending / ${data.total_suggestions} total` : `${data.total_suggestions} total`;
+
+  } catch(e) {
+    setConn('err', 'Server offline — run: python3 tools/guardian/server.py');
+  }
+}
+
+function setConn(state, msg) {
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-label');
+  dot.className = `status-dot ${state}`;
+  lbl.textContent = msg;
+}
+
+function renderRunBar(runs) {
+  const types = ['collector', 'analyzer'];
+  const labels = {collector: 'Collector', analyzer: 'Analyzer'};
+  document.getElementById('run-bar').innerHTML = types.map(type => {
+    const r = runs[type];
+    if (!r) return `
+      <div class="run-card">
+        <div class="run-dot idle"></div>
+        <div class="run-info">
+          <div class="run-label">${labels[type]}</div>
+          <div class="run-time">Never run</div>
+          <div class="run-meta"><span class="run-badge never">Inactive</span></div>
+        </div>
+      </div>`;
+
+    const running = r.started_at && !r.finished_at;
+    const dotCls  = running ? 'warn' : 'ok';
+    const badge   = running
+      ? `<span class="run-badge running">Running</span>`
+      : `<span class="run-badge done">Last: ${fmtTime(r.finished_at)}</span>`;
+    const meta = r.signals_processed
+      ? `${r.signals_processed} signals · ${r.suggestions_created} suggestions`
+      : '';
+    return `
+      <div class="run-card">
+        <div class="run-dot ${dotCls}"></div>
+        <div class="run-info">
+          <div class="run-label">${labels[type]}</div>
+          <div class="run-time">${relTime(r.started_at)}</div>
+          <div class="run-meta">${badge}${meta ? `<span style="margin-left:8px;color:var(--text3)">${meta}</span>` : ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderSourceGrid(bySource) {
+  if (!Object.keys(bySource).length) {
+    document.getElementById('source-grid').innerHTML = '<div class="empty">No signals collected yet.</div>';
+    return;
+  }
+  const statusOrder = ['acted_on','analyzed','collected','error','skipped'];
+  const statusLabels = {acted_on:'Acted on',analyzed:'Analyzed',collected:'Collected',error:'Error',skipped:'Skipped'};
+  document.getElementById('source-grid').innerHTML = Object.entries(bySource)
+    .sort((a,b) => b[1].total - a[1].total)
+    .map(([src, counts]) => {
+      const bars = statusOrder
+        .filter(s => counts[s])
+        .map(s => `
+          <div class="sbar">
+            <div class="sbar-dot ${sourceDotClass(s)}"></div>
+            <div class="sbar-label">${statusLabels[s]}</div>
+            <div class="sbar-val">${counts[s]}</div>
+          </div>`).join('');
+      return `
+        <div class="source-card">
+          <div class="source-name">${src.replace(/_/g,' ')}</div>
+          <div class="source-total">${counts.total}</div>
+          <div class="source-bars">${bars}</div>
+        </div>`;
+    }).join('');
+}
+
+async function loadSuggestions() {
+  const area = document.getElementById('suggestions-area');
+  try {
+    const r = await fetch(`${API}/api/suggestions`);
+    const data = await r.json();
+    const list = data.suggestions || [];
+    if (!list.length) {
+      area.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><br>No suggestions generated yet.</div>';
+      return;
+    }
+    area.innerHTML = `
+      <div class="suggestions-wrap">
+        <table class="suggestions-table">
+          <thead><tr>
+            <th>Type</th><th>Title</th><th>Confidence</th><th>Target</th><th>Status</th><th>Link</th><th>Created</th>
+          </tr></thead>
+          <tbody>
+            ${list.map(s => `
+              <tr>
+                <td>${typeBadge(s.type)}</td>
+                <td class="td-title" title="${esc(s.title)}">${esc(s.title)}</td>
+                <td><span style="display:inline-flex;align-items:center;gap:4px">
+                  <div class="conf-bar" style="width:${Math.round((s.confidence||0)*40)}px"></div>
+                  <code>${Math.round((s.confidence||0)*100)}%</code>
+                </span></td>
+                <td><code>${esc(s.target||'—')}</code></td>
+                <td>${statusBadge(s.status)}</td>
+                <td>${s.github_url?`<a class="gh-link" href="${esc(s.github_url)}" target="_blank">→ PR</a>`:'—'}</td>
+                <td style="color:var(--text3);font-size:.7rem;font-family:var(--mono)">${relTime(s.created_at)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    area.innerHTML = '<div class="empty">Could not load suggestions.</div>';
+  }
+}
+
+async function loadSignals() {
+  const area   = document.getElementById('signals-area');
+  const source = document.getElementById('filter-source').value;
+  const status = document.getElementById('filter-status').value;
+  area.innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+  try {
+    const params = new URLSearchParams({limit:'60'});
+    if (source) params.set('source', source);
+    if (status) params.set('status', status);
+    const r = await fetch(`${API}/api/signals?${params}`);
+    const data = await r.json();
+    const list = data.signals || [];
+    if (!list.length) {
+      area.innerHTML = '<div class="empty">No signals match this filter.</div>';
+      return;
+    }
+    area.innerHTML = `
+      <table class="signals-table">
+        <thead><tr>
+          <th>#</th><th>Source</th><th>Key</th><th>Status</th><th>Collected</th><th>Analyzed</th>
+        </tr></thead>
+        <tbody>
+          ${list.map(s=>`
+            <tr>
+              <td style="color:var(--text3)">${s.id}</td>
+              <td>${esc(s.source)}</td>
+              <td style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text3)" title="${esc(s.signal_key)}">${esc(s.signal_key)}</td>
+              <td><span class="badge ${sourceDotClass(s.status)==='dot-acted'?'badge-executed':sourceDotClass(s.status)==='dot-collected'?'badge-pending':sourceDotClass(s.status)==='dot-error'?'badge-pending':'badge-approved'}">${s.status}</span></td>
+              <td>${relTime(s.collected_at)}</td>
+              <td>${s.analyzed_at?relTime(s.analyzed_at):'—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    area.innerHTML = '<div class="empty">Could not load signals.</div>';
+  }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadAll() {
+  await loadStatus();
+  await Promise.all([loadSuggestions(), loadSignals()]);
+}
+
+loadAll();
+</script>
+</body>
+</html>
