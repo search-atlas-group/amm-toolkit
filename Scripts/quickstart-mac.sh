@@ -217,6 +217,9 @@ step "1/4" "Homebrew"
 
 if ! command -v brew &>/dev/null; then
   warn "Not found — installing..."
+  # Force HTTP/1.1 to prevent git clone stalls on restricted networks
+  git config --global http.version HTTP/1.1 2>/dev/null || true
+  git config --global http.postBuffer 524288000 2>/dev/null || true
   if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/tty; then
     echo ""
     echo "  ✗  Homebrew installation failed."
