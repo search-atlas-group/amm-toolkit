@@ -32,13 +32,20 @@ fi
 
 echo ""
 
-# ── 2b. Stamp toolkit path into the security scanner UI ─────────────────────
+# ── 2b. Make scripts executable ──────────────────────────────────────────────
+
+chmod +x "$SCRIPT_DIR/Scripts/"*.sh 2>/dev/null || true
+
+# ── 2c. Stamp toolkit path into the security scanner UI ──────────────────────
 
 SCANNER_HTML="$SCRIPT_DIR/projects/security/index.html"
 if [ -f "$SCANNER_HTML" ]; then
     sed -i.bak "s|__TOOLKIT_PATH__|$SCRIPT_DIR|g" "$SCANNER_HTML" && rm -f "$SCANNER_HTML.bak"
-    echo "Security scanner configured: $SCRIPT_DIR"
+    echo "Security scanner configured for: $SCRIPT_DIR"
 fi
+
+echo ""
+
 
 # ── 3. Configure SearchAtlas MCP ─────────────────────────────────────────────
 
@@ -91,3 +98,4 @@ echo "  3. Connect your other tools: /setup-integrations"
 echo "     Supports: HubSpot, ClickUp, Linear, Notion, Slack, Gmail, Google Calendar, GitHub"
 echo "  4. Verify everything: bash scripts/verify-setup.sh"
 echo "  5. Scan any repo before cloning: /security-scan <repo_url>"
+echo "     Or open the browser scanner: python3 projects/security/server.py"
