@@ -216,93 +216,42 @@ fi
 echo ""
 hr
 
-# ── Step 1: Homebrew ──────────────────────────────────────────────────────────
-step "1/4" "Homebrew"
+# ── Step 1: Node.js via nvm ───────────────────────────────────────────────────
+# nvm installs via curl — no massive git clone, no sudo required.
+step "1/3" "Node.js"
 
-if ! command -v brew &>/dev/null; then
-  warn "Not found — installing..."
-  # Force HTTP/1.1 to prevent git clone stalls on restricted networks
-  git config --global http.version HTTP/1.1 2>/dev/null || true
-  git config --global http.postBuffer 524288000 2>/dev/null || true
-  if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/tty; then
-    echo ""
-    echo "  ✗  Homebrew installation failed."
-    echo ""
-    echo "  This usually means your Mac account doesn't have Administrator access."
-    echo "  Homebrew requires admin rights to install."
-    echo ""
-    echo "  To fix this, ask your Mac admin to either:"
-    echo "    1. Go to System Settings → Users & Groups and make your account an Administrator"
-    echo "    2. Or open Terminal themselves and run:"
-    echo "       NONINTERACTIVE=1 /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-    echo ""
-    echo "  Then re-run this setup script."
-    echo ""
-    exit 1
-  fi
-
-  if [[ "$(uname -m)" == "arm64" ]]; then
-    BREW_PREFIX="/opt/homebrew"
-  else
-    BREW_PREFIX="/usr/local"
-  fi
-  eval "$("$BREW_PREFIX/bin/brew" shellenv)"
-
-  SHELL_PROFILE="$HOME/.zprofile"
-  [[ "$SHELL" == *"bash"* ]] && SHELL_PROFILE="$HOME/.bash_profile"
-  echo "" >> "$SHELL_PROFILE"
-  echo 'eval "$('"$BREW_PREFIX"'/bin/brew shellenv)"' >> "$SHELL_PROFILE"
-fi
-ok "Homebrew $(brew --version 2>/dev/null | head -1 | awk '{print $2}')"
-
-# ── Version requirements ──────────────────────────────────────────────────────
 MIN_NODE_MAJOR=18
-MIN_GIT="2.30"
-MIN_JAVA_MAJOR=17
 
-semver_gte() {
-  [ "$(printf '%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]
-}
 node_ok() {
   command -v node &>/dev/null || return 1
   local m; m=$(node --version | tr -d 'v' | cut -d. -f1)
   [[ "$m" -ge "$MIN_NODE_MAJOR" ]]
 }
-git_ok() {
-  command -v git &>/dev/null || return 1
-  semver_gte "$(git --version | awk '{print $3}')" "$MIN_GIT"
-}
-java_ok() {
-  command -v java &>/dev/null || return 1
-  local v; v=$(java -version 2>&1 | head -1 | awk -F'"' '{print $2}')
-  local m; m=$(echo "$v" | cut -d. -f1)
-  [[ "$m" == "1" ]] && m=$(echo "$v" | cut -d. -f2)
-  [[ "$m" -ge "$MIN_JAVA_MAJOR" ]]
-}
 
-# ── Step 2: Git + Node.js ─────────────────────────────────────────────────────
-step "2/4" "Git + Node.js"
+NVM_DIR="$HOME/.nvm"
 
-if ! command -v git &>/dev/null; then
-  warn "Git not found — installing..."
-  brew install git
-elif ! git_ok; then
-  warn "Git $(git --version | awk '{print $3}') is outdated (need $MIN_GIT+) — upgrading..."
-  brew upgrade git 2>/dev/null || brew install git
+if node_ok; then
+  ok "Node $(node --version) · npm $(npm --version)"
+else
+  warn "Node.js not found — installing via nvm..."
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+  export NVM_DIR="$NVM_DIR"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm install --lts
+  nvm use --lts
+  # Persist nvm in shell profile
+  SHELL_PROFILE="$HOME/.zprofile"
+  [[ "$SHELL" == *"bash"* ]] && SHELL_PROFILE="$HOME/.bash_profile"
+  grep -q 'NVM_DIR' "$SHELL_PROFILE" 2>/dev/null || cat >> "$SHELL_PROFILE" <<'NVM_PROFILE'
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+NVM_PROFILE
+  ok "Node $(node --version) · npm $(npm --version)"
 fi
-ok "$(git --version)"
-
-if ! command -v node &>/dev/null; then
-  warn "Node.js not found — installing LTS..."
-  brew install node
-elif ! node_ok; then
-  warn "Node $(node --version) is outdated (need v$MIN_NODE_MAJOR+) — upgrading..."
-  brew upgrade node 2>/dev/null || brew install node
-fi
-ok "Node $(node --version) · npm $(npm --version)"
 
 # ── Step 3: Claude Code ───────────────────────────────────────────────────────
-step "3/4" "Claude Code"
+step "2/3" "Claude Code"
 
 if command -v claude &>/dev/null; then
   ok "Already installed — $(claude --version 2>/dev/null | head -1)"
@@ -313,7 +262,7 @@ else
 fi
 
 # ── Step 4: Workspace + AMM-SA Toolkit ───────────────────────────────────────
-step "4/4" "Setting up workspace"
+step "3/3" "Setting up workspace"
 
 if [[ -d "$REPO_DIR" ]]; then
   info "Toolkit already present — pulling latest..."
