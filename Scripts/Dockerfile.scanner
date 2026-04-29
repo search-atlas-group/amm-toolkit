@@ -1,0 +1,43 @@
+# Dockerfile.scanner — Isolated security scanning + sandbox container
+# Build: docker build -t repo-scanner:latest -f Dockerfile.scanner .
+# Designed for macOS (linux/amd64 compatible)
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# ── System packages ───────────────────────────────────────────────────────────
+RUN apt-get update -qq && apt-get install -y -qq \
+  git curl wget jq file \
+  python3 python3-pip python3-venv \
+  nodejs npm \
+  ruby ruby-bundler \
+  strace \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# ── Security Tools ────────────────────────────────────────────────────────────
+
+# Trivy (vulnerability scanner)
+RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+  | sh -s -- -b /usr/local/bin
+
+# Gitleaks (secrets)
+RUN curl -sL "https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz" \
+  | tar -xz -C /usr/local/bin gitleaks
+
+# Semgrep (SAST)
+RUN pip3 install --quiet semgrep bandit pip-audit
+
+# ── Unprivileged User ─────────────────────────────────────────────────────────
+RUN useradd -m -s /bin/bash scanner
+WORKDIR /home/scanner
+
+# ── Sandbox runner script ─────────────────────────────────────────────────────
+COPY run-sandbox.sh /usr/local/bin/run-sandbox.sh
+RUN chmod +x /usr/local/bin/run-sandbox.sh
+
+USER scanner
+
+CMD ["/usr/local/bin/run-sandbox.sh"]

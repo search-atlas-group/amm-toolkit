@@ -32,6 +32,14 @@ fi
 
 echo ""
 
+# ── 2b. Stamp toolkit path into the security scanner UI ─────────────────────
+
+SCANNER_HTML="$SCRIPT_DIR/projects/security/index.html"
+if [ -f "$SCANNER_HTML" ]; then
+    sed -i.bak "s|__TOOLKIT_PATH__|$SCRIPT_DIR|g" "$SCANNER_HTML" && rm -f "$SCANNER_HTML.bak"
+    echo "Security scanner configured: $SCRIPT_DIR"
+fi
+
 # ── 3. Configure SearchAtlas MCP ─────────────────────────────────────────────
 
 if claude mcp list 2>/dev/null | grep -q "searchatlas"; then
@@ -62,6 +70,18 @@ elif [ -f "$SCRIPT_DIR/.env" ]; then
 fi
 
 echo ""
+
+# ── 5. Optional: security scanning tools ─────────────────────────────────────
+
+echo "Security scanning tools (trivy, gitleaks, trufflehog, semgrep) enable /security-scan."
+read -p "Install security scanning tools? (y/n): " SETUP_SECURITY
+if [[ "$SETUP_SECURITY" == "y" || "$SETUP_SECURITY" == "Y" ]]; then
+    bash "$SCRIPT_DIR/scripts/install-security-tools.sh"
+else
+    echo "Skipped. Run 'bash scripts/install-security-tools.sh' anytime to install."
+fi
+
+echo ""
 echo "Setup complete!"
 echo ""
 echo "Next steps:"
@@ -70,3 +90,4 @@ echo "  2. Try: /my-account  (will prompt OAuth authorization on first use)"
 echo "  3. Connect your other tools: /setup-integrations"
 echo "     Supports: HubSpot, ClickUp, Linear, Notion, Slack, Gmail, Google Calendar, GitHub"
 echo "  4. Verify everything: bash scripts/verify-setup.sh"
+echo "  5. Scan any repo before cloning: /security-scan <repo_url>"

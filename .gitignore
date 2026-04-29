@@ -32,6 +32,11 @@
 !/plans/
 !/plans/**
 
+!/projects/
+!/projects/**
+projects/*.sync-conflict-*
+projects/**/__pycache__/
+
 !/Scripts/
 !/Scripts/**
 Scripts/__pycache__/

@@ -1,0 +1,71 @@
+;;; mac-sandbox.sb — macOS sandbox profile for repo security testing
+;;; Used by mac-sandbox-run.sh via: sandbox-exec -f mac-sandbox.sb <command>
+;;; Built into macOS — requires NO installation whatsoever.
+;;;
+;;; What this does:
+;;;   - Blocks ALL outbound network connections (the code can't "call home")
+;;;   - Restricts file writes to /tmp only (can't touch your real files)
+;;;   - Allows reading any file (needed for install tools to work)
+;;;   - Blocks writing to sensitive locations: ~/.ssh, ~/Documents, ~/Desktop, etc.
+;;;
+;;; The code runs in a sealed-off zone. After the test, that zone is deleted.
+
+(version 1)
+
+;; Default: block everything not explicitly allowed
+(deny default)
+
+;; Allow basic process operations
+(allow process-exec)
+(allow process-fork)
+(allow process-info*)
+(allow signal)
+
+;; Allow reading anything (needed for npm/pip/gem install to function)
+(allow file-read*)
+
+;; Allow writes ONLY to /tmp and /private/tmp
+(allow file-write*
+    (subpath "/tmp")
+    (subpath "/private/tmp"))
+
+;; Allow writes to a controlled work directory (set by the caller)
+(allow file-write*
+    (subpath (param "WORK_DIR")))
+
+;; Block writes to sensitive user locations
+(deny file-write*
+    (subpath (string-append (param "HOME") "/.ssh"))
+    (subpath (string-append (param "HOME") "/.aws"))
+    (subpath (string-append (param "HOME") "/.config"))
+    (subpath (string-append (param "HOME") "/Documents"))
+    (subpath (string-append (param "HOME") "/Desktop"))
+    (subpath (string-append (param "HOME") "/Downloads"))
+    (subpath (string-append (param "HOME") "/.gnupg"))
+    (subpath (string-append (param "HOME") "/.npmrc"))
+    (subpath "/etc")
+    (subpath "/usr/local/bin")
+    (subpath "/usr/bin"))
+
+;; Block ALL network (prevents "call home" on install)
+(deny network*)
+
+;; Allow localhost only (some tools need it for internal IPC)
+(allow network-bind (local ip))
+(allow network-inbound (local ip))
+(allow network-outbound (local ip))
+
+;; Allow basic system calls needed by shells and package managers
+(allow sysctl-read)
+(allow mach-lookup)
+(allow ipc-posix*)
+(allow file-ioctl)
+
+;; Allow reading from /dev (needed by many CLI tools)
+(allow file-read-data
+    (literal "/dev/null")
+    (literal "/dev/random")
+    (literal "/dev/urandom")
+    (literal "/dev/zero"))
+(allow file-write-data
+    (literal "/dev/null"))

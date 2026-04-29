@@ -1,0 +1,185 @@
+# Workflow: Repository Security Scan
+# Invoke with: /security-scan <repo_url>
+# Full lifecycle: surface recon → static scan → AI analysis → sandbox (optional) → report
+
+template: security-repo-scan
+version: "2.0"
+description: "Multi-layer security scan before allowing any external repo onto your machine"
+
+# ── Target ─────────────────────────────────────────────────────────────────────
+repo_url: ""           # REQUIRED: GitHub/GitLab URL or local path
+repo_name: ""          # auto-derived from URL
+scan_mode: "standard"  # standard | quick | deep
+run_sandbox: "auto"    # auto | always | never
+                       # auto = run if REVIEW or higher verdict
+
+# ── Output ────────────────────────────────────────────────────────────────────
+output:
+  dir: "/tmp/security-scan-results"
+  save_report: true
+  report_path: "Security/scans/{{repo_name}}-{{date}}.md"
+  share_slack: false
+  share_email: false
+
+# ── Steps ─────────────────────────────────────────────────────────────────────
+steps:
+
+  - id: 1
+    name: "Surface reconnaissance"
+    description: "GitHub API metadata check — no code required"
+    type: api_check
+    actions:
+      - fetch_repo_metadata        # stars, forks, age, size, language
+      - fetch_key_files_raw        # package.json, setup.py, Makefile, workflows
+      - check_install_hooks        # postinstall, preinstall, prepare
+      - check_ci_workflows         # .github/workflows for injection patterns
+    outputs:
+      - metadata_flags: []
+      - install_hooks: []
+      - ci_risks: []
+    status: pending
+
+  - id: 2
+    name: "Static security scan"
+    description: "Clone + run scanner tools. No code is executed."
+    type: script
+    script: "scripts/repo-security-scan.sh"
+    args:
+      - "{{repo_url}}"
+      - "--output {{output.dir}}"
+      - "{{scan_mode == 'quick' ? '--quick' : ''}}"
+      - "{{scan_mode == 'deep' ? '--deep' : ''}}"
+    timeout: 300
+    outputs:
+      - report_json: "{{output.dir}}/report.json"
+      - verdict: ""
+      - risk_score: 0
+    status: pending
+    depends_on: [1]
+
+  - id: 3
+    name: "AI-powered code review"
+    description: "Claude reads flagged files and applies judgment"
+    type: ai_review
+    instructions: |
+      Read the findings from step 2 (report.json).
+      For each HIGH or CRITICAL finding:
+        1. Open the flagged file at the flagged line
+        2. Read surrounding context (±20 lines)
+        3. Determine: is this a true positive or false positive?
+        4. Assign final severity: CONFIRMED / LIKELY / FALSE_POSITIVE
+      Also check:
+        - Are there any obfuscated eval chains in JS/Python files?
+        - Does any code make HTTP calls at module import time?
+        - Are there any encoded strings that decode to IPs or URLs?
+    status: pending
+    depends_on: [2]
+
+  - id: 4
+    name: "Docker sandbox execution"
+    description: "Observe install behavior in complete isolation"
+    type: conditional_script
+    condition: "{{verdict in ['REVIEW', 'QUARANTINE', 'REJECT'] || run_sandbox == 'always'}}"
+    script: "scripts/repo-sandbox.sh"
+    args:
+      - "{{repo_url}}"
+      - "--timeout 120"
+      - "--network none"
+      - "--output {{output.dir}}"
+    timeout: 180
+    outputs:
+      - sandbox_report: "{{output.dir}}/sandbox-report.json"
+      - behavioral_flags: []
+    status: pending
+    depends_on: [3]
+
+  - id: 5
+    name: "Final verdict + report"
+    description: "Compute final risk score and generate shareable report"
+    type: report
+    inputs_from: [1, 2, 3, 4]
+    format: |
+      ╔══════════════════════════════════════════════════════╗
+      ║  🔐 SECURITY SCAN REPORT                            ║
+      ╚══════════════════════════════════════════════════════╝
+
+      Repo:        {{repo_url}}
+      Scanned:     {{timestamp}}
+      Commit:      {{commit}}
+
+      VERDICT:     {{verdict}} ({{risk_score}}/100)
+
+      ━━━ FINDINGS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      ❌ CRITICAL: {{critical_count}}
+      ⚠️  HIGH:     {{high_count}}
+      🔶 MEDIUM:   {{medium_count}}
+      ℹ️  LOW:      {{low_count}}
+
+      ━━━ DEPENDENCY AUDIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      CVEs Critical: {{deps_critical}} | High: {{deps_high}}
+
+      ━━━ SECRETS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      Gitleaks: {{secrets_gitleaks}} | TruffleHog: {{secrets_trufflehog}}
+
+      ━━━ SANDBOX ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {{sandbox_summary}}
+
+      ━━━ RECOMMENDATIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {{recommendations}}
+
+      Safe to clone?   {{clone_safe}}
+      Safe to install? {{install_safe}}
+      Safe to run?     {{run_safe}}
+    save_to: "{{output.report_path}}"
+    status: pending
+    depends_on: [4]
+
+# ── Verdict Rules ─────────────────────────────────────────────────────────────
+verdict_rules:
+  CLEAN:
+    max_score: 15
+    meaning: "No significant findings. Safe to use normally."
+    actions: ["clone_allowed", "install_allowed", "run_allowed"]
+
+  REVIEW:
+    min_score: 16
+    max_score: 30
+    meaning: "Minor concerns. Review findings before installing."
+    actions: ["clone_allowed", "install_with_caution", "sandbox_recommended"]
+
+  QUARANTINE:
+    min_score: 31
+    max_score: 60
+    meaning: "Significant risks. Do not install on host. Use sandbox only."
+    actions: ["clone_to_isolated_dir", "sandbox_only", "team_review_required"]
+
+  REJECT:
+    min_score: 61
+    meaning: "Active threat indicators. Do not install. Report to security team."
+    actions: ["do_not_clone", "do_not_install", "report_to_team", "document_threat"]
+
+# ── Tool Requirements ─────────────────────────────────────────────────────────
+required_tools:
+  - name: git
+    install: "built-in"
+  - name: jq
+    install: "brew install jq"
+  - name: docker
+    install: "brew install --cask docker"
+    required_for: [sandbox]
+  - name: trivy
+    install: "brew install trivy"
+  - name: gitleaks
+    install: "brew install gitleaks"
+  - name: trufflehog
+    install: "brew install trufflehog"
+  - name: semgrep
+    install: "brew install semgrep"
+
+optional_tools:
+  - name: bandit
+    install: "pip install bandit"
+    for: Python repos
+  - name: pip-audit
+    install: "pip install pip-audit"
+    for: Python dependency auditing
