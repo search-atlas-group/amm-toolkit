@@ -75,7 +75,7 @@ echo ""
 
 # ── 4. Optional: communication channels ──────────────────────────────────────
 
-WIZARD="$SCRIPT_DIR/scripts/setup-interactive.sh"
+WIZARD="$SCRIPT_DIR/Scripts/setup-interactive.sh"
 
 if [ ! -f "$SCRIPT_DIR/.env" ] && [ -f "$WIZARD" ]; then
     echo "No communication channels configured yet."
@@ -83,11 +83,11 @@ if [ ! -f "$SCRIPT_DIR/.env" ] && [ -f "$WIZARD" ]; then
     if [[ "$SETUP_COMMS" == "y" || "$SETUP_COMMS" == "Y" ]]; then
         bash "$WIZARD"
     else
-        echo "Skipped. Run 'bash scripts/setup-interactive.sh' anytime to configure."
+        echo "Skipped. Run 'bash Scripts/setup-interactive.sh' anytime to configure."
     fi
 elif [ -f "$SCRIPT_DIR/.env" ]; then
     echo "Communication channels already configured."
-    echo "To reconfigure, run: bash scripts/setup-interactive.sh"
+    echo "To reconfigure, run: bash Scripts/setup-interactive.sh"
 fi
 
 echo ""
@@ -97,9 +97,9 @@ echo ""
 echo "Security scanning tools (trivy, gitleaks, trufflehog, semgrep) enable /security-scan."
 read -p "Install security scanning tools? (y/n): " SETUP_SECURITY
 if [[ "$SETUP_SECURITY" == "y" || "$SETUP_SECURITY" == "Y" ]]; then
-    bash "$SCRIPT_DIR/scripts/install-security-tools.sh"
+    bash "$SCRIPT_DIR/Scripts/install-security-tools.sh"
 else
-    echo "Skipped. Run 'bash scripts/install-security-tools.sh' anytime to install."
+    echo "Skipped. Run 'bash Scripts/install-security-tools.sh' anytime to install."
 fi
 
 echo ""
@@ -110,6 +110,5 @@ echo "  1. Open Claude Code in this directory"
 echo "  2. Try: /my-account  (will prompt OAuth authorization on first use)"
 echo "  3. Connect your other tools: /setup-integrations"
 echo "     Supports: HubSpot, ClickUp, Linear, Notion, Slack, Gmail, Google Calendar, GitHub"
-echo "  4. Verify everything: bash scripts/verify-setup.sh"
+echo "  4. Verify everything: bash Scripts/verify-setup.sh"
 echo "  5. Scan any repo before cloning: /security-scan <repo_url>"
-echo "     Or open the browser scanner: python3 projects/security/server.py"
