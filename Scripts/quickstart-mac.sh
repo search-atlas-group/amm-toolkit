@@ -54,9 +54,9 @@ echo ""
 hr
 echo ""
 
-# Scan $HOME for any existing AMM workspace (has CLAUDE.md + AMM-SA/ inside)
+# Scan Desktop for any existing AMM workspace (has CLAUDE.md + AMM-SA/ inside)
 EXISTING=()
-for dir in "$HOME"/*/; do
+for dir in "$HOME/Desktop"/*/; do
   [[ -f "${dir}CLAUDE.md" && -d "${dir}AMM-SA" ]] && EXISTING+=("${dir%/}")
 done
 
@@ -92,7 +92,7 @@ else
   echo -n "  Workspace name (Enter for 'AMM-Workspace'): "
   read -r WORKSPACE_NAME </dev/tty
   WORKSPACE_NAME="${WORKSPACE_NAME:-AMM-Workspace}"
-  WORKSPACE_DIR="$HOME/$WORKSPACE_NAME"
+  WORKSPACE_DIR="$HOME/Desktop/$WORKSPACE_NAME"
   ok "Workspace → $WORKSPACE_DIR"
 fi
 
@@ -461,7 +461,7 @@ elif [[ -n "$IDE_OPEN_CMD" ]]; then
 else
   echo "  Run these two commands to start:"
   echo ""
-  echo -e "    ${BOLD}cd ~/$WORKSPACE_NAME${NC}"
+  echo -e "    ${BOLD}cd ~/Desktop/$WORKSPACE_NAME${NC}"
   echo -e "    ${BOLD}claude${NC}"
 fi
 
