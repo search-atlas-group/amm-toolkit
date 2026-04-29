@@ -36,6 +36,10 @@
 projects/*
 !/projects/security/
 !/projects/security/**
+!/projects/guardian/
+!/projects/guardian/**
+!/projects/Tier 2/
+!/projects/Tier 2/**
 projects/**/__pycache__/
 
 !/Scripts/
