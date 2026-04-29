@@ -97,6 +97,10 @@ else
 fi
 
 REPO_DIR="$WORKSPACE_DIR/AMM-SA"
+
+# Create the workspace folder immediately so it appears on Desktop right away
+mkdir -p "$WORKSPACE_DIR/clients" "$WORKSPACE_DIR/memory"
+ok "Folder created: $WORKSPACE_DIR"
 echo ""
 
 # ── IDE / Terminal Selection ──────────────────────────────────────────────────
@@ -310,8 +314,6 @@ fi
 
 # ── Step 4: Workspace + AMM-SA Toolkit ───────────────────────────────────────
 step "4/4" "Setting up workspace"
-
-mkdir -p "$WORKSPACE_DIR/clients" "$WORKSPACE_DIR/memory"
 
 if [[ -d "$REPO_DIR" ]]; then
   info "Toolkit already present — pulling latest..."
