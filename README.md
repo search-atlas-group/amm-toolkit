@@ -63,6 +63,11 @@ Your workspace will look like this:
 /send-circle         # Post to a Circle community space
 ```
 
+### Security
+```
+/security-scan <url> # Scan any GitHub repo for threats before cloning or running it
+```
+
 ## All Commands
 
 | Command | Description |
@@ -81,6 +86,7 @@ Your workspace will look like this:
 | `/send-discord` | Post to Discord via webhook |
 | `/send-email` | Send an email via Resend API |
 | `/send-circle` | Post to a Circle community space |
+| `/security-scan` | Scan any GitHub repo for threats before cloning or running it |
 | `/help` | List all available commands |
 
 ## Automate with Workflow Templates
@@ -96,6 +102,26 @@ Templates in `workflows/` define step-by-step tool chains for recurring tasks:
 | `ppc-launch.yaml` | PPC campaign: business, products, keywords, campaigns |
 | `authority-building.yaml` | PR and link building: press, cloud stacks, outreach |
 | `llm-visibility.yaml` | AI search: visibility, sentiment, SERP analysis |
+
+## Security Scanner
+
+Every installation includes a built-in repo security scanner. Before cloning any third-party tool or library, scan it first:
+
+```
+/security-scan https://github.com/owner/repo
+```
+
+Claude runs a 4-tier analysis — GitHub metadata, secrets detection, CVE checks, SAST rules, and an optional behavioral sandbox — and gives you a plain-English verdict before you touch any code.
+
+**Three ways to scan:**
+
+| Option | How | Best for |
+|--------|-----|----------|
+| Browser quick check | Paste URL into `projects/security/` UI | Fast first look, no setup |
+| Full local scan | `python3 projects/security/server.py` then open the UI | Thorough pre-clone analysis |
+| Claude Code | `/security-scan <url>` in Claude Code chat | Deep AI review with full report |
+
+See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full details.
 
 ## Prerequisites
 

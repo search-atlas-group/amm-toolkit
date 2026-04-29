@@ -31,6 +31,9 @@ Display this command reference to the user:
   /send-email          Send an email via Resend API
   /send-circle         Post to a Circle community space
 
+🔒 SECURITY
+  /security-scan       Scan any GitHub repo for threats before cloning or running it
+
 ❓ HELP
   /help                This command list
 ```

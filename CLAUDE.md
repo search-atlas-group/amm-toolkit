@@ -62,6 +62,14 @@ Some short tool names map to multiple underlying tools. If a tool behaves unexpe
 - API keys come from `.env` or MCP config — never print them
 - When sharing results (Slack, Circle), only include public-safe data
 
+### Rule 7: Never Hardcode the Workspace Path
+The toolkit is cloned to a user-chosen location — never assume a path like `~/Desktop/amm-toolkit` or any absolute path with a username or folder name.
+
+- **Shell scripts** → resolve at runtime: `AMM_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)`
+- **Slash commands** (`.md` files in `commands/`) → same `AMM_ROOT` pattern in every bash block
+- **HTML / static UI** → use the literal placeholder `__TOOLKIT_PATH__`; `setup.sh` stamps the real path at install time via `sed`
+- **Never** write a literal path like `/Users/anyone/...` or `~/Desktop/anything`
+
 ---
 
 ## 4. Parameter Quick Reference
