@@ -217,7 +217,7 @@ step "1/4" "Homebrew"
 
 if ! command -v brew &>/dev/null; then
   warn "Not found — installing..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   if [[ "$(uname -m)" == "arm64" ]]; then
     BREW_PREFIX="/opt/homebrew"
