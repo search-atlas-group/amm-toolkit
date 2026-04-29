@@ -13,7 +13,9 @@ echo ""
 
 # ── 1. Check prerequisites ───────────────────────────────────────────────────
 
-bash "$SCRIPT_DIR/scripts/preflight.sh"
+if [[ -f "$SCRIPT_DIR/Scripts/preflight.sh" ]]; then
+  bash "$SCRIPT_DIR/Scripts/preflight.sh"
+fi
 
 # ── 2. Install slash commands ────────────────────────────────────────────────
 
@@ -47,7 +49,19 @@ fi
 echo ""
 
 
-# ── 3. Configure SearchAtlas MCP ─────────────────────────────────────────────
+# ── 3. Install GSD (Get Shit Done) plugin ────────────────────────────────────
+
+echo "Installing GSD plugin..."
+if claude plugins list 2>/dev/null | grep -q "superpowers"; then
+    echo "GSD (superpowers) already installed."
+else
+    claude plugins install superpowers --scope user
+    echo "GSD plugin installed."
+fi
+
+echo ""
+
+# ── 5. Configure SearchAtlas MCP ─────────────────────────────────────────────
 
 if claude mcp list 2>/dev/null | grep -q "searchatlas"; then
     echo "SearchAtlas MCP already configured."
