@@ -420,6 +420,12 @@ if [[ "$IDE_NOT_INSTALLED" == "1" ]]; then
   echo "  Then in the integrated terminal, run:"
   echo ""
   echo -e "    ${BOLD}claude${NC}"
+elif [[ "$IDE_NAME" == "Terminal (built-in)" ]]; then
+  echo "  Opening a new Terminal window inside your workspace..."
+  osascript -e "tell application \"Terminal\"
+    activate
+    do script \"cd '$WORKSPACE_DIR' && echo '✓ You are inside your workspace. Now run: claude' && claude\"
+  end tell" 2>/dev/null || true
 elif [[ -n "$IDE_OPEN_CMD" ]]; then
   echo "  Opening $IDE_NAME at your workspace..."
   eval "$IDE_OPEN_CMD" 2>/dev/null || true
@@ -428,7 +434,9 @@ elif [[ -n "$IDE_OPEN_CMD" ]]; then
   echo ""
   echo -e "    ${BOLD}claude${NC}"
 else
-  echo "  Run these two commands to start:"
+  echo ""
+  echo -e "  ${YELLOW}⚠  IMPORTANT: you must cd into your workspace first.${NC}"
+  echo "  Running claude from the wrong folder creates files in the wrong place."
   echo ""
   echo -e "    ${BOLD}cd ~/Desktop/$WORKSPACE_NAME${NC}"
   echo -e "    ${BOLD}claude${NC}"
