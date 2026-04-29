@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Mastermind — Knowledge Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --sans: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Consolas', monospace;
+  --r: 14px;
+  --r-sm: 8px;
+  --nav-h: 60px;
+  --max: 1080px;
+}
+/* ── DARK — neutral, not purple-heavy ─── */
+[data-theme="dark"] {
+  --bg:        #111111;
+  --bg2:       #1a1a1a;
+  --bg3:       #222222;
+  --surf:      #1e1e1e;
+  --bdr:       rgba(255,255,255,0.08);
+  --bdr2:      rgba(255,255,255,0.16);
+  --text:      #f0f0f0;
+  --text2:     rgba(240,240,240,0.58);
+  --text3:     rgba(240,240,240,0.32);
+  --purple:    #818cf8;
+  --cyan:      #22d3ee;
+  --green:     #34d399;
+  --orange:    #fb923c;
+  --pink:      #f472b6;
+  --yellow:    #fbbf24;
+  --red:       #f87171;
+  --code-bg:   rgba(255,255,255,0.07);
+  --code-clr:  #a5b4fc;
+  --check:     #34d399;
+  --input-bg:  rgba(255,255,255,0.05);
+  --hover-bg:  rgba(255,255,255,0.04);
+  --shadow:    rgba(0,0,0,0.6);
+}
+/* ── LIGHT — sober, clean, professional (default) ─── */
+[data-theme="light"] {
+  --bg:        #ffffff;
+  --bg2:       #f7f7f7;
+  --bg3:       #f0f0f0;
+  --surf:      #ffffff;
+  --bdr:       rgba(0,0,0,0.08);
+  --bdr2:      rgba(0,0,0,0.14);
+  --text:      #0d0d0d;
+  --text2:     #4b5563;
+  --text3:     #9ca3af;
+  --purple:    #4f46e5;
+  --cyan:      #0891b2;
+  --green:     #16a34a;
+  --orange:    #ea580c;
+  --pink:      #db2777;
+  --yellow:    #b45309;
+  --red:       #dc2626;
+  --code-bg:   #f3f4f6;
+  --code-clr:  #4338ca;
+  --check:     #16a34a;
+  --input-bg:  #f3f4f6;
+  --hover-bg:  #f7f7f7;
+  --shadow:    rgba(0,0,0,0.07);
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  font-size:15px;
+  line-height:1.65;
+  min-height:100vh;
+  transition:background .3s,color .3s;
+}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:10px}
+a{color:inherit;text-decoration:none}
+code,pre{font-family:var(--mono)}
+
+/* ─── BACKGROUNDS ────────────────────────────────────────────────── */
+[data-theme="dark"] body::before {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(99,102,241,0.12) 0%,transparent 70%);
+}
+/* light mode: pure white, no tint */
+[data-theme="light"] body::before { display:none }
+
+/* ─── NAV ────────────────────────────────────────────────────────── */
+.nav{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--nav-h);z-index:100;
+  background:rgba(15,12,36,0.85);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;
+  padding:0 32px;gap:0;
+  transition:background .3s,border-color .3s;
+}
+[data-theme="light"] .nav{background:rgba(245,243,255,0.88)}
+.nav-logo{
+  font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--purple);margin-right:40px;white-space:nowrap;
+  display:flex;align-items:center;gap:10px;
+}
+.nav-logo-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--purple);
+  box-shadow:0 0 12px var(--purple);
+}
+.nav-tabs{display:flex;gap:2px;flex:1}
+.nav-tab{
+  padding:8px 16px;
+  font-size:.75rem;font-weight:600;letter-spacing:.04em;
+  color:var(--text3);
+  background:none;border:none;cursor:pointer;border-radius:var(--r-sm);
+  transition:color .2s,background .2s;
+  position:relative;
+}
+.nav-tab:hover{color:var(--text2);background:var(--hover-bg)}
+.nav-tab.active{color:var(--text);background:var(--hover-bg)}
+.nav-tab.active::after{
+  content:'';position:absolute;bottom:-1px;left:8px;right:8px;
+  height:2px;border-radius:2px;background:var(--purple);
+}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.nav-badge{
+  font-family:var(--mono);font-size:.6rem;font-weight:600;
+  padding:4px 10px;border-radius:100px;
+  background:rgba(139,92,246,0.15);border:1px solid var(--bdr2);
+  color:var(--purple);letter-spacing:.08em;white-space:nowrap;
+}
+
+/* ─── THEME TOGGLE ───────────────────────────────────────────────── */
+.theme-btn{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;border:1px solid var(--bdr);
+  background:var(--input-bg);cursor:pointer;
+  color:var(--text2);position:relative;overflow:hidden;
+  transition:background .2s,border-color .2s;
+}
+.theme-btn:hover{background:var(--hover-bg);border-color:var(--bdr2)}
+.theme-btn svg{width:16px;height:16px;position:absolute;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[data-theme="dark"] .icon-sun{transform:scale(1) translateY(0);opacity:1}
+[data-theme="dark"] .icon-moon{transform:scale(.5) translateY(20px);opacity:0}
+[data-theme="light"] .icon-sun{transform:scale(.5) translateY(20px);opacity:0}
+[data-theme="light"] .icon-moon{transform:scale(1) translateY(0);opacity:1}
+
+/* ─── PAGE SYSTEM ────────────────────────────────────────────────── */
+.page{display:none;padding-top:var(--nav-h);position:relative;z-index:1;min-height:100vh}
+.page.active{display:block}
+
+/* ─── WRAP ───────────────────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 40px}
+.section-gap{padding:72px 0}
+.divider{max-width:var(--max);margin:0 auto;height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent)}
+
+/* ─── SECTION HEADER ─────────────────────────────────────────────── */
+.sec-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.65rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:12px;
+}
+.sec-tag-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sec-h{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:12px}
+.sec-p{font-size:.95rem;color:var(--text2);max-width:540px;line-height:1.75;margin-bottom:40px}
+
+/* ─── REVEAL ─────────────────────────────────────────────────────── */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.rv.vis{opacity:1;transform:none}
+.rv.d1{transition-delay:.05s}.rv.d2{transition-delay:.1s}.rv.d3{transition-delay:.15s}
+.rv.d4{transition-delay:.2s}.rv.d5{transition-delay:.25s}.rv.d6{transition-delay:.3s}
+.rv.d7{transition-delay:.35s}.rv.d8{transition-delay:.4s}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 1 — SETUP / HERO
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── ContainerScroll (Aceternity pattern) ──────────────────────── */
+.cs-container{
+  /* viewport + 160px scroll room — card fills screen, minimal dead space below */
+  height:calc(100vh + 160px);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;padding:0 80px;
+}
+.cs-inner{
+  width:100%;position:relative;
+  padding:40px 0 60px;
+}
+.cs-perspective{
+  perspective:1000px;
+  position:relative;
+}
+/* HEADER */
+.cs-header{
+  max-width:800px;margin:0 auto;text-align:center;
+  will-change:transform;
+  padding-bottom:8px;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--bg3);border:1px solid var(--bdr2);
+  border-radius:100px;padding:7px 18px;
+  font-size:.78rem;font-weight:600;
+  color:var(--text2);margin-bottom:24px;
+}
+.hero-eyebrow-arrow{opacity:.6}
+.hero-h1{
+  font-size:clamp(2.8rem,6vw,5.5rem);
+  font-weight:900;line-height:1.0;letter-spacing:-.04em;
+  color:var(--text);margin-bottom:20px;
+}
+.hero-sub{
+  font-size:1rem;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.7;
+}
+/* CARD — moderate overlap so platform toggle is visible when card is fully flat */
+.cs-card-wrap{
+  max-width:980px;width:100%;
+  margin:-60px auto 0; /* reduced overlap — card doesn't bite too far into heading, toggle stays visible */
+  will-change:transform;
+  transform-origin:top center;
+  transform-style:preserve-3d; /* required for true 3D perspective depth */
+}
+.cs-card{
+  border:4px solid var(--bdr2);
+  border-radius:30px;
+  padding:8px;
+  background:var(--surf);
+  box-shadow:0 0 #0000004d,0 9px 20px #0000004a,0 37px 37px #00000042,0 84px 50px #00000026,0 149px 60px #0000000a,0 233px 65px #00000003;
+  overflow:hidden;
+  height:calc(100vh - 120px); /* fills viewport minus nav + breathing room */
+  min-height:44rem;
+  max-height:72rem;
+  display:flex;flex-direction:column;
+  transform-style:flat; /* stops 3D propagation — children render normally, interactions work */
+  transform-origin:top center; /* rotate from top so top items stay in layout bounds and remain clickable */
+}
+.scroll-card-inner{
+  background:var(--bg2);border-radius:22px;
+  flex:1;display:flex;flex-direction:column;
+  min-height:0;overflow:hidden;
+}
+/* COMPLETION STATE */
+.checklist-done{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:16px;padding:40px;text-align:center;
+}
+.done-badge{
+  font-size:1.05rem;font-weight:700;color:var(--check);
+  background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);
+  padding:10px 24px;border-radius:100px;
+}
+.done-sub{font-size:.9rem;color:var(--text2);line-height:1.6;max-width:380px}
+.done-reset-btn{
+  margin-top:8px;padding:9px 20px;border-radius:100px;
+  background:var(--bg3);border:1px solid var(--bdr2);
+  font-size:.8rem;font-weight:600;color:var(--text2);cursor:pointer;
+  transition:all .2s;
+}
+.done-reset-btn:hover{background:var(--hover-bg);border-color:var(--bdr);color:var(--text)}
+
+/* PLATFORM TOGGLE */
+.platform-toggle{
+  display:inline-flex;gap:2px;
+  background:var(--input-bg);border:1px solid var(--bdr);
+  border-radius:100px;padding:3px;
+  margin-bottom:12px;
+}
+.platform-btn{
+  padding:6px 16px;border-radius:100px;
+  font-size:.72rem;font-weight:600;letter-spacing:.04em;
+  color:var(--text3);border:none;background:none;cursor:pointer;
+  transition:all .2s;
+}
+.platform-btn.active{background:var(--purple);color:#fff;box-shadow:0 2px 12px rgba(139,92,246,.3)}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:0;overflow-y:auto;flex:1;min-height:0}
+/* custom scrollbar inside checklist */
+.checklist::-webkit-scrollbar{width:4px}
+.checklist::-webkit-scrollbar-track{background:transparent}
+.checklist::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:4px}
+.check-section-label{
+  font-family:var(--mono);font-size:.62rem;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--text3);
+  padding:16px 20px 8px;
+  border-top:1px solid var(--bdr);
+}
+.check-section-label:first-child{border-top:none;padding-top:20px}
+.check-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:12px 20px;
+  border-bottom:1px solid rgba(139,92,246,0.07);
+  cursor:pointer;
+  transition:background .15s;
+  user-select:none;
+}
+.check-item:hover{background:var(--hover-bg)}
+.check-item:last-child{border-bottom:none;padding-bottom:20px}
+.check-box{
+  width:20px;height:20px;border-radius:6px;
+  border:2px solid var(--bdr2);
+  flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;position:relative;
+}
+.check-item.done .check-box{
+  background:var(--check);border-color:var(--check);
+}
+.check-box-tick{
+  width:11px;height:11px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+  opacity:0;transform:scale(0.5);transition:all .2s cubic-bezier(.34,1.56,.64,1);
+}
+.check-item.done .check-box-tick{opacity:1;transform:scale(1)}
+.check-label{
+  flex:1;font-size:.85rem;color:var(--text2);line-height:1.55;
+  transition:color .2s;
+}
+.check-item.done .check-label{color:var(--text3);text-decoration:line-through;text-decoration-color:var(--text3)}
+.check-cmd{
+  margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.code-pill{
+  font-family:var(--mono);font-size:.73rem;
+  background:var(--code-bg);color:var(--code-clr);
+  padding:3px 10px;border-radius:6px;border:1px solid var(--bdr);
+  display:inline-block;
+}
+.check-label strong{color:var(--text);font-weight:600}
+
+/* COPY BUTTON */
+.copy-btn{
+  width:28px;height:28px;border-radius:var(--r-sm);
+  background:var(--input-bg);border:1px solid var(--bdr);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text3);flex-shrink:0;
+  transition:all .2s;position:relative;
+}
+.copy-btn:hover{background:var(--hover-bg);border-color:var(--bdr2);color:var(--text2)}
+.copy-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;position:absolute;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.copy-icon{transform:scale(1);opacity:1}
+.check-icon{transform:scale(0);opacity:0;stroke:var(--check)}
+.copy-btn.copied .copy-icon{transform:scale(0);opacity:0}
+.copy-btn.copied .check-icon{transform:scale(1);opacity:1}
+.copy-tooltip{
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;
+  font-size:.65rem;font-weight:600;letter-spacing:.04em;
+  background:var(--surf);border:1px solid var(--bdr);
+  color:var(--text2);padding:4px 8px;border-radius:6px;
+  pointer-events:none;opacity:0;transition:opacity .15s;
+}
+.copy-btn:hover .copy-tooltip{opacity:1}
+
+/* PROGRESS BAR */
+.progress-section{
+  padding:14px 20px 0;
+  border-bottom:1px solid var(--bdr);
+  flex-shrink:0; /* never shrink — always visible above scrollable checklist */
+}
+.progress-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.progress-label{font-size:.78rem;font-weight:600;color:var(--text2)}
+.progress-count{font-family:var(--mono);font-size:.75rem;color:var(--purple)}
+.progress-bar-track{
+  height:4px;background:var(--bg3);border-radius:100px;overflow:hidden;
+  margin-bottom:16px;
+}
+.progress-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));
+  border-radius:100px;width:0%;
+  transition:width .4s cubic-bezier(.16,1,.3,1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 2 — WORKFLOWS
+═══════════════════════════════════════════════════════════════════ */
+.workflow-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.wf-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);
+  overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+}
+.wf-card:hover{border-color:var(--bdr2);box-shadow:0 4px 24px var(--shadow)}
+.wf-header{
+  padding:20px 24px;
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:12px;
+}
+.wf-icon{font-size:1.2rem}
+.wf-info{flex:1}
+.wf-name{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.wf-cmd{font-family:var(--mono);font-size:.7rem;color:var(--purple)}
+.wf-badge{
+  font-family:var(--mono);font-size:.58rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 9px;border-radius:100px;
+  background:rgba(139,92,246,.12);border:1px solid var(--bdr2);color:var(--purple);
+  white-space:nowrap;
+}
+.wf-steps{padding:16px 24px;display:flex;flex-direction:column;gap:0}
+.wf-step{
+  display:grid;grid-template-columns:28px 1fr;
+  align-items:flex-start;gap:10px;
+  padding:8px 0;
+  position:relative;
+}
+.wf-step:last-child{padding-bottom:0}
+.step-n-col{display:flex;flex-direction:column;align-items:center;gap:0}
+.step-n{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.6rem;font-weight:700;
+  background:var(--bg3);border:1px solid var(--bdr);
+  color:var(--text3);flex-shrink:0;
+  transition:all .2s;
+}
+.wf-step.done .step-n{background:var(--check);border-color:var(--check);color:white}
+.step-line{width:1px;flex:1;background:var(--bdr);min-height:8px}
+.wf-step:last-child .step-line{display:none}
+.step-body{padding-top:2px}
+.step-text{font-size:.82rem;color:var(--text2);line-height:1.5}
+.step-async{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:.62rem;font-weight:600;
+  color:var(--orange);
+  background:rgba(251,146,60,.1);padding:1px 7px;border-radius:4px;
+  margin-top:3px;
+}
+.step-confirm{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:.62rem;font-weight:600;
+  color:var(--red);
+  background:rgba(248,113,113,.1);padding:1px 7px;border-radius:4px;
+  margin-top:3px;
+}
+.step-parallel{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:.62rem;font-weight:600;
+  color:var(--cyan);
+  background:rgba(56,189,248,.1);padding:1px 7px;border-radius:4px;
+  margin-top:3px;
+}
+.wf-note{
+  padding:12px 16px;margin:0 24px 16px;
+  background:var(--bg3);border-left:3px solid var(--purple);border-radius:0 var(--r-sm) var(--r-sm) 0;
+  font-size:.78rem;color:var(--text2);line-height:1.6;
+}
+.wf-note strong{color:var(--text)}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 3 — TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════ */
+.trouble-grid{display:flex;flex-direction:column;gap:12px}
+.trouble-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.trouble-card:hover{border-color:var(--bdr2)}
+.trouble-header{
+  padding:18px 22px;cursor:pointer;
+  display:flex;align-items:center;gap:14px;
+  transition:background .15s;
+}
+.trouble-header:hover{background:var(--hover-bg)}
+.trouble-id{
+  font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.1em;
+  padding:4px 9px;border-radius:6px;white-space:nowrap;
+}
+.trouble-title-row{flex:1}
+.trouble-title{font-size:.88rem;font-weight:700;color:var(--text)}
+.trouble-trigger{font-size:.77rem;color:var(--text3);margin-top:2px;font-style:italic}
+.trouble-arrow{
+  width:20px;height:20px;color:var(--text3);flex-shrink:0;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.trouble-card.open .trouble-arrow{transform:rotate(90deg)}
+.trouble-body{
+  display:none;padding:0 22px 20px;border-top:1px solid var(--bdr);
+}
+.trouble-card.open .trouble-body{display:block;padding-top:16px}
+.trouble-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.trouble-step{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:.82rem;color:var(--text2);line-height:1.6;
+}
+.trouble-step-n{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.58rem;font-weight:700;
+  color:var(--text3);flex-shrink:0;margin-top:1px;
+}
+.trouble-code{
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);
+  padding:12px 16px;margin:10px 0;
+  font-family:var(--mono);font-size:.74rem;color:var(--text2);
+  line-height:1.85;overflow-x:auto;position:relative;
+}
+.trouble-code .copy-btn{
+  position:absolute;top:8px;right:8px;
+}
+.trouble-warn{
+  padding:10px 14px;
+  background:rgba(251,146,60,.08);border-left:3px solid var(--orange);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;
+  font-size:.8rem;color:var(--text2);line-height:1.6;
+}
+.trouble-warn strong{color:var(--orange)}
+
+/* error id color bands */
+.t-auth{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.t-tool{background:rgba(251,146,60,.15);color:var(--orange);border:1px solid rgba(251,146,60,.3)}
+.t-param{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.t-net{background:rgba(56,189,248,.15);color:var(--cyan);border:1px solid rgba(56,189,248,.3)}
+.t-async{background:rgba(139,92,246,.15);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.t-logic{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 4 — RESOURCES / ORBITAL
+═══════════════════════════════════════════════════════════════════ */
+.resources-layout{
+  display:grid;grid-template-columns:1fr 420px;
+  gap:32px;align-items:start;
+  min-height:70vh;
+}
+.orbital-stage{
+  position:relative;
+  height:520px;
+  display:flex;align-items:center;justify-content:center;
+}
+.orbital-center{
+  position:absolute;
+  width:72px;height:72px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  z-index:10;
+  box-shadow:0 0 0 16px rgba(139,92,246,.08),0 0 0 30px rgba(139,92,246,.04);
+}
+.orbital-center-inner{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,0.9);
+}
+.orbital-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid var(--bdr);
+  pointer-events:none;
+}
+.orbital-nodes{position:absolute;inset:0}
+.orbital-node{
+  position:absolute;
+  width:44px;height:44px;
+  border-radius:50%;
+  border:2px solid var(--bdr2);
+  background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:all .3s;
+  transform:translate(-50%,-50%);
+  font-size:1rem;
+  z-index:5;
+}
+.orbital-node:hover,.orbital-node.active{
+  background:var(--purple);border-color:var(--purple);
+  box-shadow:0 0 20px rgba(139,92,246,.4);
+  transform:translate(-50%,-50%) scale(1.15);
+}
+.orbital-node-label{
+  position:absolute;top:calc(100% + 6px);
+  white-space:nowrap;
+  font-size:.62rem;font-weight:600;color:var(--text2);
+  text-align:center;
+  pointer-events:none;
+  left:50%;transform:translateX(-50%);
+}
+.orbital-ping{
+  position:absolute;inset:-8px;border-radius:50%;
+  background:rgba(139,92,246,.2);
+  animation:orbPing 2s ease infinite;
+  display:none;
+}
+.orbital-node.active .orbital-ping{display:block}
+@keyframes orbPing{
+  0%{transform:scale(.8);opacity:1}
+  100%{transform:scale(1.5);opacity:0}
+}
+.resource-panel{display:flex;flex-direction:column;gap:0}
+.resource-detail{display:none}
+.resource-detail.active{display:flex;flex-direction:column;gap:16px;animation:slideUp .3s ease}
+.resource-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:22px 24px;
+}
+.rc-tag{
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--purple);margin-bottom:8px;
+}
+.rc-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.rc-desc{font-size:.82rem;color:var(--text2);line-height:1.65;margin-bottom:14px}
+.rc-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:.74rem;font-weight:600;
+  color:var(--purple);
+  background:rgba(139,92,246,.1);border:1px solid var(--bdr2);
+  padding:7px 14px;border-radius:var(--r-sm);
+  transition:all .2s;
+}
+.rc-link:hover{background:rgba(139,92,246,.18);border-color:var(--purple)}
+.rc-links{display:flex;flex-wrap:wrap;gap:8px}
+.resource-hint{
+  text-align:center;font-size:.8rem;color:var(--text3);
+  padding:16px;
+}
+
+/* ─── SEARCH ─────────────────────────────────────────────────────── */
+.search-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:100px;
+  background:var(--input-bg);border:1px solid var(--bdr);
+  color:var(--text3);cursor:pointer;
+  font-size:.73rem;font-weight:500;
+  transition:all .2s;
+}
+.search-btn:hover{background:var(--hover-bg);border-color:var(--bdr2);color:var(--text2)}
+.search-btn-icon{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.search-kbd{
+  font-family:var(--mono);font-size:.6rem;font-weight:700;
+  background:var(--bg3);border:1px solid var(--bdr);
+  color:var(--text3);padding:2px 6px;border-radius:4px;
+  letter-spacing:.04em;white-space:nowrap;
+}
+.search-overlay{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(5,3,15,.76);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding-top:13vh;
+  opacity:0;pointer-events:none;
+  transition:opacity .18s;
+}
+.search-overlay.open{opacity:1;pointer-events:all}
+.search-box{
+  width:100%;max-width:660px;margin:0 24px;
+  background:var(--surf);
+  border:1px solid var(--bdr2);
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 1px rgba(139,92,246,.08);
+  transform:translateY(-16px) scale(.96);
+  transition:transform .24s cubic-bezier(.16,1,.3,1);
+}
+.search-overlay.open .search-box{transform:none}
+.search-input-wrap{
+  display:flex;align-items:center;gap:12px;
+  padding:18px 22px;
+  border-bottom:1px solid var(--bdr);
+}
+.search-input-wrap .si-icon{width:19px;height:19px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+#search-input{
+  flex:1;background:none;border:none;outline:none;
+  font-family:var(--sans);font-size:1.05rem;color:var(--text);
+  caret-color:var(--purple);
+}
+#search-input::placeholder{color:var(--text3)}
+.search-esc{
+  font-family:var(--mono);font-size:.62rem;color:var(--text3);
+  background:var(--bg3);border:1px solid var(--bdr);
+  padding:3px 8px;border-radius:5px;flex-shrink:0;cursor:pointer;
+}
+.search-results{max-height:400px;overflow-y:auto}
+.search-result{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 22px;cursor:pointer;
+  border-bottom:1px solid rgba(139,92,246,.05);
+  transition:background .1s;
+}
+.search-result:hover,.search-result.sel{background:var(--hover-bg)}
+.search-result:last-child{border-bottom:none}
+.sr-icon{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;
+  background:var(--bg3);border:1px solid var(--bdr);
+}
+.sr-body{flex:1;min-width:0}
+.sr-title{font-size:.86rem;font-weight:600;color:var(--text);line-height:1.3}
+.sr-meta{font-size:.73rem;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-tab{
+  font-family:var(--mono);font-size:.58rem;font-weight:700;
+  padding:2px 7px;border-radius:4px;
+  white-space:nowrap;flex-shrink:0;align-self:center;
+}
+.sr-tab-setup{background:rgba(52,211,153,.1);color:var(--green)}
+.sr-tab-wf{background:rgba(139,92,246,.1);color:var(--purple)}
+.sr-tab-ts{background:rgba(248,113,113,.1);color:var(--red)}
+.sr-tab-res{background:rgba(56,189,248,.1);color:var(--cyan)}
+.search-empty{padding:36px 22px;text-align:center;font-size:.85rem;color:var(--text3)}
+.search-footer{
+  padding:10px 22px;border-top:1px solid var(--bdr);
+  display:flex;align-items:center;gap:10px;
+  font-size:.68rem;color:var(--text3);
+}
+.search-footer kbd{
+  font-family:var(--mono);font-size:.58rem;
+  background:var(--bg3);border:1px solid var(--bdr);
+  padding:2px 6px;border-radius:4px;color:var(--text2);
+}
+
+/* ─── FILE STRUCTURE ─────────────────────────────────────────────── */
+.file-tree-wrap{
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;
+}
+.file-tree{
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:20px 24px;
+  font-family:var(--mono);font-size:.78rem;line-height:1.9;
+  color:var(--text2);
+}
+.ft-root{color:var(--cyan);font-weight:700}
+.ft-dir{color:var(--purple);font-weight:600}
+.ft-file{color:var(--text2)}
+.ft-file.important{color:var(--yellow);font-weight:600}
+.ft-file.secret{color:var(--red)}
+.ft-comment{color:var(--text3);font-style:italic;font-size:.72rem}
+.ft-line{display:flex;align-items:baseline;gap:8px}
+.ft-annotation{
+  background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);
+  padding:12px 16px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.fa-row{display:flex;align-items:flex-start;gap:10px;font-size:.8rem;color:var(--text2);line-height:1.5}
+.fa-key{font-family:var(--mono);font-size:.7rem;font-weight:600;flex-shrink:0;min-width:120px}
+.ignore-block{
+  margin-top:16px;
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);
+  overflow:hidden;
+}
+.ignore-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--bdr);
+}
+.ignore-title{font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.ignore-body{padding:12px 16px;font-family:var(--mono);font-size:.74rem;color:var(--text2);line-height:1.85}
+.ig-comment{color:var(--text3)}
+.ig-entry{color:var(--red)}
+
+/* ─── SUBSCRIPTION CARDS ─────────────────────────────────────────── */
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.sub-card{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:18px 20px;
+}
+.sub-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sub-icon{font-size:1.2rem}
+.sub-name{font-size:.88rem;font-weight:700;color:var(--text)}
+.sub-plan{font-family:var(--mono);font-size:.62rem;font-weight:700;
+  padding:2px 8px;border-radius:100px;
+  background:rgba(139,92,246,.12);border:1px solid var(--bdr2);color:var(--purple)}
+.sub-desc{font-size:.78rem;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.sub-link{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:.72rem;font-weight:600;
+  color:var(--cyan);
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .wrap{padding:0 20px}
+  .workflow-grid{grid-template-columns:1fr}
+  .resources-layout{grid-template-columns:1fr}
+  .orbital-stage{height:400px}
+  .hero-h1{font-size:2rem}
+  .nav{padding:0 16px}
+  .nav-logo{margin-right:16px}
+  .file-tree-wrap{grid-template-columns:1fr}
+  .sub-grid{grid-template-columns:1fr}
+  .cs-container{height:80rem;padding:0 20px}
+  .cs-card{height:34rem}
+}
+@media(max-width:600px){
+  .nav-badge{display:none}
+  .search-btn span:not(.search-btn-icon):not(.search-kbd){display:none}
+  .cs-container{height:72rem;padding:0 8px}
+  .cs-card{height:30rem}
+  .hero-h1{font-size:2.4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    Mastermind Hub
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="setup">01 · Get Started</button>
+    <button class="nav-tab" data-page="workflows">02 · Workflows</button>
+    <button class="nav-tab" data-page="troubleshoot">03 · Troubleshooting</button>
+    <button class="nav-tab" data-page="resources">04 · Resources</button>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">Agency Series</span>
+    <button class="search-btn" id="search-btn" title="Search knowledge hub (⌘K / Ctrl+K)">
+      <svg class="search-btn-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search</span>
+      <span class="search-kbd mac-cmd">⌘K</span>
+      <span class="search-kbd win-cmd" style="display:none">Ctrl+K</span>
+    </button>
+    <button class="theme-btn" id="theme-btn" title="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ SEARCH MODAL ══════════════════════════════════════════════════ -->
+<div class="search-overlay" id="search-overlay">
+  <div class="search-box" role="dialog" aria-label="Search">
+    <div class="search-input-wrap">
+      <svg class="si-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" type="text" placeholder="Search commands, workflows, errors, tools…" autocomplete="off" spellcheck="false">
+      <span class="search-esc" id="search-close">ESC</span>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty">Start typing to search across all sections…</div>
+    </div>
+    <div class="search-footer">
+      <kbd>↑↓</kbd> Navigate &nbsp;&nbsp;
+      <kbd>↵</kbd> Go to section &nbsp;&nbsp;
+      <kbd>ESC</kbd> Close
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 1 — GET STARTED
+══════════════════════════════════════════════════════════════════════ -->
+<div id="page-setup" class="page active">
+
+  <!-- ContainerScroll: hero title + checklist card in one scroll-driven container -->
+  <div class="cs-container" id="hero-scroll">
+    <div class="cs-inner">
+      <div class="cs-perspective">
+
+        <!-- HEADER — translateY 0 → -100px as scroll progresses -->
+        <div class="cs-header" id="hero-title">
+          <div class="hero-eyebrow">Agentic Agency Series <span class="hero-eyebrow-arrow">→</span></div>
+          <h1 class="hero-h1">Get Started<br>Guide</h1>
+        </div>
+
+        <!-- CARD — rotateX 20→0, scale 1.05→1, -mt-12 overlaps header -->
+        <div class="cs-card-wrap" id="scroll-card-wrap">
+          <div class="cs-card" id="scroll-card">
+            <div class="scroll-card-inner">
+              <!-- progress -->
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-label">Setup Progress</span>
+                  <span class="progress-count" id="progress-count">0 / 15</span>
+                </div>
+                <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar"></div></div>
+                <div class="platform-toggle" id="platform-toggle">
+                  <button class="platform-btn active" data-os="mac">🍎 Mac</button>
+                  <button class="platform-btn" data-os="win">🪟 Windows</button>
+                </div>
+              </div>
+              <!-- CHECKLIST (existing content stays here unchanged) -->
+              <div class="checklist" id="checklist">
+
+            <!-- ── SUBSCRIPTIONS ── -->
+            <div class="check-section-label">Subscriptions &amp; Accounts</div>
+
+            <div class="check-item" data-id="c1">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Claude Pro or Max subscription</strong><br>
+                <span class="mac-cmd">Claude Code requires an active Claude.ai subscription. <strong>Pro ($20/mo)</strong> covers personal use. <strong>Max ($100/mo)</strong> is recommended for agency workloads — higher rate limits and extended context.</span>
+                <span class="win-cmd" style="display:none">Claude Code requires an active Claude.ai subscription. <strong>Pro ($20/mo)</strong> covers personal use. <strong>Max ($100/mo)</strong> is recommended for agency workloads — higher rate limits and extended context.</span>
+                <div class="check-cmd"><a class="code-pill" href="https://claude.ai" target="_blank">claude.ai → Upgrade</a></div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c2">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>SearchAtlas account &amp; API key</strong><br>
+                An active SearchAtlas plan is required to use the MCP tools. After subscribing, generate your key at <em>Settings → API Keys</em>.
+                <div class="check-cmd"><a class="code-pill" href="https://searchatlas.com" target="_blank">searchatlas.com → Subscribe</a></div>
+              </div>
+            </div>
+
+            <!-- ── SOFTWARE ── -->
+            <div class="check-section-label">Software Installation</div>
+
+            <div class="check-item" data-id="c3">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Warp Terminal <span style="font-weight:400;color:var(--text3)">(recommended)</span></strong><br>
+                <span class="mac-cmd">AI-native terminal. Free download: <a class="code-pill" href="https://www.warp.dev" target="_blank">warp.dev</a> — or install via Homebrew:
+                  <div class="check-cmd" style="margin-top:4px">
+                    <span class="code-pill">brew install --cask warp</span>
+                    <button class="copy-btn" data-copy="brew install --cask warp"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                  </div>
+                  After install: <em>Warp → Settings → Features → Enable AI</em> for natural-language commands.</span>
+                <span class="win-cmd" style="display:none">Download the Windows installer from <a class="code-pill" href="https://www.warp.dev" target="_blank">warp.dev</a> — native Windows app is available. After install: <em>Warp → Settings → Features → Enable AI</em>.<br>Alternative: <strong>Windows Terminal</strong> (from Microsoft Store) with Git Bash profile also works.</span>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c4">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Node.js ≥ 18</strong><br>
+                Required to install and run Claude Code CLI.
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="mac-cmd"><span class="code-pill">brew install node</span> or use <a class="code-pill" href="https://nodejs.org" target="_blank">nodejs.org</a></span>
+                  <span class="win-cmd" style="display:none">Download the LTS installer from <a class="code-pill" href="https://nodejs.org" target="_blank">nodejs.org</a></span>
+                  <button class="copy-btn mac-cmd" data-copy="brew install node"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd">Verify: <span class="code-pill">node --version</span> — must show v18.x or higher.</div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c5">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Git</strong>
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="mac-cmd"><span class="code-pill">xcode-select --install</span> (includes git) or <span class="code-pill">brew install git</span></span>
+                  <span class="win-cmd" style="display:none">Download from <a class="code-pill" href="https://git-scm.com" target="_blank">git-scm.com</a> — includes Git Bash which is required for running .sh scripts on Windows.</span>
+                  <button class="copy-btn mac-cmd" data-copy="xcode-select --install"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd">Verify: <span class="code-pill">git --version</span></div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c6">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Claude Code CLI</strong><br>
+                Install globally via npm. Requires Node 18+ from the previous step.
+                <div class="check-cmd">
+                  <span class="code-pill">npm install -g @anthropic-ai/claude-code</span>
+                  <button class="copy-btn" data-copy="npm install -g @anthropic-ai/claude-code"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">
+                  Verify &amp; auth: <span class="code-pill">claude</span>
+                  <span class="mac-cmd"> — opens browser to log in with your Claude.ai account.</span>
+                  <span class="win-cmd" style="display:none"> — opens browser to log in. Use Git Bash, not PowerShell.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── REPOSITORY ── -->
+            <div class="check-section-label">Repository Setup</div>
+
+            <div class="check-item" data-id="c7">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Clone the repository</strong>
+                <div class="check-cmd">
+                  <span class="code-pill">git clone https://github.com/manickbhan/agentic-mastermind.git</span>
+                  <button class="copy-btn" data-copy="git clone https://github.com/manickbhan/agentic-mastermind.git"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">
+                  Navigate:
+                  <span class="code-pill mac-cmd">cd agentic-mastermind</span>
+                  <span class="code-pill win-cmd" style="display:none">cd agentic-mastermind</span>
+                  <button class="copy-btn" data-copy="cd agentic-mastermind"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c8">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Run the setup wizard</strong><br>
+                Copies commands to <code>~/.claude/commands/</code>, writes <code>.env</code>, and configures <code>~/.claude/settings.json</code>. Paste your SearchAtlas API key when prompted.
+                <div class="check-cmd">
+                  <span class="code-pill mac-cmd">bash setup.sh</span>
+                  <span class="code-pill win-cmd" style="display:none">bash setup.sh</span>
+                  <button class="copy-btn" data-copy="bash setup.sh"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="win-cmd" style="display:none">⚠️ On Windows: run this inside <strong>Git Bash</strong>, not PowerShell.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c9">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Run the verify script</strong><br>
+                Checks .env, API key format, file permissions, MCP config, and live connectivity. Fix any RED items before moving on.
+                <div class="check-cmd">
+                  <span class="code-pill">bash scripts/verify-setup.sh</span>
+                  <button class="copy-btn" data-copy="bash scripts/verify-setup.sh"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c-mcp">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Verify MCP connections</strong><br>
+                Open Claude Code in the repo folder and confirm all tools are live. Every connection should show green before running any workflow.
+                <div class="check-cmd">
+                  <span class="code-pill">/mcp</span>
+                  <button class="copy-btn" data-copy="/mcp"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">If any connection is red → re-run <span class="code-pill">bash setup.sh</span> or see the Troubleshooting tab.</div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c10">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Open Claude Code and test MCP connection</strong><br>
+                Open your terminal in the repo folder and launch Claude Code. Type <code>/my-account</code> — it should return your SearchAtlas projects, GBP locations, and quota.
+                <div class="check-cmd">
+                  <span class="code-pill mac-cmd">claude</span>
+                  <span class="code-pill win-cmd" style="display:none">claude</span>
+                  <button class="copy-btn" data-copy="claude"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── CONFIGURATION ── -->
+            <div class="check-section-label">Configuration</div>
+
+            <div class="check-item" data-id="c-integrations">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Set up communication integrations</strong><br>
+                Add your webhook/API credentials to <code>.env</code> for Slack, Discord, or Email notifications. These power the <code>/send-*</code> commands.
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="mac-cmd">Open <span class="code-pill">.env</span> in the repo and add the vars you need:</span>
+                  <span class="win-cmd" style="display:none">Open <span class="code-pill">.env</span> in the repo and add the vars you need:</span>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="code-pill">SLACK_WEBHOOK_URL</span>
+                  <span class="code-pill">DISCORD_WEBHOOK_URL</span>
+                  <span class="code-pill">RESEND_API_KEY</span>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">Skip any you don't need — all integrations are optional. See Resources → Integrations for where to get each credential.</div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c11">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Create .claudeignore in the repo root</strong><br>
+                Prevents token waste by excluding large/unnecessary files from Claude's context. See the File Structure section below for the exact contents.
+                <div class="check-cmd">
+                  <span class="code-pill mac-cmd">touch .claudeignore</span>
+                  <span class="code-pill win-cmd" style="display:none">type nul &gt; .claudeignore</span>
+                  <button class="copy-btn mac-cmd" data-copy="touch .claudeignore"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                  <button class="copy-btn win-cmd" style="display:none" data-copy="type nul > .claudeignore"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── AGENCY MEMORY ── -->
+            <div class="check-section-label">Agency Memory</div>
+
+            <div class="check-item" data-id="c-claudemd">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Write your CLAUDE.md</strong><br>
+                This is Claude's persistent memory — loaded every session. Add your agency identity, client list, preferred tools, and non-negotiable rules. Keep it under 150 lines.
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="code-pill mac-cmd">nano CLAUDE.md</span>
+                  <span class="code-pill win-cmd" style="display:none">notepad CLAUDE.md</span>
+                  <button class="copy-btn mac-cmd" data-copy="nano CLAUDE.md"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">Template available in the Resources tab. Include: agency name, clients, tools, tone preference, and action rules.</div>
+              </div>
+            </div>
+
+            <div class="check-item" data-id="c-skills">
+              <div class="check-box"><svg class="check-box-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+              <div class="check-label">
+                <strong>Create AI_RULES.md and skills/ folder</strong><br>
+                <code>AI_RULES.md</code> sets agency-wide non-negotiables (tone, tools, scope). <code>skills/</code> holds your workflow SOPs — each file is one repeatable process (e.g., <code>keyword-research.md</code>, <code>client-report.md</code>). Claude runs them on demand.
+                <div class="check-cmd" style="margin-top:4px">
+                  <span class="code-pill mac-cmd">touch AI_RULES.md && mkdir -p skills</span>
+                  <span class="code-pill win-cmd" style="display:none">type nul &gt; AI_RULES.md &amp;&amp; mkdir skills</span>
+                  <button class="copy-btn mac-cmd" data-copy="touch AI_RULES.md && mkdir -p skills"><span class="copy-tooltip">Click to copy</span><svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+                </div>
+                <div class="check-cmd" style="margin-top:4px">Start with your top 3 most-repeated workflows. See Workflows tab → Skill Files for ready-made templates.</div>
+              </div>
+            </div>
+
+
+              </div><!-- /checklist -->
+              <!-- COMPLETION STATE (hidden until all done) -->
+              <div class="checklist-done" id="checklist-done" style="display:none">
+                <div class="done-badge">✅ Setup Complete</div>
+                <p class="done-sub">You're ready. Run <code class="code-pill">/my-account</code> inside Claude Code to verify everything is connected.</p>
+                <button class="done-reset-btn" id="done-reset">↺ Reset checklist</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE STRUCTURE -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--cyan)"></span>File Structure</div>
+      <h2 class="sec-h">Repository Layout &amp; Token Hygiene</h2>
+      <p class="sec-p">Know what each file does — and which ones Claude Code should never read. A clean structure = fast, cheap sessions.</p>
+    </div>
+
+    <div class="file-tree-wrap rv d1">
+      <div>
+        <div class="file-tree">
+<span class="ft-root">agentic-mastermind/</span>
+├── <span class="ft-file important">.claudeignore</span>      <span class="ft-comment">← exclude from AI context</span>
+├── <span class="ft-file important">CLAUDE.md</span>          <span class="ft-comment">← agency memory, &lt;150 lines</span>
+├── <span class="ft-file important">AI_RULES.md</span>        <span class="ft-comment">← non-negotiable agency rules</span>
+├── <span class="ft-file important">setup.sh</span>           <span class="ft-comment">← run once after clone</span>
+├── <span class="ft-file secret">.env</span>               <span class="ft-comment">← NEVER in AI context</span>
+│
+├── <span class="ft-dir">skills/</span>            <span class="ft-comment">← your workflow SOPs (.md files)</span>
+│   ├── keyword-research.md
+│   ├── client-report.md
+│   └── … your custom skills
+│
+├── <span class="ft-dir">commands/</span>          <span class="ft-comment">← 14 slash command .md files</span>
+│   ├── run-seo.md
+│   ├── run-gbp.md
+│   └── … 12 more
+│
+├── <span class="ft-dir">workflows/</span>         <span class="ft-comment">← 7 YAML workflow templates</span>
+│   ├── seo-onboarding.yaml
+│   └── … 6 more
+│
+├── <span class="ft-dir">integrations/</span>      <span class="ft-comment">← bash scripts (auto-excluded)</span>
+│   ├── slack/send-message.sh
+│   ├── discord/send-message.sh
+│   └── email/send-email.sh
+│
+└── <span class="ft-dir">scripts/</span>
+    └── verify-setup.sh
+        </div>
+      </div>
+
+      <div>
+        <div class="ft-annotation rv d2">
+          <div class="fa-row"><span class="fa-key" style="color:var(--yellow)">.claudeignore</span><span>Works like .gitignore — listed paths are hidden from Claude Code. <strong>Critical</strong> to prevent token drain.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--green)">CLAUDE.md</span><span>Agency memory. Loaded every session. Keep under 150 lines — one fact per line, no prose. Covers: identity, clients, tools, rules.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--orange)">AI_RULES.md</span><span>Hard non-negotiables that apply to every client: never publish without approval, never expose keys, confirm before destructive actions.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--pink)">skills/</span><span>Markdown SOPs Claude runs on demand. Each file = one repeatable workflow. Invoke with <code>use skill [name]</code>. Write once, reuse forever.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--red)">.env</span><span>API keys and secrets. <strong>Never</strong> reference this path in conversation. Always add to .claudeignore and .gitignore.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--purple)">commands/</span><span>Slash commands loaded on-demand when you type /run-seo etc. Not loaded upfront — no token cost at session start.</span></div>
+          <div class="fa-row"><span class="fa-key" style="color:var(--cyan)">workflows/</span><span>YAML templates referenced by commands. Only the active workflow is loaded per session. ~500 tokens each.</span></div>
+        </div>
+
+        <div class="ignore-block rv d3">
+          <div class="ignore-header">
+            <span class="ignore-title">.claudeignore — copy this exactly</span>
+            <button class="copy-btn" style="width:auto;padding:4px 10px;gap:5px;border-radius:6px" data-copy=".git/&#10;node_modules/&#10;*.log&#10;dist/&#10;build/&#10;.env&#10;.env.*&#10;*.secret&#10;*.key&#10;*.lock&#10;__pycache__/&#10;.DS_Store&#10;*.tmp&#10;coverage/">
+              <svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:13px;height:13px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg>
+              <span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy all</span>
+            </button>
+          </div>
+          <div class="ignore-body">
+<span class="ig-comment"># Version control &amp; system</span>
+<span class="ig-entry">.git/
+.DS_Store</span>
+
+<span class="ig-comment"># Secrets — never expose</span>
+<span class="ig-entry">.env
+.env.*
+*.secret
+*.key</span>
+
+<span class="ig-comment"># Build artifacts / caches</span>
+<span class="ig-entry">node_modules/
+dist/
+build/
+*.lock
+__pycache__/
+coverage/
+*.tmp
+*.log</span>
+          </div>
+        </div>
+
+        <div class="trouble-warn rv d4" style="margin-top:12px">
+          <strong>Token budget rules:</strong> Session start loads ~2k tokens (CLAUDE.md + env). Each tool call uses 500–2k tokens. Run <code>/compact</code> at <strong>65–70%</strong> context bar. Run <code>/clear</code> at <strong>85%+</strong> for a clean restart.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAILY SESSION FLOW -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--green)"></span>Daily Routine</div>
+      <h2 class="sec-h">Session Flow — 30 Seconds to Running</h2>
+      <p class="sec-p">Same 6 steps every time. Do them in order and you'll never lose work or mix client data.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="rv d1">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">0</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Open Warp in your project folder</div><div class="code-pill" style="display:inline-block;margin-top:2px">cd ~/agentic-mastermind</div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">1</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Start Claude &amp; name your session</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="code-pill">claude</span><span style="font-size:.8rem;color:var(--text3);align-self:center">then</span><span class="code-pill">/rename client-task-date</span></div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">2</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Check connections</div><div class="code-pill" style="display:inline-block;margin-top:2px">/mcp → verify all green</div><div style="font-size:.78rem;color:var(--text3);margin-top:4px">30 seconds now saves a broken session later</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">3</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Get your bearings</div><div class="code-pill" style="display:inline-block;margin-top:2px">/my-account</div><div style="font-size:.78rem;color:var(--text3);margin-top:4px">Pull fresh account overview before touching work</div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">4</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Do the work — one client at a time</div><div style="font-size:.78rem;color:var(--text3);margin-top:4px">Describe the outcome in plain English. Drop @files or paste screenshots directly.</div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">5</div>
+          <div><div style="font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:3px">Export + clear before switching clients</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="code-pill">/export</span><span style="font-size:.8rem;color:var(--text3);align-self:center">then</span><span class="code-pill">/clear</span></div><div style="font-size:.78rem;color:var(--text3);margin-top:4px">Every. Single. Time.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard shortcuts -->
+    <div class="rv d2" style="margin-top:28px">
+      <div class="sec-tag" style="margin-bottom:12px"><span class="sec-tag-dot" style="background:var(--text3)"></span>Keyboard Shortcuts</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:12px;text-align:center">
+          <div style="font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--purple);margin-bottom:4px">Esc</div>
+          <div style="font-size:.75rem;color:var(--text2)">Stop Claude mid-task</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:12px;text-align:center">
+          <div style="font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--cyan);margin-bottom:4px">Shift+Tab</div>
+          <div style="font-size:.75rem;color:var(--text2)">Enter plan mode</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:12px;text-align:center">
+          <div style="font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--orange);margin-bottom:4px">Ctrl+G</div>
+          <div style="font-size:.75rem;color:var(--text2)">Edit the plan</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:12px;text-align:center">
+          <div style="font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--green);margin-bottom:4px"># + Enter</div>
+          <div style="font-size:.75rem;color:var(--text2)">Warp AI command</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Essential commands quick ref -->
+    <div class="rv d3" style="margin-top:20px">
+      <div class="sec-tag" style="margin-bottom:12px"><span class="sec-tag-dot" style="background:var(--text3)"></span>Essential Commands</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/help</span><span style="font-size:.78rem;color:var(--text2)">Show all commands</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/clear</span><span style="font-size:.78rem;color:var(--text2)">Clear context between clients</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/compact</span><span style="font-size:.78rem;color:var(--text2)">Free memory at 65–70%</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/rename</span><span style="font-size:.78rem;color:var(--text2)">Name the current session</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/resume</span><span style="font-size:.78rem;color:var(--text2)">Pick up cross-day work</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/export</span><span style="font-size:.78rem;color:var(--text2)">Save outputs to /reports/</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/plan</span><span style="font-size:.78rem;color:var(--text2)">Think before big tasks</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/btw</span><span style="font-size:.78rem;color:var(--text2)">Quick Q without history</span></div>
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;display:flex;gap:10px;align-items:center"><span class="code-pill" style="flex-shrink:0">/mcp</span><span style="font-size:.78rem;color:var(--text2)">Verify MCP connections</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MANUAL MCP CONFIG -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--orange)"></span>Manual Setup</div>
+      <h2 class="sec-h">If the wizard fails</h2>
+      <p class="sec-p">If <code>setup.sh</code> doesn't work or you're adding the MCP server manually, edit this file directly. The header name is case-sensitive — <strong>X-API-KEY</strong> exactly.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="rv d1">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-family:var(--mono);font-size:.65rem;color:var(--text3);font-weight:600;letter-spacing:.12em;text-transform:uppercase">~/.claude/settings.json</span>
+          <button class="copy-btn" data-copy='{"mcpServers":{"searchatlas":{"type":"url","url":"https://mcp.searchatlas.com/sse","headers":{"X-API-KEY":"YOUR_API_KEY_HERE"}}}}' style="width:auto;padding:4px 10px;gap:4px;border-radius:6px">
+            <svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:13px;height:13px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span>
+          </button>
+        </div>
+        <div class="trouble-code" style="margin:0">
+{
+  "mcpServers": {
+    "searchatlas": {
+      "type": "url",
+      "url": "https://mcp.searchatlas.com/sse",
+      "headers": {
+        "X-API-KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}</div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">.env (optional integrations)</div>
+        <div class="trouble-code" style="margin:0">
+# Required
+SA_API_KEY=sk-your-key-here
+
+# Slack (optional)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/...
+SLACK_WEBHOOK_SEO=https://hooks.slack.com/...
+
+# Discord (optional)
+DISCORD_WEBHOOK_URL=https://discord.com/api/...
+
+# Email via Resend (optional)
+RESEND_API_KEY=re_your_key
+EMAIL_FROM=you@yourdomain.com
+
+# Circle (optional)
+CIRCLE_API_KEY=your_key
+CIRCLE_COMMUNITY_ID=12345</div>
+      </div>
+    </div>
+    <div class="trouble-warn rv d2" style="margin-top:20px">
+      <strong>⚠️ Key Rotation Gotcha:</strong> Editing <code>.env</code> alone does NOT update the running MCP config. After changing your API key, re-run <code>bash setup.sh</code> OR manually update <code>~/.claude/settings.json</code>. That file is what Claude Code reads at runtime.
+    </div>
+  </section>
+
+</div><!-- /page-setup -->
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 2 — WORKFLOWS
+══════════════════════════════════════════════════════════════════════ -->
+<div id="page-workflows" class="page">
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--purple)"></span>Execution Guide</div>
+      <h2 class="sec-h">7 Workflows — Step by Step</h2>
+      <p class="sec-p">Each workflow has strict step dependencies. Skipping steps causes "missing ID" errors downstream. Follow the order, and watch for async steps that need polling.</p>
+    </div>
+
+    <div class="workflow-grid">
+
+      <!-- SEO Onboarding -->
+      <div class="wf-card rv d1">
+        <div class="wf-header">
+          <span class="wf-icon">🔍</span>
+          <div class="wf-info">
+            <div class="wf-name">SEO Onboarding</div>
+            <div class="wf-cmd">/run-seo → New Client</div>
+          </div>
+          <span class="wf-badge">7 steps</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create OTTO Project for the client domain</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create Site Audit <span style="color:var(--text3);font-size:.75rem">— needs project_id from step 1</span></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Get Pillar Scores <span style="color:var(--text3);font-size:.75rem">— needs audit to exist</span></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create Brand Vault <div class="step-parallel">⇄ Parallel with step 5</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Keyword Research <div class="step-parallel">⇄ Parallel with step 4</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">6</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create Topical Map <span style="color:var(--text3);font-size:.75rem">— needs step 5</span></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">7</div></div><div class="step-body"><div class="step-text">Generate Articles <span style="color:var(--text3);font-size:.75rem">— needs brand_vault_id + topical_map_id</span></div></div></div>
+        </div>
+        <div class="wf-note">Generate max <strong>4 articles per session</strong>. Content gen takes 3–8 min per article — this is normal, not a hang.</div>
+      </div>
+
+      <!-- Monthly SEO -->
+      <div class="wf-card rv d2">
+        <div class="wf-header">
+          <span class="wf-icon">📅</span>
+          <div class="wf-info">
+            <div class="wf-name">Monthly SEO</div>
+            <div class="wf-cmd">/run-seo → Monthly Maintenance</div>
+          </div>
+          <span class="wf-badge">7 steps</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Issues Overview — reprocess autopilot</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Apply Suggestions <div class="step-parallel">⇄ Parallel with 3 & 4</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Deploy Schemas <div class="step-parallel">⇄ Parallel with 2 & 4</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Fix Indexing <div class="step-parallel">⇄ Parallel with 2 & 3</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Expand Topical Map</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">6</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Generate Articles</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">7</div></div><div class="step-body"><div class="step-text">Content Grader <div class="step-parallel">— independent, run anytime</div></div></div></div>
+        </div>
+      </div>
+
+      <!-- GBP Optimization -->
+      <div class="wf-card rv d3">
+        <div class="wf-header">
+          <span class="wf-icon">📍</span>
+          <div class="wf-info">
+            <div class="wf-name">GBP Optimization</div>
+            <div class="wf-cmd">/run-gbp → First-Time</div>
+          </div>
+          <span class="wf-badge">6 steps</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Load Location — sync from Google</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">AI Recommendations</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Fix Categories <div class="step-parallel">⇄ Parallel with 4 & 5</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Add Services <div class="step-parallel">⇄ Parallel with 3 & 5</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Add Attributes <div class="step-parallel">⇄ Parallel with 3 & 4</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">6</div></div><div class="step-body"><div class="step-text">Deploy to Google <div class="step-confirm">🚨 Confirm first — pushes to Google</div></div></div></div>
+        </div>
+        <div class="wf-note">Location must be <strong>verified on Google</strong> before deploying. Unverified locations accept the call but changes won't appear.</div>
+      </div>
+
+      <!-- PPC Launch -->
+      <div class="wf-card rv d4">
+        <div class="wf-header">
+          <span class="wf-icon">📈</span>
+          <div class="wf-info">
+            <div class="wf-name">PPC Launch</div>
+            <div class="wf-cmd">/run-ppc</div>
+          </div>
+          <span class="wf-badge">6 steps</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create &amp; Validate Business</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Generate Products from Landing Pages</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Validate URLs &amp; Approve Products</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Bulk Create Keyword Clusters <div class="step-async">⏳ Async — poll get_otto_ppc_task_status</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Send to Google Ads <div class="step-confirm">🚨 Confirm — spending starts here</div></div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">6</div></div><div class="step-body"><div class="step-text">Activate Campaigns <div class="step-confirm">🚨 Confirm — campaigns go live</div></div></div></div>
+        </div>
+        <div class="wf-note">Keyword clustering can take <strong>2–5 minutes</strong>. New campaigns take 24–48h for Google review before serving.</div>
+      </div>
+
+      <!-- GBP Monthly -->
+      <div class="wf-card rv d5">
+        <div class="wf-header">
+          <span class="wf-icon">💬</span>
+          <div class="wf-info">
+            <div class="wf-name">GBP Monthly</div>
+            <div class="wf-cmd">/run-gbp → Monthly</div>
+          </div>
+          <span class="wf-badge">4 steps</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Fetch unanswered reviews</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Auto-generate &amp; post replies</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Create &amp; publish monthly posts</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div></div><div class="step-body"><div class="step-text">Pull insights &amp; performance report</div></div></div>
+        </div>
+      </div>
+
+      <!-- Authority Building -->
+      <div class="wf-card rv d6">
+        <div class="wf-header">
+          <span class="wf-icon">🔗</span>
+          <div class="wf-info">
+            <div class="wf-name">Authority Building</div>
+            <div class="wf-cmd">/run-pr</div>
+          </div>
+          <span class="wf-badge">4 flows</span>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Write &amp; finalize press release</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Distribute via cloud stack</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-text">Launch digital PR campaign</div></div></div>
+          <div class="wf-step"><div class="step-n-col"><div class="step-n">4</div></div><div class="step-body"><div class="step-text">Track coverage &amp; acquired links</div></div></div>
+        </div>
+      </div>
+
+    </div><!-- /workflow-grid -->
+
+    <!-- Async polling note -->
+    <div class="trouble-warn rv d7" style="margin-top:28px">
+      <strong>Async tasks explained:</strong> Operations marked ⏳ return a task_id immediately. Claude polls <code>get_otto_task_status</code> every 5–10s until <code>status = SUCCESS</code>. If it looks like it's "hanging" — it's just waiting. Content takes 30–90s per phase. PPC keyword clusters take 2–5 minutes. Do NOT cancel unless it's been over 15 minutes.
+    </div>
+
+  </section>
+
+  <!-- POWER PROMPTS -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--yellow)"></span>Prompt Library</div>
+      <h2 class="sec-h">Power Prompts That Work</h2>
+      <p class="sec-p">Copy, paste, fill in the brackets. These are specific — vague prompts produce generic output.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d1">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">SEO Reporting</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Pull top 20 ranking keywords for [domain] from Search Atlas, compare to last month, write 2-paragraph executive summary of ranking progress suitable for non-technical client</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Pull top 20 ranking keywords for [domain] from Search Atlas, compare to last month, write 2-paragraph executive summary of ranking progress suitable for non-technical client"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d2">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px">Local SEO / GBP</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Check GBP profiles for all [X] locations of [client] in Search Atlas. Identify incomplete info or low optimization scores, create prioritized fix list</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Check GBP profiles for all [X] locations of [client] in Search Atlas. Identify incomplete info or low optimization scores, create prioritized fix list"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d3">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:10px">Content Creation</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Using Content Genius, create 5 blog posts targeting keywords in @keyword-list.txt, matching brand voice in @brand-guidelines.md. Output drafts to /reports/[client]/content/</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Using Content Genius, create 5 blog posts targeting keywords in @keyword-list.txt, matching brand voice in @brand-guidelines.md. Output drafts to /reports/[client]/content/"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d4">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin-bottom:10px">Client Communication</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Read last 5 emails from client@company.com, summarize open items, draft professional response to each, create tasks for any commitments made</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Read last 5 emails from client@company.com, summarize open items, draft professional response to each, create tasks for any commitments made"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d5">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);margin-bottom:10px">Monthly Reporting</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Get this month's keyword rankings for [client] from Search Atlas. Compare to last month. Identify top 5 wins and top 3 concerns. Write executive summary, save to /reports/[client]/[month].md</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Get this month's keyword rankings for [client] from Search Atlas. Compare to last month. Identify top 5 wins and top 3 concerns. Write executive summary, save to /reports/[client]/[month].md"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d6">
+        <div style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px">AI / LLM Visibility</div>
+        <div class="trouble-code" style="margin:0;font-size:.75rem;line-height:1.6">Run LLM visibility check for [client]. Show where they appear in ChatGPT and Perplexity answers for top 10 keywords. List what to do to improve AI search presence</div>
+        <button class="copy-btn" style="width:auto;padding:4px 12px;gap:6px;border-radius:6px;margin-top:10px" data-copy="Run LLM visibility check for [client]. Show where they appear in ChatGPT and Perplexity answers for top 10 keywords. List what to do to improve AI search presence"><svg class="copy-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check-icon" viewBox="0 0 24 24" style="position:static;width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:.68rem;font-weight:600;color:var(--text3)">Copy</span></button>
+      </div>
+
+    </div>
+
+    <div class="trouble-warn rv d7" style="margin-top:20px">
+      <strong>Prompting rule:</strong> Be specific — name the client, tool, and output format. Include "done" criteria (e.g., "confirm all 10 keywords have data"). Chain tasks with "then create a task for each item." Vague prompts produce generic output.
+    </div>
+  </section>
+
+  <!-- SKILL FILES -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--pink)"></span>Skill Files</div>
+      <h2 class="sec-h">Agency SOPs — Write Once, Run Forever</h2>
+      <p class="sec-p">Skill files are markdown documents in your <code>skills/</code> folder. Each one teaches Claude exactly how to run a repeatable workflow. Invoke with <code>use skill [name] for [client]</code>.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--purple);background:rgba(139,92,246,.1);padding:3px 8px;border-radius:4px">keyword-research.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">Keyword Research</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Pulls seed keywords from brand vault, classifies search intent, identifies entity gaps vs competitors, validates against KRT data. Output: keyword-map.csv</div>
+        <div class="code-pill" style="font-size:.7rem">use skill keyword-research for [client]</div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d2">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--cyan);background:rgba(56,189,248,.1);padding:3px 8px;border-radius:4px">entity-mapping.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">Entity Mapping</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Builds structured entity map for a topic cluster, identifies which entities client is missing vs competitors, produces priority page-creation list.</div>
+        <div class="code-pill" style="font-size:.7rem">use skill entity-mapping for [topic]</div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d3">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);padding:3px 8px;border-radius:4px">site-architecture.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">Site Architecture</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Generates complete site plan from keyword map — silo structure, URL slugs, internal link anchors, page relationships. Ready for Website Studio.</div>
+        <div class="code-pill" style="font-size:.7rem">use skill site-architecture for [client]</div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d4">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--orange);background:rgba(251,146,60,.1);padding:3px 8px;border-radius:4px">brand-voice.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">Brand Voice</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Applies client-specific tone, vocabulary, and style to all content. Pulls from brand vault data. Prevents generic "plumbing page" output.</div>
+        <div class="code-pill" style="font-size:.7rem">use skill brand-voice for [client]</div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d5">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--pink);background:rgba(244,114,182,.1);padding:3px 8px;border-radius:4px">cro-audit.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">CRO Audit</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Conversion rate optimization audit for a specific page — reviews CTAs, structure, intent match, and friction points. Outputs prioritized fixes.</div>
+        <div class="code-pill" style="font-size:.7rem">use skill cro-audit for [page URL]</div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px" class="rv d6">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--yellow);background:rgba(251,191,36,.1);padding:3px 8px;border-radius:4px">client-report.md</span>
+        </div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px">Client Report</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px">Monthly reporting structure — KPI definitions, executive summary format. Pulls ranking movement, traffic changes, writes commentary at client's reading level.</div>
+        <div class="code-pill" style="font-size:.7rem">use skill client-report for [month]</div>
+      </div>
+
+    </div>
+    <div class="trouble-warn rv d7" style="margin-top:20px">
+      <strong>How to create a skill file:</strong> Paste your best ChatGPT system prompt into Claude and say <em>"Convert this into a skill file."</em> Claude formats it with invocation syntax automatically. Skill files are living docs — update them when the underlying process improves, or when a client's brand voice changes.
+    </div>
+  </section>
+
+</div><!-- /page-workflows -->
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 3 — TROUBLESHOOTING
+══════════════════════════════════════════════════════════════════════ -->
+<div id="page-troubleshoot" class="page">
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--red)"></span>Error Reference</div>
+      <h2 class="sec-h">Troubleshooting Guide</h2>
+      <p class="sec-p">Find your error message below. Each card walks you through the exact fix — no guessing.</p>
+    </div>
+
+    <div class="trouble-grid">
+
+      <!-- T1 -->
+      <div class="trouble-card rv d1">
+        <div class="trouble-header">
+          <span class="trouble-id t-auth">T1</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Authentication Error</div>
+            <div class="trouble-trigger">"credentials not provided" or "authentication failed"</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Run the verify script first: <code class="code-pill">bash scripts/verify-setup.sh</code></div></div>
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Check that <code>~/.claude/settings.json</code> has a <code>searchatlas</code> block with <code>X-API-KEY</code> (all caps, hyphen — not underscore)</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>Confirm key is valid: log in at searchatlas.com → Settings → API Keys</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">4</div><div>Test the raw connection:</div></div>
+          </div>
+          <div class="trouble-code">
+            <button class="copy-btn" data-copy='curl -H "X-API-KEY: YOUR_KEY" https://mcp.searchatlas.com/sse'>
+              <span class="copy-tooltip">Click to copy</span>
+              <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+curl -H "X-API-KEY: YOUR_KEY" https://mcp.searchatlas.com/sse</div>
+          <div class="trouble-warn"><strong>⚠️ Key Rotation:</strong> If the key was rotated, re-run <code>bash setup.sh</code> with the new key. Editing <code>.env</code> alone is not enough — it must propagate to <code>settings.json</code>.</div>
+        </div>
+      </div>
+
+      <!-- T2 -->
+      <div class="trouble-card rv d2">
+        <div class="trouble-header">
+          <span class="trouble-id t-tool">T2</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Tool Not Found</div>
+            <div class="trouble-trigger">"Tool not found" or tool returns wrong data type</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Run schema discovery on any tool to see current operations:</div></div>
+          </div>
+          <div class="trouble-code">op: "help", params: {}</div>
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>If <code>project_management</code> returns content projects instead of OTTO projects → retry with <code>otto_project_management</code> prefix</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>Check deprecated tool names — common renames: <code>OTTO_Project_Management → project_management</code>, <code>BrandVaultTools → brand_vault</code></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T3 -->
+      <div class="trouble-card rv d3">
+        <div class="trouble-header">
+          <span class="trouble-id t-param">T3</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Parameter Validation Error</div>
+            <div class="trouble-trigger">"Parameter validation error" / "missing required field: [field]"</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div><strong>Read the error message carefully</strong> — it contains the correct schema with exact field names and types</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Common gotchas by tool group:</div></div>
+          </div>
+          <div class="trouble-code">
+brand_vault (CRUD)      → brand_vault_uuid  (NOT vault_id)
+brand_vault (read-only) → hostname           (NOT brand_vault_uuid)
+holistic_audit          → domain             (plain string)
+gbp_locations_crud      → location_id        (integer, NOT uuid)
+organic / backlinks     → project_identifier (domain, URL, or ID)
+project_management      → project_id         (UUID)</div>
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>Call the tool with empty params to get live schema: <code>op: "list_otto_projects", params: {}</code></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T4 + T5 -->
+      <div class="trouble-card rv d4">
+        <div class="trouble-header">
+          <span class="trouble-id t-net">T4</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">404 / Resource Not Found</div>
+            <div class="trouble-trigger">"404", "not found", empty results for a known resource</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Run <code>/my-account</code> to get a fresh list of all current IDs — never use hardcoded IDs</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Verify the resource exists in the SearchAtlas dashboard</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>If recently created: wait 1–2 minutes and retry (propagation lag is normal)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T6 -->
+      <div class="trouble-card rv d5">
+        <div class="trouble-header">
+          <span class="trouble-id t-net">T6</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Connection Timeout / Hangs</div>
+            <div class="trouble-trigger">Claude Code hangs, SSE drops, no response from MCP</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Test raw connectivity:</div></div>
+          </div>
+          <div class="trouble-code">
+            <button class="copy-btn" data-copy="curl https://mcp.searchatlas.com/sse">
+              <span class="copy-tooltip">Click to copy</span>
+              <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+curl https://mcp.searchatlas.com/sse</div>
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Restart Claude Code — it will re-establish the SSE connection</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>On corporate/office networks: SSE on port 443 may need to be explicitly allowed by IT. Test on a different network first.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T7 -->
+      <div class="trouble-card rv d6">
+        <div class="trouble-header">
+          <span class="trouble-id t-tool">T7</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Command Not Found</div>
+            <div class="trouble-trigger">Typing /run-seo shows nothing or "command not found"</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Verify commands are installed:</div></div>
+          </div>
+          <div class="trouble-code">
+            <button class="copy-btn" data-copy="ls ~/.claude/commands/">
+              <span class="copy-tooltip">Click to copy</span>
+              <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+ls ~/.claude/commands/  # Should show 13 .md files</div>
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>If missing: re-run <code>bash setup.sh</code> from the repo directory</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>After a repo update: <code>git pull origin main</code> then <code>bash setup.sh</code> again</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T8 -->
+      <div class="trouble-card rv d7">
+        <div class="trouble-header">
+          <span class="trouble-id t-async">T8</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Workflow Step Stuck / Async Timeout</div>
+            <div class="trouble-trigger">Workflow stops at a step for too long / polls forever</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Check last status from the polling call: PENDING/IN_PROGRESS = still running (wait), SUCCESS = process result, FAILED = retry that step only</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Normal wait times: content generation 30–90s per phase, PPC keyword clustering 2–5 min</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>If PENDING for over 15 minutes: the task likely failed silently. Retry only the failed step — do NOT restart the whole workflow</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T10 -->
+      <div class="trouble-card rv d8">
+        <div class="trouble-header">
+          <span class="trouble-id t-logic">T10</span>
+          <div class="trouble-title-row">
+            <div class="trouble-title">Notification Not Sending</div>
+            <div class="trouble-trigger">/send-slack, /send-discord, /send-email fails silently</div>
+          </div>
+          <svg class="trouble-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="trouble-body">
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">1</div><div>Verify env vars are set in <code>.env</code></div></div>
+            <div class="trouble-step"><div class="trouble-step-n">2</div><div>Test Slack webhook directly:</div></div>
+          </div>
+          <div class="trouble-code">
+            <button class="copy-btn" data-copy="curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"test\"}' YOUR_SLACK_WEBHOOK_URL">
+              <span class="copy-tooltip">Click to copy</span>
+              <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+curl -X POST -H 'Content-type: application/json' \
+  --data '{"text":"test"}' YOUR_SLACK_WEBHOOK_URL</div>
+          <div class="trouble-steps">
+            <div class="trouble-step"><div class="trouble-step-n">3</div><div>Named Slack channels: env var must be <code>SLACK_WEBHOOK_CHANNELNAME</code> in ALL CAPS</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">4</div><div>For Resend email: confirm domain is verified OR use <code>onboarding@resend.dev</code> for testing. Check spam folder first.</div></div>
+            <div class="trouble-step"><div class="trouble-step-n">5</div><div>For Circle: <code>CIRCLE_COMMUNITY_ID</code> must be the numeric ID — not the slug or name</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /trouble-grid -->
+  </section>
+
+  <!-- SESSION TROUBLESHOOTING -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--orange)"></span>Session Issues</div>
+      <h2 class="sec-h">When Claude Feels Off</h2>
+      <p class="sec-p">These aren't API errors — they're session state issues. Different fixes than tool errors.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d1">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Claude giving wrong or confusing answers</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55">Use <span class="code-pill">/clear</span> and start fresh with a cleaner, more specific prompt. You haven't lost anything — just stale context. If you've corrected Claude twice on the same thing, <em>always clear and rewrite</em> instead of correcting a third time.</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d2">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Session is slow or Claude seems "foggy"</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55">Run <span class="code-pill">/compact</span> to summarize and free memory. If still bad: <span class="code-pill">/export</span> your outputs, then <span class="code-pill">/clear</span> and resume with a fresh summary. Run <span class="code-pill">/compact</span> proactively at 65–70% context bar.</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d3">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Can't find a report Claude generated</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55">Ask: <em>"Where did you save the last report?"</em> or check <span class="code-pill">/export</span> history. Going forward: always end sessions with explicit save instructions like <em>"save to /reports/[client]/[month].md"</em>.</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:20px" class="rv d4">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Everything feels overwhelming</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.55">Start with 3 things: 1) open Warp, 2) type <span class="code-pill">claude</span>, 3) say what you need in plain English. Everything else is optional until you're ready. You don't need to understand the code — just describe the outcome clearly.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 PITFALLS -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--red)"></span>Common Pitfalls</div>
+      <h2 class="sec-h">6 Mistakes That Break Everything</h2>
+      <p class="sec-p">These aren't beginner errors — experienced users hit all of them. Know the fix before you hit the problem.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d1">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--red);background:rgba(248,113,113,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P1</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">Cold-start syndrome</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">Every session opens with zero memory. Without <code>AI_RULES.md</code> and <code>CLAUDE.md</code> in place, you re-explain your world every time and results drift.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: build AI_RULES.md first</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d2">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--orange);background:rgba(251,146,60,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P2</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">The silent misroute</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">Claude says "done" but the file saved to the wrong folder — no error, no warning. Happens when opening Claude Code without confirming working directory.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: ask "what is cwd?"</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d3">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--yellow);background:rgba(251,191,36,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P3</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">Only using one level of CLAUDE.md</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">Root-only: every client gets the same generic output. Client-only: no agency baseline, standards reset every session. You need both — always.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: root + per-client</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d4">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--cyan);background:rgba(56,189,248,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P4</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">Generic prompts produce generic output</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">"Write a page about plumbing services" sounds like every other plumbing page. Less specific input = Claude falls back to default patterns. Skill files and CLAUDE.md close this gap.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: use skill files</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d5">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--purple);background:rgba(139,92,246,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P5</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">Building site pages outside Search Atlas</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">Building outside Website Studio loses version control, OTTO integration, one-click publish, and workflow templates. You trade 10 min setup for hours of manual work downstream.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: use Website Studio</div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start" class="rv d6">
+        <span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--pink);background:rgba(244,114,182,.1);padding:3px 8px;border-radius:4px;white-space:nowrap">P6</span>
+        <div><div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:4px">Treating skill files as one-time setup</div><div style="font-size:.78rem;color:var(--text2);line-height:1.55">Skill files are living documents. If keyword research improves, the skill should improve. If a client changes brand voice, update the file. Stale skills produce stale output.</div></div>
+        <div style="font-size:.75rem;color:var(--green);font-weight:600;white-space:nowrap">Fix: review on process change</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOS AND DON'TS -->
+  <div class="divider"></div>
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--text3)"></span>Rules of the Road</div>
+      <h2 class="sec-h">Dos &amp; Don'ts</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.2);border-radius:var(--r);padding:20px" class="rv d1">
+        <div style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:14px">Always Do</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Name every session before working</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Check /mcp at session start</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Use @filename to reference documents</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>/clear between every client — every time</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Save reports with date stamps</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Read Claude's plan before approving</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Use /compact in long sessions</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>Export outputs before closing</div>
+        </div>
+      </div>
+      <div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:20px" class="rv d2">
+        <div style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:14px">Never Do</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Mix clients in the same session</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Write vague prompts ("fix my SEO")</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Paste API keys into the chat</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Approve without reading Claude's plan</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Skip /clear and wonder why output is wrong</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Store secrets outside .env</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Correct Claude 3× — clear and rewrite instead</div>
+          <div style="display:flex;gap:8px;font-size:.8rem;color:var(--text2)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Ignore MCP connection errors</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-troubleshoot -->
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 4 — RESOURCES (ORBITAL)
+══════════════════════════════════════════════════════════════════════ -->
+<div id="page-resources" class="page">
+  <section class="wrap section-gap">
+    <div class="rv">
+      <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--cyan)"></span>Reference</div>
+      <h2 class="sec-h">Resources &amp; Links</h2>
+      <p class="sec-p">Everything you need in one place. Click a node to explore.</p>
+    </div>
+
+    <div class="resources-layout rv d1">
+      <!-- ORBITAL -->
+      <div class="orbital-stage" id="orbital-stage">
+        <div class="orbital-ring" style="width:440px;height:440px"></div>
+        <div class="orbital-ring" style="width:310px;height:310px"></div>
+        <div class="orbital-center">
+          <div class="orbital-center-inner"></div>
+        </div>
+        <div class="orbital-nodes" id="orbital-nodes"></div>
+      </div>
+
+      <!-- RESOURCE DETAILS -->
+      <div class="resource-panel" id="resource-panel">
+        <div class="resource-hint">&larr; Click any node to view resource details</div>
+
+        <div class="resource-detail" id="res-repo">
+          <div class="resource-card">
+            <div class="rc-tag">Official Repository</div>
+            <div class="rc-title">Agentic Mastermind GitHub</div>
+            <div class="rc-desc">The main repo. Clone here, pull updates here. Contains all 13 commands, 7 workflow YAMLs, integration scripts, and setup wizard.</div>
+            <div class="rc-links">
+              <a class="rc-link" href="https://github.com/manickbhan/agentic-mastermind" target="_blank">github.com/manickbhan/agentic-mastermind</a>
+            </div>
+          </div>
+          <div class="resource-card">
+            <div class="rc-tag">Update Command</div>
+            <div class="rc-desc">Pull the latest commands and workflow templates:</div>
+            <div class="trouble-code" style="margin:0">
+              <button class="copy-btn" data-copy="git pull origin main && bash setup.sh">
+                <span class="copy-tooltip">Click to copy</span>
+                <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+git pull origin main &amp;&amp; bash setup.sh</div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-searchatlas">
+          <div class="resource-card">
+            <div class="rc-tag">SearchAtlas Platform</div>
+            <div class="rc-title">SearchAtlas Dashboards</div>
+            <div class="rc-desc">Verify your workflow results, check campaign status, and manage GBP locations directly in the dashboard.</div>
+            <div class="rc-links">
+              <a class="rc-link" href="https://dashboard.searchatlas.com/otto/" target="_blank">OTTO SEO</a>
+              <a class="rc-link" href="https://dashboard.searchatlas.com/gbp/" target="_blank">GBP</a>
+              <a class="rc-link" href="https://dashboard.searchatlas.com/otto-ppc/" target="_blank">PPC</a>
+              <a class="rc-link" href="https://dashboard.searchatlas.com/content/articles/" target="_blank">Content</a>
+              <a class="rc-link" href="https://dashboard.searchatlas.com/llm-visibility/" target="_blank">LLM Visibility</a>
+              <a class="rc-link" href="https://dashboard.searchatlas.com/press-releases/" target="_blank">Press Releases</a>
+            </div>
+          </div>
+          <div class="resource-card">
+            <div class="rc-tag">API Settings</div>
+            <div class="rc-desc">Get your API key at: <code class="code-pill">searchatlas.com &rarr; Settings &rarr; API Keys</code><br>Check service status at: <code class="code-pill">status.searchatlas.com</code></div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-claude">
+          <div class="resource-card">
+            <div class="rc-tag">Claude Code</div>
+            <div class="rc-title">Claude Code Documentation</div>
+            <div class="rc-desc">Official Anthropic docs for Claude Code &mdash; covers custom commands, MCP integration, CLAUDE.md syntax, and session management.</div>
+            <div class="rc-links">
+              <a class="rc-link" href="https://docs.anthropic.com/claude-code" target="_blank">docs.anthropic.com/claude-code</a>
+            </div>
+          </div>
+          <div class="resource-card">
+            <div class="rc-tag">CLAUDE.md Starter Template</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 6px">
+              <span style="font-size:.72rem;color:var(--text3)">Copy and fill in the brackets</span>
+            </div>
+            <div class="trouble-code" style="margin:0;font-size:.7rem;line-height:1.7">
+# Agency: [Name] | Claude Code Manual
+
+## Who I Am
+You assist [Name], owner of [Agency].
+Prefer: bullet points &middot; wins first &middot; confirm before action.
+
+## My Clients
+[Client 1] | domain.com | Local SEO | [X] locations
+[Client 2] | domain.com | B2B SaaS | Content
+
+## Tools
+1. Search Atlas &mdash; SEO/GBP/content/reports
+2. Google Calendar &mdash; scheduling
+3. Slack &mdash; team updates
+
+## Non-Negotiable Rules
+- Never publish without showing me first
+- Never assume IDs &mdash; always look up via /my-account
+- Save reports to /reports/[client]/[month]/
+- /clear between different clients &mdash; always
+
+## What NOT To Do
+- No walls of text | No guessing | No mixed sessions
+- No hardcoded keys anywhere</div>
+            <div style="margin-top:10px;font-size:.75rem;color:var(--text3)">Keep under <strong style="color:var(--text2)">150 lines</strong>. One fact per line. Prune every 2 weeks.</div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-warp">
+          <div class="resource-card">
+            <div class="rc-tag">Terminal</div>
+            <div class="rc-title">Warp Terminal (Recommended)</div>
+            <div class="rc-desc">The AI-native terminal that works best with Claude Code. Supports natural language commands, command history, and session sharing. Free for personal use.</div>
+            <div class="rc-links">
+              <a class="rc-link" href="https://www.warp.dev" target="_blank">warp.dev</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-tokens">
+          <div class="resource-card">
+            <div class="rc-tag">Token Management</div>
+            <div class="rc-title">Keeping Sessions Efficient</div>
+            <div class="rc-desc">Token waste is the most common hidden cost. Follow these rules to keep every session clean and fast.</div>
+          </div>
+          <div class="resource-card">
+            <div class="rc-tag">Required .claudeignore</div>
+            <div class="trouble-code" style="margin:0">
+              <button class="copy-btn" data-copy="node_modules/&#10;.git/&#10;*.log&#10;dist/&#10;build/&#10;.env*&#10;*.secret&#10;*.lock&#10;__pycache__/&#10;.DS_Store">
+                <span class="copy-tooltip">Click to copy</span>
+                <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+node_modules/  .git/  *.log
+dist/  build/  .env*
+*.secret  *.lock  __pycache__/</div>
+            <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px">
+                <div style="font-family:var(--mono);font-size:.6rem;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em">Run /compact</div>
+                <div style="font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--orange)">at 65&ndash;70%</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px">
+                <div style="font-family:var(--mono);font-size:.6rem;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em">Run /clear</div>
+                <div style="font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--red)">at 85%+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-rules">
+          <div class="resource-card">
+            <div class="rc-tag">Golden Rules</div>
+            <div class="rc-title">6 Non-Negotiables</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--purple);background:rgba(139,92,246,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">01</span>Schema Discovery First &mdash; call any tool with <code>params: {}</code> before first use</div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--cyan);background:rgba(56,189,248,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">02</span>Read Error Messages &mdash; they contain the correct schema and fix</div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--orange);background:rgba(251,146,60,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">03</span>Poll Async Tasks &mdash; check status until SUCCESS</div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">04</span>Watch Name Collisions &mdash; use full prefixed tool names</div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--pink);background:rgba(244,114,182,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">05</span>Never Hardcode IDs &mdash; always discover via <code>/my-account</code></div>
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--text2)"><span style="font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--red);background:rgba(248,113,113,.1);padding:2px 8px;border-radius:4px;flex-shrink:0">06</span>Never Expose Secrets &mdash; keys in <code>.env</code> only, never in output</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="resource-detail" id="res-integrations">
+          <div class="resource-card">
+            <div class="rc-tag">Communication Integrations</div>
+            <div class="rc-title">Where to Get Credentials</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+              <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:start;font-size:.8rem">
+                <span style="font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--purple)">Slack</span>
+                <span style="color:var(--text2)">Workspace &rarr; Apps &rarr; Incoming Webhooks &rarr; Add New</span>
+              </div>
+              <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:start;font-size:.8rem">
+                <span style="font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--cyan)">Discord</span>
+                <span style="color:var(--text2)">Server &rarr; Settings &rarr; Integrations &rarr; Webhooks &rarr; New</span>
+              </div>
+              <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:start;font-size:.8rem">
+                <span style="font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--orange)">Email</span>
+                <span style="color:var(--text2)">resend.com &rarr; API Keys. Free: 100/day. Use <code>onboarding@resend.dev</code> for testing</span>
+              </div>
+              <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:start;font-size:.8rem">
+                <span style="font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--green)">Circle</span>
+                <span style="color:var(--text2)">circle.so &rarr; Settings &rarr; API. CIRCLE_COMMUNITY_ID must be numeric ID</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /resource-panel -->
+    </div>
+
+  </section>
+</div><!-- /page-resources -->
+
+
+
+
+
+
+<!-- ══ SCRIPTS ════════════════════════════════════════════════════ -->
+<script>
+// ─── PAGE TABS ─────────────────────────────────────────────────────
+function switchPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active')});
+  var pg=document.getElementById('page-'+id);
+  var btn=document.querySelector('[data-page="'+id+'"]');
+  if(pg){pg.classList.add('active')}
+  if(btn){btn.classList.add('active')}
+  window.scrollTo(0,0);
+  history.replaceState(null,'','#'+id);
+}
+document.querySelectorAll('.nav-tab[data-page]').forEach(function(b){
+  b.addEventListener('click',function(){switchPage(b.dataset.page)});
+});
+var ih=location.hash.replace('#','');
+if(ih&&document.getElementById('page-'+ih)) switchPage(ih);
+
+// ─── THEME TOGGLE ──────────────────────────────────────────────────
+var html=document.documentElement;
+var saved=localStorage.getItem('km-theme');
+// default is light (set in HTML); only override if user explicitly chose dark
+if(saved==='dark') html.setAttribute('data-theme','dark');
+else html.setAttribute('data-theme','light');
+document.getElementById('theme-btn').addEventListener('click',function(){
+  var t=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',t);
+  localStorage.setItem('km-theme',t);
+});
+
+// ─── PLATFORM TOGGLE ───────────────────────────────────────────────
+var currentOS='mac';
+document.getElementById('platform-toggle').addEventListener('click',function(e){
+  var btn=e.target.closest('.platform-btn');
+  if(!btn) return;
+  currentOS=btn.dataset.os;
+  document.querySelectorAll('.platform-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  document.querySelectorAll('.mac-cmd').forEach(function(el){el.style.display=currentOS==='mac'?'':'none'});
+  document.querySelectorAll('.win-cmd').forEach(function(el){el.style.display=currentOS==='win'?'':'none'});
+});
+
+// ─── CHECKLIST ─────────────────────────────────────────────────────
+var TOTAL_ITEMS=15;
+function updateProgress(){
+  var done=document.querySelectorAll('.check-item.done').length;
+  document.getElementById('progress-bar').style.width=(done/TOTAL_ITEMS*100)+'%';
+  document.getElementById('progress-count').textContent=done+' / 15';
+  var cl=document.getElementById('checklist');
+  var cd=document.getElementById('checklist-done');
+  if(done>=TOTAL_ITEMS){
+    if(cl) cl.style.display='none';
+    if(cd) cd.style.display='flex';
+  } else {
+    if(cl) cl.style.display='';
+    if(cd) cd.style.display='none';
+  }
+}
+document.querySelectorAll('.check-item').forEach(function(item){
+  item.addEventListener('click',function(e){
+    if(e.target.closest('.copy-btn')) return;
+    item.classList.toggle('done');
+    var id=item.dataset.id;
+    var state={};
+    try{state=JSON.parse(localStorage.getItem('km-checklist')||'{}')}catch(x){}
+    state[id]=item.classList.contains('done');
+    localStorage.setItem('km-checklist',JSON.stringify(state));
+    updateProgress();
+  });
+});
+// restore saved state
+try{
+  var saved2=JSON.parse(localStorage.getItem('km-checklist')||'{}');
+  Object.keys(saved2).forEach(function(id){
+    if(saved2[id]){
+      var el=document.querySelector('[data-id="'+id+'"]');
+      if(el) el.classList.add('done');
+    }
+  });
+}catch(x){}
+updateProgress();
+
+// ─── COPY BUTTONS ──────────────────────────────────────────────────
+document.addEventListener('click',function(e){
+  var btn=e.target.closest('.copy-btn');
+  if(!btn) return;
+  var text=btn.dataset.copy;
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(function(){
+    btn.classList.add('copied');
+    setTimeout(function(){btn.classList.remove('copied')},1600);
+  }).catch(function(){
+    // fallback
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.classList.add('copied');
+    setTimeout(function(){btn.classList.remove('copied')},1600);
+  });
+});
+
+// ─── TROUBLE ACCORDION ─────────────────────────────────────────────
+document.querySelectorAll('.trouble-header').forEach(function(hdr){
+  hdr.addEventListener('click',function(){
+    var card=hdr.closest('.trouble-card');
+    var wasOpen=card.classList.contains('open');
+    document.querySelectorAll('.trouble-card').forEach(function(c){c.classList.remove('open')});
+    if(!wasOpen) card.classList.add('open');
+  });
+});
+
+// ─── SCROLL ANIMATION (Aceternity ContainerScroll — vanilla JS) ────
+var card=document.getElementById('scroll-card');
+var titleEl=document.getElementById('hero-title');
+var heroContainer=document.getElementById('hero-scroll');
+// Initial state: tilted back + slightly small — grows forward as user scrolls
+if(card) card.style.transform='rotateX(22deg) scale(0.86)';
+function onHeroScroll(){
+  if(!heroContainer||!card) return;
+  var rect=heroContainer.getBoundingClientRect();
+  var containerH=heroContainer.offsetHeight;
+  var viewH=window.innerHeight;
+  var scrolled=-rect.top;
+  var maxScroll=containerH-viewH;
+  if(maxScroll<=0){
+    card.style.transform='rotateX(0deg) scale(1.02)';
+    if(titleEl) titleEl.style.transform='translateY(0px)';
+    return;
+  }
+  var p=Math.max(0,Math.min(1,scrolled/maxScroll));
+  // Card: tilts flat AND grows forward — rotateX 22→0, scale 0.86→1.02
+  card.style.transform='rotateX('+(22*(1-p))+'deg) scale('+(0.86+0.16*p)+')';
+  // Header: translateY 0 → -100px
+  if(titleEl) titleEl.style.transform='translateY('+(-100*p)+'px)';
+}
+window.addEventListener('scroll',onHeroScroll,{passive:true});
+onHeroScroll();
+
+// ─── ORBITAL TIMELINE ──────────────────────────────────────────────
+var ORB_NODES=[
+  {id:'repo',    icon:'⑂', label:'GitHub Repo',  color:'#a78bfa'},
+  {id:'searchatlas', icon:'🔍', label:'SearchAtlas', color:'#38bdf8'},
+  {id:'claude',  icon:'🤖', label:'Claude Code',  color:'#34d399'},
+  {id:'warp',    icon:'⌨',  label:'Warp Terminal', color:'#fb923c'},
+  {id:'tokens',  icon:'⚡', label:'Token Hygiene', color:'#fbbf24'},
+  {id:'rules',   icon:'📋', label:'Golden Rules',  color:'#f472b6'},
+  {id:'integrations', icon:'🔗', label:'Integrations', color:'#34d399'},
+];
+var rotAngle=0;
+var autoRot=true;
+var activeNode=null;
+var nodeEls=[];
+var orbContainer=document.getElementById('orbital-nodes');
+var stageW=460, stageH=520, cx=stageW/2, cy=stageH/2, r=185;
+
+function buildNodes(){
+  ORB_NODES.forEach(function(n,i){
+    var div=document.createElement('div');
+    div.className='orbital-node';
+    div.innerHTML='<div class="orbital-ping"></div><span style="position:relative;z-index:1">'+n.icon+'</span><span class="orbital-node-label">'+n.label+'</span>';
+    div.style.left=cx+'px';div.style.top=cy+'px';
+    div.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(activeNode===n.id){clearActive();return;}
+      setActive(n.id,div);
+    });
+    orbContainer.appendChild(div);
+    nodeEls.push({node:n,el:div});
+  });
+  animateOrbit();
+}
+function setActive(id,el){
+  nodeEls.forEach(function(x){x.el.classList.remove('active')});
+  el.classList.add('active');
+  activeNode=id;
+  autoRot=false;
+  document.querySelector('.resource-hint').style.display='none';
+  document.querySelectorAll('.resource-detail').forEach(function(d){d.classList.remove('active')});
+  var panel=document.getElementById('res-'+id);
+  if(panel) panel.classList.add('active');
+}
+function clearActive(){
+  nodeEls.forEach(function(x){x.el.classList.remove('active')});
+  activeNode=null;
+  autoRot=true;
+  document.querySelector('.resource-hint').style.display='';
+  document.querySelectorAll('.resource-detail').forEach(function(d){d.classList.remove('active')});
+}
+var orbStage=document.getElementById('orbital-stage');
+if(orbStage) orbStage.addEventListener('click',function(e){
+  if(e.target===this||e.target===orbContainer) clearActive();
+});
+var lastTs=0;
+function animateOrbit(ts){
+  if(ts&&lastTs){var dt=(ts-lastTs)/1000;if(autoRot) rotAngle=(rotAngle+dt*18)%360;}
+  lastTs=ts||0;
+  var total=ORB_NODES.length;
+  nodeEls.forEach(function(item,i){
+    var angle=((i/total)*360+rotAngle)*Math.PI/180;
+    var x=cx+r*Math.cos(angle);var y=cy+r*Math.sin(angle);
+    var depth=Math.sin(angle);
+    var opacity=Math.max(0.45,0.45+0.55*((1+depth)/2));
+    var zIndex=Math.round(50+30*depth);
+    if(!item.el.classList.contains('active')){item.el.style.opacity=opacity;item.el.style.zIndex=zIndex;}
+    item.el.style.left=x+'px';item.el.style.top=y+'px';
+  });
+  requestAnimationFrame(animateOrbit);
+}
+if(orbContainer) buildNodes();
+
+// ─── CHECKLIST RESET ───────────────────────────────────────────────
+var resetBtn=document.getElementById('done-reset');
+if(resetBtn){
+  resetBtn.addEventListener('click',function(){
+    document.querySelectorAll('.check-item').forEach(function(item){item.classList.remove('done')});
+    localStorage.removeItem('km-checklist');
+    updateProgress();
+  });
+}
+
+// ─── SCROLL REVEAL ─────────────────────────────────────────────────
+var ro=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting) e.target.classList.add('vis')});
+},{threshold:.07});
+document.querySelectorAll('.rv').forEach(function(el){ro.observe(el)});
+
+// ─── SEARCH ────────────────────────────────────────────────────────
+var SEARCH_INDEX=[
+  // Setup
+  {icon:'🍎',title:'Claude subscription',meta:'Pro $20/mo · Max $100/mo — required for Claude Code',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🔑',title:'SearchAtlas API key',meta:'Settings → API Keys — needed for MCP tools',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'⌨',title:'Warp Terminal install',meta:'brew install --cask warp (Mac) · warp.dev (Win)',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🟢',title:'Node.js ≥ 18',meta:'brew install node · nodejs.org — required for Claude Code CLI',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🐙',title:'Git install',meta:'xcode-select --install (Mac) · git-scm.com (Win)',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🤖',title:'Claude Code CLI install',meta:'npm install -g @anthropic-ai/claude-code',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'📦',title:'Clone repository',meta:'git clone https://github.com/manickbhan/agentic-mastermind.git',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'⚙',title:'Run setup wizard',meta:'bash setup.sh — configures .env, MCP, and installs commands',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'✅',title:'Verify setup',meta:'bash scripts/verify-setup.sh — checks connectivity and config',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🚀',title:'Test MCP connection',meta:'/my-account — lists your SearchAtlas projects after setup',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'📁',title:'.claudeignore file',meta:'Exclude .git/ node_modules/ .env .env.* *.log *.lock',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🏢',title:'Onboard first client',meta:'/onboard-client — guided wizard for OTTO + brand vault + GBP',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🗂',title:'File structure overview',meta:'CLAUDE.md · commands/ · workflows/ · .env · integrations/',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'📝',title:'CLAUDE.md best practices',meta:'Keep under 150 lines — one fact per line, no prose',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'🔧',title:'Manual MCP config',meta:'~/.claude/settings.json — X-API-KEY header, exact case',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  // Workflows
+  {icon:'🔍',title:'SEO Onboarding workflow',meta:'/run-seo → New Client · 7 steps · brand vault + topical map',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'📅',title:'Monthly SEO workflow',meta:'/run-seo → Monthly Maintenance · autopilot + articles',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'📍',title:'GBP Optimization workflow',meta:'/run-gbp → First-Time · 6 steps · deploys to Google',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'💬',title:'GBP Monthly workflow',meta:'/run-gbp → Monthly · reviews + posts + insights',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'📈',title:'PPC Launch workflow',meta:'/run-ppc · 6 steps · keyword clusters + Google Ads',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'🔗',title:'Authority Building workflow',meta:'/run-pr · press release + digital PR + link tracking',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'⏳',title:'Async task polling',meta:'get_otto_task_status · poll until status=SUCCESS · 30s–5min normal',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  // Troubleshooting
+  {icon:'🔴',title:'T1 — Authentication Error',meta:'"credentials not provided" — check X-API-KEY in settings.json',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🟠',title:'T2 — Tool Not Found',meta:'Run op:"help" params:{} for schema discovery',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🟡',title:'T3 — Parameter Validation Error',meta:'Read the error — it contains the correct field names',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🔵',title:'T4 — 404 Resource Not Found',meta:'Run /my-account to get fresh IDs — never hardcode',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🔵',title:'T6 — Connection Timeout',meta:'curl https://mcp.searchatlas.com/sse · restart Claude Code',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🟠',title:'T7 — Command Not Found',meta:'ls ~/.claude/commands/ · re-run bash setup.sh',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🟣',title:'T8 — Async Timeout',meta:'PENDING >15min = silent fail · retry that step only',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  {icon:'🟢',title:'T10 — Notification Not Sending',meta:'Slack/Discord/Email webhook env vars — test with curl',tab:'troubleshoot',tabLabel:'Troubleshooting',tabCls:'sr-tab-ts'},
+  // Infographics
+  {icon:'🗺',title:'Infographic 01 — Command Center Setup',meta:'MCP config, slash commands, environment variables, tool stack',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🗺',title:'Infographic 02 — Daily Playbook',meta:'Workflow patterns, session management, command routing table',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🗺',title:'Infographic 03 — Field Guide',meta:'Troubleshooting, error patterns, golden rules visual reference',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🗺',title:'Infographic 04 — Skills Catch-Up',meta:'Superpowers skills, GSD commands, agent workflow reference',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  // Resources
+  {icon:'⑂',title:'Agentic Mastermind GitHub',meta:'github.com/manickbhan/agentic-mastermind · git pull origin main',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🔍',title:'SearchAtlas Dashboard',meta:'OTTO · GBP · PPC · Content · LLM Visibility · Press Releases',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🤖',title:'Claude Code documentation',meta:'docs.anthropic.com/claude-code · CLAUDE.md syntax · MCP setup',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'⌨',title:'Warp Terminal',meta:'warp.dev · AI-native terminal · free personal tier',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'⚡',title:'Token hygiene rules',meta:'/compact at 65–70% · /clear at 85%+ · .claudeignore required',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'📋',title:'Golden Rules (6)',meta:'Schema first · read errors · poll async · no hardcoded IDs · no secrets',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'🔗',title:'Integration credentials',meta:'Slack webhook · Discord webhook · Resend email · Circle API',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  // Commands
+  {icon:'/',title:'/my-account',meta:'List all SearchAtlas projects, locations, campaigns, and quota',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'/',title:'/business-report',meta:'Full deep-dive report for one client — OTTO, GBP, PPC, content, LLM visibility',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'/',title:'/onboard-client',meta:'Guided wizard: create OTTO project + brand vault + connect GBP',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+  {icon:'/',title:'/run-seo',meta:'SEO onboarding or monthly maintenance workflow',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/run-gbp',meta:'GBP optimization (first-time or monthly) workflow',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/run-ppc',meta:'PPC launch: keyword clusters + Google Ads campaigns',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/run-content',meta:'Generate topical map + articles for a client',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/run-pr',meta:'Press release + digital PR + authority building workflow',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/run-visibility',meta:'LLM/AI visibility audit and brand monitoring',tab:'workflows',tabLabel:'Workflows',tabCls:'sr-tab-wf'},
+  {icon:'/',title:'/send-slack',meta:'Post results to Slack channel (multi-channel supported)',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'/',title:'/send-discord',meta:'Post results to Discord via webhook',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'/',title:'/send-email',meta:'Send report via email using Resend API',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'/',title:'/send-circle',meta:'Post to Circle community space',tab:'resources',tabLabel:'Resources',tabCls:'sr-tab-res'},
+  {icon:'/',title:'/help',meta:'List all available commands and their purposes',tab:'setup',tabLabel:'Get Started',tabCls:'sr-tab-setup'},
+];
+
+var searchOverlay=document.getElementById('search-overlay');
+var searchInput=document.getElementById('search-input');
+var searchResults=document.getElementById('search-results');
+var selIdx=-1;
+
+function openSearch(){
+  searchOverlay.classList.add('open');
+  searchInput.value='';
+  selIdx=-1;
+  renderSearchResults('');
+  setTimeout(function(){searchInput.focus()},50);
+}
+function closeSearch(){
+  searchOverlay.classList.remove('open');
+  searchInput.blur();
+}
+function renderSearchResults(q){
+  q=q.trim().toLowerCase();
+  var filtered=q?SEARCH_INDEX.filter(function(item){
+    return (item.title+' '+item.meta).toLowerCase().indexOf(q)!==-1;
+  }):SEARCH_INDEX.slice(0,12);
+  selIdx=-1;
+  if(!filtered.length){
+    searchResults.innerHTML='<div class="search-empty">No results for "'+q.replace(/</g,'&lt;')+'". Try a command name, error code, or tool.</div>';
+    return;
+  }
+  searchResults.innerHTML=filtered.map(function(item,i){
+    return '<div class="search-result" data-tab="'+item.tab+'" data-res-id="'+(item.resId||'')+'" data-idx="'+i+'">'+
+      '<div class="sr-icon">'+item.icon+'</div>'+
+      '<div class="sr-body">'+
+        '<div class="sr-title">'+item.title+'</div>'+
+        '<div class="sr-meta">'+item.meta+'</div>'+
+      '</div>'+
+      '<span class="sr-tab '+item.tabCls+'">'+item.tabLabel+'</span>'+
+    '</div>';
+  }).join('');
+  searchResults.querySelectorAll('.search-result').forEach(function(el){
+    el.addEventListener('click',function(){
+      switchPage(el.dataset.tab);
+      closeSearch();
+    });
+  });
+}
+function moveSelection(dir){
+  var items=searchResults.querySelectorAll('.search-result');
+  if(!items.length) return;
+  items.forEach(function(el){el.classList.remove('sel')});
+  selIdx=Math.max(0,Math.min(items.length-1,selIdx+dir));
+  items[selIdx].classList.add('sel');
+  items[selIdx].scrollIntoView({block:'nearest'});
+}
+
+document.getElementById('search-btn').addEventListener('click',openSearch);
+document.getElementById('search-close').addEventListener('click',closeSearch);
+searchOverlay.addEventListener('click',function(e){if(e.target===searchOverlay)closeSearch()});
+searchInput.addEventListener('input',function(){renderSearchResults(searchInput.value)});
+searchInput.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){closeSearch();return}
+  if(e.key==='ArrowDown'){e.preventDefault();moveSelection(1)}
+  if(e.key==='ArrowUp'){e.preventDefault();moveSelection(-1)}
+  if(e.key==='Enter'){
+    var sel=searchResults.querySelector('.sel');
+    if(sel){switchPage(sel.dataset.tab);closeSearch()}
+    else{
+      var first=searchResults.querySelector('.search-result');
+      if(first){switchPage(first.dataset.tab);closeSearch()}
+    }
+  }
+});
+// global keyboard shortcut ⌘K / Ctrl+K
+document.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+    e.preventDefault();
+    if(searchOverlay.classList.contains('open')) closeSearch();
+    else openSearch();
+  }
+  if(e.key==='Escape'&&searchOverlay.classList.contains('open')) closeSearch();
+});
+</script>
+</body>
+</html>
