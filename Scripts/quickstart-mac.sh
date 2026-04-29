@@ -217,7 +217,7 @@ step "1/4" "Homebrew"
 
 if ! command -v brew &>/dev/null; then
   warn "Not found — installing..."
-  if ! NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+  if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/tty; then
     echo ""
     echo "  ✗  Homebrew installation failed."
     echo ""
