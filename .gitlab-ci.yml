@@ -15,7 +15,7 @@ build:
   before_script:
     - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
   script:
-    - echo "$HARBOR_PASSWORD" | docker login -u "$HARBOR_USER" --password-stdin "$HARBOR_REGISTRY"
+    - docker login -u "$HARBOR_USER" -p "$HARBOR_PASSWORD" "$HARBOR_REGISTRY"
     - docker build -t "$HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$HARBOR_IMAGE:latest" deploy/knowledge-hub/
     - docker push "$HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA"
     - docker push "$HARBOR_IMAGE:latest"
@@ -34,6 +34,6 @@ deploy:
     - argocd login "$ARGOCD_SERVER" --username admin --password "$ARGOCD_PASSWORD" --grpc-web --insecure
     - argocd app set dash-amm-sa-dashboard -p image.tag="$CI_COMMIT_SHORT_SHA"
     - argocd app sync dash-amm-sa-dashboard --async || echo "Sync already in progress"
-    - echo "Deployed $HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - echo "Deployed $HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA to amm.labs.searchatlas.com"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
