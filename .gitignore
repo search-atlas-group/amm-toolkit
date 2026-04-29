@@ -30,27 +30,13 @@
 !/guides/
 !/guides/**
 
-!/plans/
-!/plans/**
-
-!/projects/
-projects/*
-!/projects/security/
-!/projects/security/**
-!/projects/guardian/
-!/projects/guardian/**
-!/projects/Tier 2/
-!/projects/Tier 2/**
-projects/**/__pycache__/
-
 !/Scripts/
 !/Scripts/**
 Scripts/__pycache__/
 
-# ── deploy/ — static site builds for Northflank ──────────────────────────────
-
-!/deploy/
-!/deploy/**
+!/tools/
+!/tools/**
+tools/**/__pycache__/
 
 # ── docs/ — explicitly list allowed files, block everything else ─────────────
 

@@ -302,7 +302,7 @@ async function loadStatus() {
       pc > 0 ? `${pc} pending / ${data.total_suggestions} total` : `${data.total_suggestions} total`;
 
   } catch(e) {
-    setConn('err', 'Server offline — run: python3 projects/guardian/server.py');
+    setConn('err', 'Server offline — run: python3 tools/guardian/server.py');
   }
 }
 

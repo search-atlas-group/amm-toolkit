@@ -117,8 +117,8 @@ Claude runs a 4-tier analysis — GitHub metadata, secrets detection, CVE checks
 
 | Option | How | Best for |
 |--------|-----|----------|
-| Browser quick check | Paste URL into `projects/security/` UI | Fast first look, no setup |
-| Full local scan | `python3 projects/security/server.py` then open the UI | Thorough pre-clone analysis |
+| Browser quick check | Paste URL into `tools/security/` UI | Fast first look, no setup |
+| Full local scan | `python3 tools/security/server.py` then open the UI | Thorough pre-clone analysis |
 | Claude Code | `/security-scan <url>` in Claude Code chat | Deep AI review with full report |
 
 See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full details.
