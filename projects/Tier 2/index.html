@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tier 2 Hub</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><rect x='3' y='3' width='14' height='14' rx='3' fill='none' stroke='%23936BDA' stroke-width='1.5'/><path d='M7 10h6M10 7v6' stroke='%23936BDA' stroke-width='1.5' stroke-linecap='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'Inter',system-ui,sans-serif;--tight:'Inter Tight',system-ui,sans-serif;--mono:'JetBrains Mono','Consolas',monospace;--r:14px;--r-sm:8px;--nav-h:60px;--max:860px}
+[data-theme="dark"]{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2236;
+  --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.15);
+  --text:#f0f0f0;--text2:rgba(240,240,240,.6);--text3:rgba(240,240,240,.3);
+  --purple:#936BDA;--purple-lt:rgba(147,107,218,.12);
+  --green:#34d399;--green-lt:rgba(52,211,153,.1);
+  --yellow:#fbbf24;--yellow-lt:rgba(251,191,36,.1);
+  --red:#f87171;--red-lt:rgba(248,113,113,.1);
+  --code-bg:rgba(255,255,255,.07);--hover:rgba(255,255,255,.04);
+}
+[data-theme="light"]{
+  --bg:#fff;--bg2:#f8f8fc;--bg3:#f0eefa;
+  --bdr:rgba(147,107,218,.1);--bdr2:rgba(147,107,218,.22);
+  --text:#1a0a2e;--text2:#4b4468;--text3:#9e8fc0;
+  --purple:#7c3aed;--purple-lt:rgba(124,58,237,.08);
+  --green:#16a34a;--green-lt:rgba(22,163,74,.08);
+  --yellow:#b45309;--yellow-lt:rgba(180,83,9,.08);
+  --red:#dc2626;--red-lt:rgba(220,38,38,.08);
+  --code-bg:rgba(124,58,237,.06);--hover:rgba(124,58,237,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;min-height:100vh}
+[data-theme="dark"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(147,107,218,.07) 0%,transparent 70%)}
+
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:100;background:rgba(11,15,26,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);border-top:3px solid var(--purple);display:flex;align-items:center;padding:0 28px;gap:0}
+[data-theme="light"] .nav{background:rgba(255,255,255,.95)}
+.nav-logo{display:flex;align-items:center;gap:9px;margin-right:auto}
+.nav-title{font-family:var(--tight);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--purple)}
+.theme-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--bdr);background:var(--code-bg);cursor:pointer;color:var(--text2);transition:background .2s;position:relative;overflow:hidden}
+.theme-btn:hover{background:var(--hover)}
+.theme-btn svg{width:14px;height:14px;position:absolute;transition:all .3s;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[data-theme="dark"] .icon-sun{transform:scale(1);opacity:1}[data-theme="dark"] .icon-moon{transform:scale(.4);opacity:0}
+[data-theme="light"] .icon-sun{transform:scale(.4);opacity:0}[data-theme="light"] .icon-moon{transform:scale(1);opacity:1}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px;position:relative;z-index:1}
+.page{padding-top:calc(var(--nav-h) + 60px);padding-bottom:80px}
+
+.hero{text-align:center;margin-bottom:56px}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;font-size:.62rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.hero-dot{width:4px;height:4px;border-radius:50%;background:var(--purple)}
+.hero-h{font-family:var(--tight);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:10px}
+.hero-p{font-size:.88rem;color:var(--text2);line-height:1.75;max-width:400px;margin:0 auto}
+
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.tools-grid{grid-template-columns:1fr}}
+
+.tool-card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:24px;position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s;display:flex;flex-direction:column;gap:0}
+.tool-card:hover{border-color:var(--bdr2);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.tool-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.tool-icon{width:36px;height:36px;border-radius:10px;background:var(--purple-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-icon svg{width:18px;height:18px;stroke:var(--purple);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tool-status{display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--text3)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.status-dot.ok{background:var(--green);box-shadow:0 0 0 3px var(--green-lt)}
+.status-dot.err{background:var(--red);box-shadow:0 0 0 3px var(--red-lt)}
+.tool-name{font-family:var(--tight);font-size:1.05rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.tool-desc{font-size:.8rem;color:var(--text2);line-height:1.65;margin-bottom:20px;flex:1}
+.tool-actions{display:flex;gap:8px;margin-top:auto}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:.78rem;font-weight:600;color:#fff;background:var(--purple);border-radius:var(--r-sm);text-decoration:none;transition:opacity .2s;letter-spacing:.01em}
+.btn-primary:hover{opacity:.88}
+.btn-primary svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:.78rem;font-weight:600;color:var(--text2);border:1px solid var(--bdr);border-radius:var(--r-sm);text-decoration:none;transition:all .2s;letter-spacing:.01em}
+.btn-secondary:hover{background:var(--hover);border-color:var(--bdr2);color:var(--text)}
+.btn-secondary svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tool-footer{margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr);display:flex;align-items:center;gap:6px}
+.tool-footer code{font-family:var(--mono);font-size:.7rem;background:var(--code-bg);padding:3px 8px;border-radius:5px;color:var(--text3)}
+
+.info-box{margin-top:36px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;font-size:.78rem;color:var(--text2);line-height:1.75}
+.info-box strong{color:var(--text);font-weight:600}
+.info-box code{font-family:var(--mono);font-size:.72rem;background:var(--code-bg);padding:2px 7px;border-radius:4px;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="3" width="14" height="14" rx="3" stroke="var(--purple)" stroke-width="1.5"/>
+      <path d="M7 10h6M10 7v6" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-title">Tier 2 Hub</span>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</nav>
+
+<div class="wrap page">
+
+  <div class="hero">
+    <div class="hero-tag"><div class="hero-dot"></div>Internal Tools<div class="hero-dot"></div></div>
+    <h1 class="hero-h">Tier 2 Operations</h1>
+    <p class="hero-p">Client operations monitoring and Intercom T2 triage tools.</p>
+  </div>
+
+  <div class="tools-grid">
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <div class="tool-status">
+          <div class="status-dot" id="dot-clientops"></div>
+          <span id="lbl-clientops">checking…</span>
+        </div>
+      </div>
+      <div class="tool-name">ClientOps Backend</div>
+      <div class="tool-desc">Client operations dashboard — issue signals, MRR tiers, Slack channel monitoring, and escalation tracking across the SearchAtlas client base.</div>
+      <div class="tool-actions">
+        <a href="/clientops" class="btn-primary" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open Tool
+        </a>
+        <a href="http://localhost:8000/docs" class="btn-secondary" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          API Docs
+        </a>
+      </div>
+      <div class="tool-footer">
+        <code>cd 'Work stuff/clientops-backend' &amp;&amp; python main.py</code>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div class="tool-status">
+          <div class="status-dot" id="dot-t2"></div>
+          <span id="lbl-t2">checking…</span>
+        </div>
+      </div>
+      <div class="tool-name">Intercom T2 Triage</div>
+      <div class="tool-desc">Tier 2 support triage panel — classify and route Intercom conversations, inject training tickets, and manage the T2 pipeline with AI-assisted classification.</div>
+      <div class="tool-actions">
+        <a href="/t2-triage" class="btn-primary" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open Tool
+        </a>
+        <a href="http://localhost:8001/docs" class="btn-secondary" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          API Docs
+        </a>
+      </div>
+      <div class="tool-footer">
+        <code>cd 'Work stuff/intercom-t2-triage' &amp;&amp; python main.py</code>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="info-box">
+    <strong>Both tools require their backends running.</strong>
+    ClientOps runs on <code>:8000</code>, T2 Triage on <code>:8001</code>.
+    Start them from the <code>Work stuff/</code> directory, then click Open Tool above.
+    The hub server itself runs on <code>:7434</code> via <code>python3 'projects/Tier 2/server.py'</code>.
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('t2-theme', t);
+}
+(function(){const t=localStorage.getItem('t2-theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
+
+async function checkHealth() {
+  try {
+    const r = await fetch('http://localhost:7434/api/health');
+    const d = await r.json();
+
+    const setStatus = (dotId, lblId, ok) => {
+      document.getElementById(dotId).className = `status-dot ${ok?'ok':'err'}`;
+      document.getElementById(lblId).textContent = ok ? 'Backend running' : 'Backend offline';
+    };
+    setStatus('dot-clientops', 'lbl-clientops', d.clientops);
+    setStatus('dot-t2', 'lbl-t2', d.t2_triage);
+  } catch {
+    ['dot-clientops','dot-t2'].forEach(id=>document.getElementById(id).className='status-dot err');
+    ['lbl-clientops','lbl-t2'].forEach(id=>document.getElementById(id).textContent='Hub offline');
+  }
+}
+
+checkHealth();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>

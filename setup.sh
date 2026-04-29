@@ -46,6 +46,7 @@ fi
 
 echo ""
 
+
 # ── 3. Configure SearchAtlas MCP ─────────────────────────────────────────────
 
 if claude mcp list 2>/dev/null | grep -q "searchatlas"; then
@@ -73,6 +74,18 @@ if [ ! -f "$SCRIPT_DIR/.env" ] && [ -f "$WIZARD" ]; then
 elif [ -f "$SCRIPT_DIR/.env" ]; then
     echo "Communication channels already configured."
     echo "To reconfigure, run: bash scripts/setup-interactive.sh"
+fi
+
+echo ""
+
+# ── 5. Optional: security scanning tools ─────────────────────────────────────
+
+echo "Security scanning tools (trivy, gitleaks, trufflehog, semgrep) enable /security-scan."
+read -p "Install security scanning tools? (y/n): " SETUP_SECURITY
+if [[ "$SETUP_SECURITY" == "y" || "$SETUP_SECURITY" == "Y" ]]; then
+    bash "$SCRIPT_DIR/scripts/install-security-tools.sh"
+else
+    echo "Skipped. Run 'bash scripts/install-security-tools.sh' anytime to install."
 fi
 
 echo ""

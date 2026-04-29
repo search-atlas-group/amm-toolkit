@@ -1,0 +1,39 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:24
+  tags: [forge, kubernetes]
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
+  script:
+    - echo "$HARBOR_PASSWORD" | docker login -u "$HARBOR_USER" --password-stdin "$HARBOR_REGISTRY"
+    - docker build -t "$HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$HARBOR_IMAGE:latest" deploy/knowledge-hub/
+    - docker push "$HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$HARBOR_IMAGE:latest"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy:
+  stage: deploy
+  image: quay.io/argoproj/argocd:v2.14.11
+  tags: [forge, kubernetes]
+  needs: ["build"]
+  variables:
+    ARGOCD_SERVER: argocd.baremetal-production.searchatlas.com
+    ARGOCD_OPTS: "--grpc-web"
+  script:
+    - argocd login "$ARGOCD_SERVER" --username admin --password "$ARGOCD_PASSWORD" --grpc-web --insecure
+    - argocd app set dash-amm-sa-dashboard -p image.tag="$CI_COMMIT_SHORT_SHA"
+    - argocd app sync dash-amm-sa-dashboard --async || echo "Sync already in progress"
+    - echo "Deployed $HARBOR_IMAGE:$CI_COMMIT_SHORT_SHA"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

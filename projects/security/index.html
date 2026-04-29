@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repo Security Scanner</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M10 2L4 5v5c0 4.4 2.6 8.5 6 9.9 3.4-1.4 6-5.5 6-9.9V5L10 2z' fill='%23936BDA'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sans:'Inter',system-ui,sans-serif;--tight:'Inter Tight',system-ui,sans-serif;--mono:'JetBrains Mono','Consolas',monospace;--r:14px;--r-sm:8px;--r-lg:20px;--nav-h:60px;--max:1080px}
+[data-theme="dark"]{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2236;--surf:#131b2e;
+  --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.15);
+  --text:#f0f0f0;--text2:rgba(240,240,240,.6);--text3:rgba(240,240,240,.3);
+  --purple:#936BDA;--purple-d:#7c3aed;--purple-lt:rgba(147,107,218,.12);--purple-glow:rgba(147,107,218,.25);
+  --green:#34d399;--green-lt:rgba(52,211,153,.12);
+  --yellow:#fbbf24;--yellow-lt:rgba(251,191,36,.12);
+  --red:#f87171;--red-lt:rgba(248,113,113,.12);
+  --blue:#60a5fa;--blue-lt:rgba(96,165,250,.12);
+  --orange:#fb923c;--orange-lt:rgba(251,146,60,.12);
+  --code-bg:rgba(255,255,255,.07);--hover:rgba(255,255,255,.04);
+  --mono-clr:#a5b4fc;
+}
+[data-theme="light"]{
+  --bg:#fff;--bg2:#f8f8fc;--bg3:#f0eefa;--surf:#fff;
+  --bdr:rgba(147,107,218,.1);--bdr2:rgba(147,107,218,.22);
+  --text:#1a0a2e;--text2:#4b4468;--text3:#9e8fc0;
+  --purple:#7c3aed;--purple-d:#6d28d9;--purple-lt:rgba(124,58,237,.08);--purple-glow:rgba(124,58,237,.15);
+  --green:#16a34a;--green-lt:rgba(22,163,74,.1);
+  --yellow:#b45309;--yellow-lt:rgba(180,83,9,.1);
+  --red:#dc2626;--red-lt:rgba(220,38,38,.1);
+  --blue:#2563eb;--blue-lt:rgba(37,99,235,.1);
+  --orange:#ea580c;--orange-lt:rgba(234,88,12,.1);
+  --code-bg:rgba(124,58,237,.06);--hover:rgba(124,58,237,.04);
+  --mono-clr:#7c3aed;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.65;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:10px}
+a{color:var(--purple);text-decoration:none}
+code{font-family:var(--mono);font-size:.82em;background:var(--code-bg);padding:2px 7px;border-radius:5px;color:var(--mono-clr)}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+[data-theme="dark"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(147,107,218,.08) 0%,transparent 70%)}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:100;background:rgba(11,15,26,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);border-top:3px solid var(--purple);display:flex;align-items:center;padding:0 28px;gap:0;transition:background .3s}
+[data-theme="light"] .nav{background:rgba(255,255,255,.95)}
+.nav-logo{display:flex;align-items:center;gap:10px;margin-right:32px;text-decoration:none}
+.nav-shield{width:22px;height:22px;flex-shrink:0}
+.nav-title{font-family:var(--tight);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple)}
+.nav-links{display:flex;gap:2px}
+.nav-link{padding:7px 13px;font-size:.72rem;font-weight:600;letter-spacing:.02em;color:var(--text3);border-radius:var(--r-sm);transition:color .2s,background .2s}
+.nav-link:hover{color:var(--text2);background:var(--hover)}
+.nav-link.active{color:var(--text);background:var(--hover)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.theme-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--bdr);background:var(--code-bg);cursor:pointer;color:var(--text2);transition:background .2s;position:relative;overflow:hidden}
+.theme-btn:hover{background:var(--hover)}
+.theme-btn svg{width:15px;height:15px;position:absolute;transition:all .3s;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[data-theme="dark"] .icon-sun{transform:scale(1);opacity:1}[data-theme="dark"] .icon-moon{transform:scale(.4);opacity:0}
+[data-theme="light"] .icon-sun{transform:scale(.4);opacity:0}[data-theme="light"] .icon-moon{transform:scale(1);opacity:1}
+
+/* LAYOUT */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px;position:relative;z-index:1}
+.page{padding-top:calc(var(--nav-h) + 40px);padding-bottom:80px}
+section{margin-bottom:80px}
+.sec-tag{display:inline-flex;align-items:center;gap:7px;font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.sec-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);flex-shrink:0}
+.sec-h{font-family:var(--tight);font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:10px}
+.sec-p{font-size:.9rem;color:var(--text2);max-width:520px;line-height:1.75;margin-bottom:32px}
+.rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.rv.vis{opacity:1;transform:none}
+.rv.d1{transition-delay:.06s}.rv.d2{transition-delay:.12s}.rv.d3{transition-delay:.18s}.rv.d4{transition-delay:.24s}.rv.d5{transition-delay:.3s}
+
+/* CARD */
+.card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:24px;position:relative;transition:border-color .2s,box-shadow .2s;overflow:hidden}
+.card:hover{border-color:var(--bdr2);box-shadow:0 0 0 1px var(--bdr2),0 8px 32px rgba(0,0,0,.35)}
+.card::before,.card::after{content:'';position:absolute;width:8px;height:8px;background:var(--bdr2);opacity:0;transition:opacity .2s}
+.card::before{top:-1px;left:-1px;clip-path:polygon(0 0,100% 0,0 100%)}
+.card::after{bottom:-1px;right:-1px;clip-path:polygon(100% 100%,0 100%,100% 0)}
+.card:hover::before,.card:hover::after{opacity:1}
+
+/* ── SCANNER UI ──────────────────────────────────────────────────────────── */
+.scanner-section{padding:36px 0 0}
+.scanner-box{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r-lg);padding:32px;margin-bottom:16px;position:relative;overflow:hidden}
+.scanner-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--blue),var(--purple));background-size:200% 100%;animation:gradient-flow 4s linear infinite}
+@keyframes gradient-flow{0%{background-position:0%}100%{background-position:200%}}
+
+.sb-top{margin-bottom:24px}
+.sb-label{font-family:var(--tight);font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.sb-sublabel{font-size:.82rem;color:var(--text2)}
+
+.scanner-input-row{display:flex;gap:10px;margin-bottom:16px}
+.scanner-input{flex:1;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--r);padding:13px 18px;font-family:var(--mono);font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;min-width:0}
+.scanner-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-lt)}
+.scanner-input::placeholder{color:var(--text3);font-size:.82rem}
+
+.scan-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.sbtn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:100px;font-size:.82rem;font-weight:700;transition:all .2s;letter-spacing:.01em}
+.sbtn-primary{background:var(--purple);color:#fff;box-shadow:0 4px 16px var(--purple-glow)}
+.sbtn-primary:hover{background:var(--purple-d);transform:translateY(-1px);box-shadow:0 6px 20px var(--purple-glow)}
+.sbtn-primary:active{transform:none}
+.sbtn-primary:disabled{opacity:.5;pointer-events:none}
+.sbtn-secondary{border:1.5px solid var(--bdr2);color:var(--text2)}
+.sbtn-secondary:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-lt)}
+.sbtn-secondary:disabled{opacity:.5;pointer-events:none}
+.sbtn svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
+.server-status{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--text3);margin-left:4px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sdot.online{background:var(--green);box-shadow:0 0 5px var(--green);animation:sdot-pulse 2s ease-in-out infinite}
+@keyframes sdot-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.sb-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+@media(max-width:600px){.sb-modes{grid-template-columns:1fr}}
+.sb-mode{position:relative;padding:16px 18px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s;overflow:hidden}
+.sb-mode::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bdr2);transition:background .2s}
+.sb-mode:hover{border-color:var(--bdr2);background:var(--bg2)}
+.sb-mode.mode-recommended{border-color:rgba(147,107,218,.35);background:var(--purple-lt)}
+.sb-mode.mode-recommended::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.sb-mode.mode-recommended:hover{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-lt)}
+.sb-mode-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sb-mode-opt{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3)}
+.sb-mode-badge{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px;background:var(--purple);color:#fff}
+.sb-mode-body{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.sb-mode-icon{font-size:1.25rem;flex-shrink:0;line-height:1;margin-top:1px}
+.sb-mode-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.sb-mode-desc{font-size:.73rem;color:var(--text3);line-height:1.6}
+.mode-recommended .sb-mode-desc{color:var(--text2)}
+.sb-mode-depth{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--bdr)}
+.depth-label{font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+.depth-dots{display:flex;gap:4px}
+.depth-dot{width:8px;height:8px;border-radius:50%;background:var(--bdr2);transition:background .2s}
+.depth-dot.on{background:var(--purple)}
+.sb-mode-cta{margin-top:10px;font-size:.73rem;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:5px}
+.sb-mode-cta svg{width:11px;height:11px;fill:currentColor}
+
+/* ── RESULTS PANEL ─────────────────────────────────────────────────────── */
+.scan-results{border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;display:none;margin-bottom:20px;animation:slideDown .3s cubic-bezier(.16,1,.3,1)}
+.scan-results.visible{display:block}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+.results-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:100px;font-size:.72rem;font-weight:700;border:1px solid transparent}
+.vp-scanning{background:var(--purple-lt);color:var(--purple);border-color:rgba(147,107,218,.25)}
+.vp-clean{background:var(--green-lt);color:var(--green);border-color:rgba(52,211,153,.25)}
+.vp-care{background:var(--yellow-lt);color:var(--yellow);border-color:rgba(251,191,36,.25)}
+.vp-quarantine{background:var(--orange-lt);color:var(--orange);border-color:rgba(251,146,60,.25)}
+.vp-reject{background:var(--red-lt);color:var(--red);border-color:rgba(248,113,113,.25)}
+.vp-info{background:var(--blue-lt);color:var(--blue);border-color:rgba(96,165,250,.25)}
+.results-repo{font-family:var(--mono);font-size:.72rem;color:var(--text3)}
+.results-mode{font-size:.68rem;color:var(--text3);margin-left:auto;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+
+.results-body{background:var(--surf)}
+
+/* browser check results */
+.check-list{padding:18px;display:flex;flex-direction:column;gap:8px}
+.check-item{display:flex;align-items:flex-start;gap:10px;font-size:.8rem;line-height:1.5}
+.ci-icon{width:18px;flex-shrink:0;text-align:center;margin-top:1px;font-size:.9rem}
+.ci-msg{color:var(--text2);flex:1}
+.ci-msg.danger{color:var(--red)}
+.ci-msg.warn{color:var(--yellow)}
+.ci-msg.info{color:var(--blue)}
+
+.check-score{padding:14px 18px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.cs-label{font-size:.75rem;color:var(--text2)}
+.cs-num{font-family:var(--mono);font-size:.75rem;font-weight:700}
+.check-note{padding:12px 18px;border-top:1px solid var(--bdr);font-size:.75rem;color:var(--text3);line-height:1.55;background:var(--bg2)}
+.check-note strong{color:var(--text2)}
+
+/* local terminal */
+.local-terminal{padding:16px 18px;font-family:var(--mono);font-size:.73rem;line-height:1.85;color:var(--text2);max-height:380px;overflow-y:auto;background:var(--bg)}
+.lt-line{display:block}
+.lt-ok{color:var(--green)}.lt-warn{color:var(--yellow)}.lt-err{color:var(--red)}.lt-dim{color:var(--text3)}.lt-purple{color:var(--purple)}.lt-blue{color:var(--blue)}
+
+/* setup instructions */
+.setup-panel{padding:22px 24px}
+.setup-title{font-size:.88rem;font-weight:700;margin-bottom:16px;color:var(--text)}
+.setup-step{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+.setup-num{width:22px;height:22px;border-radius:50%;background:var(--purple-lt);border:1px solid rgba(147,107,218,.3);color:var(--purple);font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.setup-body{flex:1}
+.setup-label{font-size:.8rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+.setup-cmd{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:9px 12px;font-family:var(--mono);font-size:.72rem;color:var(--mono-clr);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;transition:border-color .2s}
+.setup-cmd:hover{border-color:var(--purple)}
+.scopy{font-size:.6rem;font-weight:700;background:var(--purple-lt);color:var(--purple);border:1px solid rgba(147,107,218,.2);padding:2px 8px;border-radius:4px;flex-shrink:0;transition:all .2s;white-space:nowrap}
+.setup-cmd:hover .scopy{background:var(--purple);color:#fff}
+.setup-note{font-size:.72rem;color:var(--text3);margin-top:5px;line-height:1.5}
+.setup-or{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:.72rem}
+.setup-or::before,.setup-or::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* ── PIPELINE ──────────────────────────────────────────────────────────── */
+.pipeline-wrap{position:relative}
+.pipeline-controls{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.btn-run{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--purple);color:#fff;border-radius:100px;font-size:.82rem;font-weight:700;letter-spacing:.03em;transition:all .2s;box-shadow:0 4px 16px var(--purple-glow)}
+.btn-run:hover{background:var(--purple-d);box-shadow:0 4px 24px var(--purple-glow);transform:translateY(-1px)}
+.btn-run:active{transform:translateY(0)}
+.btn-run svg{width:14px;height:14px;fill:currentColor}
+.btn-run.running{background:var(--bg3);color:var(--text2);box-shadow:none}
+.btn-reset{padding:8px 16px;border:1px solid var(--bdr);border-radius:100px;font-size:.75rem;color:var(--text3);transition:all .2s}
+.btn-reset:hover{border-color:var(--bdr2);color:var(--text2)}
+.scan-status{font-family:var(--mono);font-size:.72rem;color:var(--text3);margin-left:4px}
+
+.pipeline-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;position:relative}
+.pipe-node{background:var(--bg2);padding:20px 18px;cursor:pointer;transition:background .2s,box-shadow .2s;position:relative;overflow:hidden}
+.pipe-node:hover{background:var(--bg3)}
+.pipe-node.active{background:linear-gradient(160deg,rgba(147,107,218,.1),var(--bg3));box-shadow:inset 0 0 0 1px rgba(147,107,218,.3)}
+.pipe-node::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--purple);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+.pipe-node.active::after{transform:scaleX(1)}
+.pipe-num{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.18em;color:var(--text3);text-transform:uppercase;margin-bottom:12px}
+.pipe-icon{font-size:1.4rem;margin-bottom:10px;display:block;line-height:1}
+.pipe-name{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.pipe-desc{font-size:.73rem;color:var(--text2);line-height:1.55}
+
+.pipe-detail{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:24px 28px;margin-top:3px;display:none;animation:slideDown .25s cubic-bezier(.16,1,.3,1)}
+.pipe-detail.open{display:block}
+.pd-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.pd-icon{font-size:1.6rem}
+.pd-title{font-family:var(--tight);font-size:1.1rem;font-weight:700}
+.pd-badge{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:100px;background:var(--purple-lt);color:var(--purple);margin-left:auto}
+.pd-body{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:660px){.pd-body{grid-template-columns:1fr}}
+.pd-section-title{font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.pd-checks{list-style:none;display:flex;flex-direction:column;gap:7px}
+.pd-checks li{font-size:.8rem;color:var(--text2);display:flex;align-items:baseline;gap:8px;line-height:1.5}
+.pd-checks li::before{content:'›';color:var(--purple);font-size:.9rem;flex-shrink:0}
+.pd-terminal{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:14px 16px;font-family:var(--mono);font-size:.72rem;line-height:1.8;color:var(--text2);overflow:hidden}
+.pd-terminal .t-green{color:var(--green)}.pd-terminal .t-red{color:var(--red)}.pd-terminal .t-yellow{color:var(--yellow)}.pd-terminal .t-purple{color:var(--purple)}.pd-terminal .t-dim{color:var(--text3)}
+
+/* TIER EXPLORER */
+.tier-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tier-tab{padding:8px 18px;border-radius:100px;font-size:.78rem;font-weight:700;border:1px solid var(--bdr);color:var(--text3);transition:all .2s;position:relative;overflow:hidden}
+.tier-tab:hover{border-color:var(--bdr2);color:var(--text2)}
+.tier-tab.t0.active{border-color:rgba(156,163,175,.5);color:#9ca3af;background:rgba(156,163,175,.1)}
+.tier-tab.t1.active{border-color:rgba(96,165,250,.5);color:var(--blue);background:var(--blue-lt)}
+.tier-tab.t2.active{border-color:rgba(52,211,153,.5);color:var(--green);background:var(--green-lt)}
+.tier-tab.t3.active{border-color:rgba(147,107,218,.5);color:var(--purple);background:var(--purple-lt)}
+.tier-tab .tier-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
+.t0 .tier-dot{background:#6b7280}.t1 .tier-dot{background:var(--blue)}.t2 .tier-dot{background:var(--green)}.t3 .tier-dot{background:var(--purple)}
+.tier-pane{display:none;animation:fadeIn .2s ease}
+.tier-pane.active{display:grid;grid-template-columns:1fr 1.3fr;gap:20px}
+@media(max-width:720px){.tier-pane.active{grid-template-columns:1fr}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.tier-card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:24px;position:relative;overflow:hidden}
+.tier-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.t0 .tier-card::before{background:linear-gradient(90deg,#4b5563,#6b7280)}
+.t1 .tier-card::before{background:linear-gradient(90deg,var(--blue),#93c5fd)}
+.t2 .tier-card::before{background:linear-gradient(90deg,var(--green),#6ee7b7)}
+.t3 .tier-card::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.tier-label{font-size:.67rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:100px;display:inline-block;margin-bottom:14px}
+.t0 .tier-label{background:rgba(107,114,128,.15);color:#9ca3af}
+.t1 .tier-label{background:var(--blue-lt);color:var(--blue)}
+.t2 .tier-label{background:var(--green-lt);color:var(--green)}
+.t3 .tier-label{background:var(--purple-lt);color:var(--purple)}
+.tier-name{font-family:var(--tight);font-size:1.1rem;font-weight:700;margin-bottom:8px}
+.tier-reqs{font-size:.78rem;color:var(--text3);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bdr)}
+.tier-reqs strong{color:var(--text2)}
+.tier-caps{list-style:none;display:flex;flex-direction:column;gap:9px}
+.tier-caps li{font-size:.8rem;color:var(--text2);display:flex;align-items:baseline;gap:8px;line-height:1.5}
+.tier-caps li span.cap-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.t0 .cap-dot{background:#4b5563}.t1 .cap-dot{background:var(--blue)}.t2 .cap-dot{background:var(--green)}.t3 .cap-dot{background:var(--purple)}
+.tier-terminal{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.terminal-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:6px}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.td-red{background:#f87171}.td-yellow{background:#fbbf24}.td-green{background:#34d399}
+.terminal-title{font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-left:8px}
+.terminal-body{padding:16px;font-family:var(--mono);font-size:.74rem;line-height:1.85;color:var(--text2);min-height:220px;position:relative}
+.t-line{display:block;opacity:0;transform:translateX(-4px);transition:opacity .25s,transform .25s}
+.t-line.show{opacity:1;transform:none}
+.t-prompt{color:var(--purple)}.t-ok{color:var(--green)}.t-warn{color:var(--yellow)}.t-err{color:var(--red)}.t-dim{color:var(--text3)}.t-white{color:var(--text)}.t-blue{color:var(--blue)}
+
+/* RISK CALCULATOR */
+.calc-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+@media(max-width:800px){.calc-layout{grid-template-columns:1fr}}
+.toggle-group{display:flex;flex-direction:column;gap:8px}
+.toggle-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);transition:border-color .2s,background .2s;cursor:pointer}
+.toggle-row:hover{border-color:var(--bdr2)}
+.toggle-row.checked{background:linear-gradient(135deg,rgba(248,113,113,.05),var(--bg2));border-color:rgba(248,113,113,.25)}
+.toggle-row.checked.medium{background:linear-gradient(135deg,rgba(251,146,60,.05),var(--bg2));border-color:rgba(251,146,60,.25)}
+.toggle-row.checked.low{background:linear-gradient(135deg,rgba(251,191,36,.05),var(--bg2));border-color:rgba(251,191,36,.25)}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--bdr2);border-radius:100px;transition:background .2s}
+.toggle input:checked~.toggle-track{background:var(--red)}
+.toggle-row.medium .toggle input:checked~.toggle-track{background:var(--orange)}
+.toggle-row.low .toggle input:checked~.toggle-track{background:var(--yellow)}
+.toggle-thumb{position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle input:checked~.toggle-track~.toggle-thumb,.toggle input:checked+.toggle-track+.toggle-thumb{transform:translateX(16px)}
+.toggle-info{flex:1}
+.toggle-label{font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.toggle-pts{font-family:var(--mono);font-size:.7rem}
+.toggle-row:not(.checked) .toggle-pts{color:var(--text3)}
+.toggle-row.checked .toggle-pts{color:var(--red)}
+.toggle-row.checked.medium .toggle-pts{color:var(--orange)}
+.toggle-row.checked.low .toggle-pts{color:var(--yellow)}
+.score-panel{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:24px;position:sticky;top:80px}
+.score-display{text-align:center;margin-bottom:24px}
+.score-num{font-family:var(--tight);font-size:4rem;font-weight:800;line-height:1;transition:color .4s}
+.score-num.clean{color:var(--green)}.score-num.care{color:var(--yellow)}.score-num.quarantine{color:var(--orange)}.score-num.reject{color:var(--red)}
+.score-label{font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-top:4px}
+.score-bar-bg{height:8px;background:var(--bdr2);border-radius:100px;overflow:hidden;margin-bottom:20px}
+.score-bar-fill{height:100%;border-radius:100px;transition:width .4s cubic-bezier(.16,1,.3,1),background .4s}
+.verdict-badge{border-radius:var(--r);padding:16px;text-align:center;transition:background .4s,border-color .4s}
+.verdict-badge.v-clean{background:var(--green-lt);border:1px solid rgba(52,211,153,.2)}
+.verdict-badge.v-care{background:var(--yellow-lt);border:1px solid rgba(251,191,36,.2)}
+.verdict-badge.v-quarantine{background:var(--orange-lt);border:1px solid rgba(251,146,60,.2)}
+.verdict-badge.v-reject{background:var(--red-lt);border:1px solid rgba(248,113,113,.2)}
+.verdict-emoji{font-size:1.8rem;margin-bottom:6px}
+.verdict-text{font-family:var(--tight);font-size:.85rem;font-weight:700;margin-bottom:4px}
+.verdict-text.v-clean{color:var(--green)}.verdict-text.v-care{color:var(--yellow)}.verdict-text.v-quarantine{color:var(--orange)}.verdict-text.v-reject{color:var(--red)}
+.verdict-action{font-size:.75rem;color:var(--text2);line-height:1.5}
+
+/* SANDBOX */
+.sandbox-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:center}
+@media(max-width:800px){.sandbox-layout{grid-template-columns:1fr}}
+.sandbox-viz{position:relative;height:340px;background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sbv-svg{width:100%;height:100%;position:absolute;inset:0}
+.sb-ring-outer{fill:none;stroke:var(--bdr2);stroke-width:1;stroke-dasharray:6 4}
+.sb-ring-mid{fill:none;stroke:rgba(248,113,113,.2);stroke-width:1.5}
+.sb-ring-inner{fill:none;stroke:rgba(147,107,218,.3);stroke-width:2}
+.sb-label{font-family:'JetBrains Mono',monospace;font-size:10px;fill:var(--text3)}
+.sb-label-big{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--purple);font-weight:600}
+.sb-code-box{fill:var(--bg3);stroke:var(--purple);stroke-width:1.5;rx:8}
+.sb-code-text{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--text2)}
+.sb-ray{stroke-width:1.5;stroke-dasharray:4 3;opacity:0;transition:opacity .2s}
+.sb-ray.blocked{stroke:rgba(248,113,113,.6);animation:ray-pulse 1.5s ease-in-out infinite}
+@keyframes ray-pulse{0%,100%{opacity:.3}50%{opacity:.9}}
+.zone-safe-text{fill:var(--green)}.zone-blocked-text{fill:var(--red)}
+.sandbox-info{display:flex;flex-direction:column;gap:12px}
+.sb-info-card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r-sm);padding:14px 16px;transition:border-color .2s}
+.sb-info-card.highlight{border-color:var(--purple)}
+.sb-info-title{font-size:.8rem;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-info-text{font-size:.75rem;color:var(--text2);line-height:1.55}
+.sandbox-controls{display:flex;gap:10px;margin-top:12px}
+.btn-primary{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:var(--purple);color:#fff;border-radius:100px;font-size:.78rem;font-weight:700;transition:all .2s;box-shadow:0 4px 12px var(--purple-glow)}
+.btn-primary:hover{background:var(--purple-d);transform:translateY(-1px)}
+.btn-secondary{padding:9px 16px;border:1px solid var(--bdr);border-radius:100px;font-size:.78rem;color:var(--text2);transition:all .2s}
+.btn-secondary:hover{border-color:var(--bdr2);color:var(--text)}
+
+/* QUICK START */
+.qs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:720px){.qs-grid{grid-template-columns:1fr}}
+.qs-card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:20px;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
+.qs-card:hover{border-color:var(--bdr2);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.qs-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.qs-card:nth-child(1)::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.qs-card:nth-child(2)::before{background:linear-gradient(90deg,var(--green),var(--blue))}
+.qs-card:nth-child(3)::before{background:linear-gradient(90deg,var(--purple),var(--green))}
+.qs-step{font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.qs-title{font-family:var(--tight);font-size:.95rem;font-weight:700;margin-bottom:10px}
+.qs-cmd{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;font-family:var(--mono);font-size:.72rem;color:var(--mono-clr);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;transition:border-color .2s}
+.qs-cmd:hover{border-color:var(--purple)}
+.qs-copy-btn{font-size:.6rem;font-weight:700;background:var(--purple-lt);color:var(--purple);border:1px solid rgba(147,107,218,.2);padding:2px 7px;border-radius:4px;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.qs-cmd:hover .qs-copy-btn{background:var(--purple);color:#fff}
+.qs-desc{font-size:.75rem;color:var(--text3);margin-top:8px;line-height:1.5}
+
+.sb-setup-link{font-size:.67rem;font-weight:600;color:var(--text3);letter-spacing:.02em;transition:color .2s;text-decoration:none;padding:2px 0}
+.sb-setup-link:hover{color:var(--purple)}
+.qs-back-ref{display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;text-decoration:none;transition:color .2s}
+.qs-back-ref:hover{color:var(--purple)}
+.qs-back-ref svg{width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.calc-sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:.67rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:100px;background:var(--purple-lt);color:var(--purple);border:1px solid rgba(147,107,218,.25);animation:badge-in .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes badge-in{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.toggle-row.synced-on{outline:2px solid var(--purple);outline-offset:1px;transition:outline .2s}
+footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-size:.75rem;color:var(--text3);position:relative;z-index:1}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo" href="#">
+    <svg class="nav-shield" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L4 6v6c0 5.5 3.4 10.7 8 12 4.6-1.3 8-6.5 8-12V6L12 2z" fill="var(--purple)" opacity=".2"/>
+      <path d="M12 2L4 6v6c0 5.5 3.4 10.7 8 12 4.6-1.3 8-6.5 8-12V6L12 2z" stroke="var(--purple)" stroke-width="1.5"/>
+      <path d="M9 12l2 2 4-4" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="nav-title">Security Scan</span>
+  </a>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="navTo('scan')">Scan</button>
+    <button class="nav-link" onclick="navTo('quickstart')">Quick Start</button>
+    <button class="nav-link" onclick="navTo('pipeline')">How It Works</button>
+    <button class="nav-link" onclick="navTo('tiers')">Tiers</button>
+    <button class="nav-link" onclick="navTo('calculator')">Risk Score</button>
+    <button class="nav-link" onclick="navTo('sandbox')">Sandbox</button>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+<div class="wrap">
+
+  <!-- ── SCANNER ─────────────────────────────────────────────────────────────── -->
+  <section id="scan" class="scanner-section rv">
+
+    <div class="scanner-box">
+      <div class="sb-top">
+        <div class="sb-label">Scan a repository</div>
+        <div class="sb-sublabel">Two ways to check — pick your depth.</div>
+      </div>
+
+      <div class="scanner-input-row">
+        <input id="scanInput" class="scanner-input"
+               placeholder="https://github.com/owner/repo"
+               autocomplete="off" spellcheck="false"
+               onkeydown="if(event.key==='Enter')runBrowserScan()">
+      </div>
+
+      <div class="sb-modes">
+        <div class="sb-mode" onclick="runBrowserScan()">
+          <div class="sb-mode-top">
+            <span class="sb-mode-opt">Option 1 · Browser</span>
+          </div>
+          <div class="sb-mode-body">
+            <div class="sb-mode-icon">🌐</div>
+            <div>
+              <div class="sb-mode-title">Browser Quick Check</div>
+              <div class="sb-mode-desc">GitHub API only. Checks repo age, stars, install hooks, and README patterns. Runs instantly — no code is downloaded.</div>
+            </div>
+          </div>
+          <div class="sb-mode-depth">
+            <span class="depth-label">Coverage</span>
+            <div class="depth-dots">
+              <span class="depth-dot on"></span>
+              <span class="depth-dot on"></span>
+              <span class="depth-dot"></span>
+              <span class="depth-dot"></span>
+              <span class="depth-dot"></span>
+            </div>
+            <span style="font-size:.67rem;color:var(--text3)">Metadata only</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+            <div class="sb-mode-cta">
+              <svg viewBox="0 0 16 16"><path d="M3 2l11 6-11 6V2z"/></svg> Run quick check
+            </div>
+            <a class="sb-setup-link" onclick="event.stopPropagation()" href="#qs-option1">setup guide ↓</a>
+          </div>
+        </div>
+
+        <div class="sb-mode mode-recommended" onclick="runLocalScan()">
+          <div class="sb-mode-top">
+            <span class="sb-mode-opt">Option 2 · Local Server</span>
+            <span class="sb-mode-badge">Recommended</span>
+          </div>
+          <div class="sb-mode-body">
+            <div class="sb-mode-icon">⚡</div>
+            <div>
+              <div class="sb-mode-title">Full Local Scan</div>
+              <div class="sb-mode-desc">Secrets, CVEs, SAST rules, and sandbox behavioral test. Full code-level analysis before you clone anything.</div>
+            </div>
+          </div>
+          <div class="sb-mode-depth">
+            <span class="depth-label">Coverage</span>
+            <div class="depth-dots">
+              <span class="depth-dot on"></span>
+              <span class="depth-dot on"></span>
+              <span class="depth-dot on"></span>
+              <span class="depth-dot on"></span>
+              <span class="depth-dot on"></span>
+            </div>
+            <span style="font-size:.67rem;color:var(--text2)">Full analysis</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+            <div class="sb-mode-cta" style="color:var(--purple)">
+              <svg viewBox="0 0 16 16"><path d="M3 2l11 6-11 6V2z"/></svg>
+              <span id="localCtaText">Run full scan</span>
+              <span class="server-status" style="margin-left:6px">
+                <span class="sdot" id="sdot"></span>
+                <span id="sLabel">server offline</span>
+              </span>
+            </div>
+            <a class="sb-setup-link" onclick="event.stopPropagation()" href="#qs-option2">setup guide ↓</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="scan-results" id="scanResults">
+      <div class="results-bar">
+        <span class="verdict-pill vp-scanning" id="verdictPill">⟳ Scanning…</span>
+        <span class="results-repo" id="resultsRepo"></span>
+        <span class="results-mode" id="resultsMode"></span>
+      </div>
+      <div class="results-body" id="resultsBody"></div>
+    </div>
+
+  </section>
+
+  <!-- ── QUICK START ────────────────────────────────────────────────────────── -->
+  <section id="quickstart" class="rv d1">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Get Started</div>
+    <h2 class="sec-h">Quick Start</h2>
+    <p class="sec-p">Setup guide for each scan option above. Click any box to copy.</p>
+
+    <div class="qs-grid">
+      <div class="qs-card" id="qs-option1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 1 · Browser</div>
+          <a class="qs-back-ref" href="#scan" title="Back to scan options">
+            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
+          </a>
+        </div>
+        <div class="qs-title">Instant check, no setup</div>
+        <div class="qs-cmd" onclick="document.getElementById('scanInput').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('scanInput').focus(),400)">
+          <span>Paste any GitHub URL above ↑</span>
+          <span class="qs-copy-btn">Go ↑</span>
+        </div>
+        <div class="qs-desc">Works right now. Uses GitHub API. No code is downloaded. Good for a first look at any repo.</div>
+      </div>
+      <div class="qs-card" id="qs-option2">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 2 · Local Server</div>
+          <a class="qs-back-ref" href="#scan" title="Back to scan options">
+            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
+          </a>
+        </div>
+        <div class="qs-title">Full scan in this browser</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">Requires the Agentic toolkit repo — run these two commands in Terminal:</div>
+        <div class="qs-cmd" onclick="copyToClipboard('cd __TOOLKIT_PATH__', this)" style="margin-bottom:6px">
+          <span>① cd __TOOLKIT_PATH__</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-cmd" onclick="copyToClipboard('python3 projects/security/server.py', this)" style="margin-bottom:8px">
+          <span>② python3 projects/security/server.py</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-desc">Leave it running. Come back here — the server dot turns green and Full Local Scan unlocks. Don't have the repo yet? <a href="https://github.com/ruvnet/agentic-mastermind" target="_blank" style="color:var(--purple)">Clone it first →</a></div>
+      </div>
+      <div class="qs-card" id="qs-option3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 3 · Claude Code</div>
+          <a class="qs-back-ref" href="#scan" title="Back to scan options">
+            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
+          </a>
+        </div>
+        <div class="qs-title">Deep AI scan via slash command</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">This is a <strong style="color:var(--purple)">custom command from this toolkit</strong> — not built into Claude Code. You need the repo cloned and <code>setup.sh</code> run first to install it. Then type this in Claude Code's chat:</div>
+        <div class="qs-cmd" id="qs3-cmd" onclick="copyToClipboard(document.getElementById('qs3-cmd-text').textContent, this)" style="margin-bottom:8px">
+          <span id="qs3-cmd-text">/security-scan https://github.com/owner/repo</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-desc">Claude runs a full 4-tier analysis and explains the results in plain English. Add <code>--sandbox</code> at the end to also run the behavioral test inside an isolated zone.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PIPELINE ──────────────────────────────────────────────────────────── -->
+  <section id="pipeline" class="rv d1">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>How It Works</div>
+    <h2 class="sec-h">The Scan Pipeline</h2>
+    <p class="sec-p">Each step cycles automatically. Click any card to pause and read the details.</p>
+
+    <div class="pipeline-wrap">
+
+      <div class="pipeline-grid" id="pipelineGrid">
+        <div class="pipe-node" data-step="0" onclick="openPipeDetail(0,true)">
+          <div class="pipe-num">01 <span>SURFACE</span></div>
+          <span class="pipe-icon">🔍</span>
+          <div class="pipe-name">Surface Recon</div>
+          <div class="pipe-desc">GitHub API check — repo age, stars, install hooks. No code downloaded.</div>
+        </div>
+        <div class="pipe-node" data-step="1" onclick="openPipeDetail(1,true)">
+          <div class="pipe-num">02 <span>CLONE</span></div>
+          <span class="pipe-icon">📦</span>
+          <div class="pipe-name">Isolated Clone</div>
+          <div class="pipe-desc">Clone to <code>/tmp</code> — never your working directory. Auto-deleted after.</div>
+        </div>
+        <div class="pipe-node" data-step="2" onclick="openPipeDetail(2,true)">
+          <div class="pipe-num">03 <span>STATIC</span></div>
+          <span class="pipe-icon">⚙️</span>
+          <div class="pipe-name">Static Analysis</div>
+          <div class="pipe-desc">Secrets scan, CVE check, SAST rules, pattern matching. Nothing executes.</div>
+        </div>
+        <div class="pipe-node" data-step="3" onclick="openPipeDetail(3,true)">
+          <div class="pipe-num">04 <span>AI</span></div>
+          <span class="pipe-icon">🧠</span>
+          <div class="pipe-name">AI Review</div>
+          <div class="pipe-desc">Claude reads flagged files, distinguishes true threats from false positives.</div>
+        </div>
+        <div class="pipe-node" data-step="4" onclick="openPipeDetail(4,true)">
+          <div class="pipe-num">05 <span>SANDBOX</span></div>
+          <span class="pipe-icon">🔒</span>
+          <div class="pipe-name">Sandbox Test</div>
+          <div class="pipe-desc">Install runs in a sealed zone — no internet, no host file access.</div>
+        </div>
+        <div class="pipe-node" data-step="5" onclick="openPipeDetail(5,true)">
+          <div class="pipe-num">06 <span>SCORE</span></div>
+          <span class="pipe-icon">⚖️</span>
+          <div class="pipe-name">Risk Scoring</div>
+          <div class="pipe-desc">Points tallied. Score maps to a plain-English verdict.</div>
+        </div>
+        <div class="pipe-node" data-step="6" onclick="openPipeDetail(6,true)">
+          <div class="pipe-num">07 <span>REPORT</span></div>
+          <span class="pipe-icon">📄</span>
+          <div class="pipe-name">Report</div>
+          <div class="pipe-desc">Shareable Markdown report saved to <code>Security/scans/</code>.</div>
+        </div>
+        <div class="pipe-node" data-step="7" onclick="openPipeDetail(7,true)">
+          <div class="pipe-num">08 <span>CLEAN UP</span></div>
+          <span class="pipe-icon">🗑️</span>
+          <div class="pipe-name">Clean Up</div>
+          <div class="pipe-desc">Temp clone deleted. No repo code remains on your machine.</div>
+        </div>
+      </div>
+
+      <div class="pipe-detail" id="pipeDetail"></div>
+    </div>
+  </section>
+
+  <!-- ── TIER EXPLORER ──────────────────────────────────────────────────────── -->
+  <section id="tiers" class="rv d2">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Progressive Enhancement</div>
+    <h2 class="sec-h">The 4 Scan Tiers</h2>
+    <p class="sec-p">The scanner never fails — click each tier to see what it can detect.</p>
+
+    <div class="tier-tabs">
+      <button class="tier-tab t0" onclick="showTier(0)"><span class="tier-dot"></span>Tier 0 — AI Only</button>
+      <button class="tier-tab t1" onclick="showTier(1)"><span class="tier-dot"></span>Tier 1 — Basic Tools</button>
+      <button class="tier-tab t2 active" onclick="showTier(2)"><span class="tier-dot"></span>Tier 2 — Full Scan</button>
+      <button class="tier-tab t3" onclick="showTier(3)"><span class="tier-dot"></span>Tier 3 — Sandbox</button>
+    </div>
+
+    <div id="tier-0" class="t0 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 0 · Always available</span>
+        <div class="tier-name">AI Analysis Only</div>
+        <div class="tier-reqs"><strong>Requires:</strong> Just Claude Code — nothing else to install</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Surface recon via GitHub API (age, stars, size)</li>
+          <li><span class="cap-dot"></span>Install hook inspection (postinstall, prepare)</li>
+          <li><span class="cap-dot"></span>Reverse shell pattern detection</li>
+          <li><span class="cap-dot"></span>Obfuscated code detection (eval/base64 chains)</li>
+          <li><span class="cap-dot"></span>Crypto miner signature scanning</li>
+          <li><span class="cap-dot"></span>Credential theft pattern scanning (.ssh, clipboard)</li>
+          <li><span class="cap-dot"></span>Embedded binary detection</li>
+          <li><span class="cap-dot"></span>Committed secret files (.env, .pem, .key)</li>
+        </ul>
+      </div>
+      <div class="tier-terminal">
+        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan</span></div>
+        <div class="terminal-body" id="term-0"></div>
+      </div>
+    </div>
+
+    <div id="tier-1" class="t1 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 1 · Basic tools</span>
+        <div class="tier-name">Pattern Scanning</div>
+        <div class="tier-reqs"><strong>Requires:</strong> git + curl + jq (usually pre-installed)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tier 0</li>
+          <li><span class="cap-dot"></span>Clone to isolated /tmp directory</li>
+          <li><span class="cap-dot"></span>Full codebase grep across all files</li>
+          <li><span class="cap-dot"></span>Dependency file deep inspection</li>
+          <li><span class="cap-dot"></span>CI workflow file analysis (.github/)</li>
+          <li><span class="cap-dot"></span>File type scanning for hidden executables</li>
+        </ul>
+      </div>
+      <div class="tier-terminal">
+        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 1)</span></div>
+        <div class="terminal-body" id="term-1"></div>
+      </div>
+    </div>
+
+    <div id="tier-2" class="t2 tier-pane active">
+      <div class="tier-card">
+        <span class="tier-label">Tier 2 · Recommended</span>
+        <div class="tier-name">Full Automated Scan</div>
+        <div class="tier-reqs"><strong>Requires:</strong> trivy · gitleaks · trufflehog · semgrep &nbsp;(<code>bash scripts/install-security-tools.sh</code>)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tiers 0 & 1</li>
+          <li><span class="cap-dot"></span>CVE database lookup (Trivy)</li>
+          <li><span class="cap-dot"></span>Secrets in current code (Gitleaks)</li>
+          <li><span class="cap-dot"></span>Secrets in full git history (TruffleHog)</li>
+          <li><span class="cap-dot"></span>Professional SAST rules (Semgrep)</li>
+          <li><span class="cap-dot"></span>npm audit / pip-audit / bundle audit</li>
+        </ul>
+      </div>
+      <div class="tier-terminal">
+        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 2)</span></div>
+        <div class="terminal-body" id="term-2"></div>
+      </div>
+    </div>
+
+    <div id="tier-3" class="t3 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 3 · Maximum coverage</span>
+        <div class="tier-name">Sandbox Execution</div>
+        <div class="tier-reqs"><strong>Requires:</strong> Docker Desktop &nbsp;<em>or</em>&nbsp; built-in macOS sandbox-exec (no install)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tiers 0, 1 & 2</li>
+          <li><span class="cap-dot"></span>Install runs in a sealed container</li>
+          <li><span class="cap-dot"></span>All network connections blocked</li>
+          <li><span class="cap-dot"></span>Network attempts captured and logged</li>
+          <li><span class="cap-dot"></span>File system writes monitored</li>
+          <li><span class="cap-dot"></span>Container destroyed after test</li>
+        </ul>
+      </div>
+      <div class="tier-terminal">
+        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 3)</span></div>
+        <div class="terminal-body" id="term-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RISK CALCULATOR ───────────────────────────────────────────────────── -->
+  <section id="calculator" class="rv d3">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Interactive</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <h2 class="sec-h" style="margin-bottom:0">Live Risk Calculator</h2>
+      <span class="calc-sync-badge" id="calcSyncBadge" style="display:none">⟳ synced from scan</span>
+    </div>
+    <p class="sec-p">Toggle findings to see how the score builds and the verdict changes. Runs a browser scan above and the detected findings auto-populate here.</p>
+
+    <div class="calc-layout">
+      <div class="toggle-group" id="toggleGroup">
+        <div class="toggle-row" data-pts="50"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Reverse shell / C2 callback code</div><div class="toggle-pts">+50 pts</div></div></div>
+        <div class="toggle-row" data-pts="50"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Crypto miner signatures found</div><div class="toggle-pts">+50 pts</div></div></div>
+        <div class="toggle-row" data-pts="40"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Live credentials in code (Gitleaks)</div><div class="toggle-pts">+40 pts</div></div></div>
+        <div class="toggle-row" data-pts="40"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Secrets found in git history (TruffleHog)</div><div class="toggle-pts">+40 pts</div></div></div>
+        <div class="toggle-row" data-pts="35"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Clipboard / SSH key harvesting code</div><div class="toggle-pts">+35 pts</div></div></div>
+        <div class="toggle-row medium" data-pts="25"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Obfuscated code (eval/base64 chains)</div><div class="toggle-pts">+25 pts</div></div></div>
+        <div class="toggle-row medium" data-pts="20"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Install hook makes a network call</div><div class="toggle-pts">+20 pts</div></div></div>
+        <div class="toggle-row medium" data-pts="20"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Embedded binary / executable file</div><div class="toggle-pts">+20 pts</div></div></div>
+        <div class="toggle-row medium" data-pts="15"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">CVE Critical (CVSS ≥ 9.0) in deps</div><div class="toggle-pts">+15 pts</div></div></div>
+        <div class="toggle-row low" data-pts="10"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Install hook present (not network)</div><div class="toggle-pts">+10 pts</div></div></div>
+        <div class="toggle-row low" data-pts="8"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">CVE High (CVSS 7.0–8.9) in deps</div><div class="toggle-pts">+8 pts</div></div></div>
+        <div class="toggle-row low" data-pts="5"><label class="toggle"><input type="checkbox" onchange="calcScore()"><span class="toggle-track"></span><span class="toggle-thumb"></span></label><div class="toggle-info"><div class="toggle-label">Repo created &lt; 7 days ago, 0 stars</div><div class="toggle-pts">+5 pts</div></div></div>
+      </div>
+
+      <div class="score-panel">
+        <div class="score-display">
+          <div class="score-num clean" id="scoreNum">0</div>
+          <div class="score-label">Risk Score</div>
+        </div>
+        <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBar" style="width:0%;background:var(--green)"></div></div>
+        <div class="verdict-badge v-clean" id="verdictBadge">
+          <div class="verdict-emoji" id="verdictEmoji">✅</div>
+          <div class="verdict-text v-clean" id="verdictText">Safe to Use</div>
+          <div class="verdict-action" id="verdictAction">No significant findings. Clone and install normally.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SANDBOX DEMO ──────────────────────────────────────────────────────── -->
+  <section id="sandbox" class="rv d4">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Isolation</div>
+    <h2 class="sec-h">The Sandbox</h2>
+    <p class="sec-p">Runs suspicious code in a sealed zone. The code executes — but can't call home and can't touch your real files.</p>
+
+    <div class="sandbox-layout">
+      <div>
+        <div class="sandbox-viz">
+          <svg class="sbv-svg" viewBox="0 0 480 340" xmlns="http://www.w3.org/2000/svg">
+            <circle class="sb-ring-outer" cx="240" cy="170" r="155"/>
+            <circle class="sb-ring-mid" cx="240" cy="170" r="120"/>
+            <circle class="sb-ring-inner" cx="240" cy="170" r="72"/>
+            <text class="sb-label" x="240" y="26" text-anchor="middle">Your Machine</text>
+            <text class="sb-label" x="240" y="56" text-anchor="middle">⬛ All Access Blocked</text>
+            <g id="rays">
+              <line class="sb-ray blocked" id="ray-n"  x1="240" y1="97"  x2="240" y2="50"/>
+              <line class="sb-ray blocked" id="ray-ne" x1="288" y1="122" x2="330" y2="88"/>
+              <line class="sb-ray blocked" id="ray-e"  x1="312" y1="170" x2="365" y2="170"/>
+              <line class="sb-ray blocked" id="ray-se" x1="288" y1="218" x2="330" y2="252"/>
+              <line class="sb-ray blocked" id="ray-s"  x1="240" y1="243" x2="240" y2="290"/>
+              <line class="sb-ray blocked" id="ray-sw" x1="192" y1="218" x2="150" y2="252"/>
+              <line class="sb-ray blocked" id="ray-w"  x1="168" y1="170" x2="115" y2="170"/>
+              <line class="sb-ray blocked" id="ray-nw" x1="192" y1="122" x2="150" y2="88"/>
+            </g>
+            <g id="blockMarkers">
+              <text class="sb-label" id="bm-n"  x="240" y="47"  text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-ne" x="334" y="88"  text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-e"  x="368" y="174" text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-se" x="334" y="256" text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-s"  x="240" y="296" text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-sw" x="146" y="256" text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-w"  x="112" y="174" text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+              <text class="sb-label" id="bm-nw" x="146" y="88"  text-anchor="middle" fill="#f87171" opacity="0" font-size="14">✕</text>
+            </g>
+            <text class="sb-label zone-blocked-text" x="56"  y="120" text-anchor="middle" font-size="8">~/.ssh</text>
+            <text class="sb-label zone-blocked-text" x="56"  y="132" text-anchor="middle" font-size="8">BLOCKED</text>
+            <text class="sb-label zone-blocked-text" x="424" y="120" text-anchor="middle" font-size="8">~/Desktop</text>
+            <text class="sb-label zone-blocked-text" x="424" y="132" text-anchor="middle" font-size="8">BLOCKED</text>
+            <text class="sb-label zone-safe-text"    x="240" y="308" text-anchor="middle" font-size="8">/tmp — WRITABLE</text>
+            <text class="sb-label zone-blocked-text" x="56"  y="220" text-anchor="middle" font-size="8">internet</text>
+            <text class="sb-label zone-blocked-text" x="56"  y="232" text-anchor="middle" font-size="8">BLOCKED</text>
+            <text class="sb-label zone-blocked-text" x="424" y="220" text-anchor="middle" font-size="8">internet</text>
+            <text class="sb-label zone-blocked-text" x="424" y="232" text-anchor="middle" font-size="8">BLOCKED</text>
+            <rect x="180" y="130" width="120" height="80" rx="10" class="sb-code-box"/>
+            <text class="sb-label-big" x="240" y="162" text-anchor="middle">Repo Code</text>
+            <text class="sb-code-text" x="240" y="178" text-anchor="middle">npm install</text>
+            <text class="sb-code-text" x="240" y="192" text-anchor="middle" id="sbCodeStatus">waiting...</text>
+            <text class="sb-label" x="240" y="225" text-anchor="middle" font-size="9" fill="var(--blue)" id="sbMonitorLabel">● behavioral monitor active</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="sandbox-info">
+        <div class="sb-info-card highlight">
+          <div class="sb-info-title"><span class="sb-dot" style="background:var(--purple)"></span>macOS sandbox-exec</div>
+          <div class="sb-info-text">Built into every Mac since 10.5. No Docker, no installs. The <code>mac-sandbox.sb</code> profile blocks all network and restricts writes to <code>/tmp</code>.</div>
+        </div>
+        <div class="sb-info-card">
+          <div class="sb-info-title"><span class="sb-dot" style="background:var(--blue)"></span>Docker container (optional)</div>
+          <div class="sb-info-text">Full OS-level isolation. <code>--network none</code>, <code>--read-only</code>, <code>--memory 512m</code>, <code>--cap-drop ALL</code>. Container is destroyed after the test.</div>
+        </div>
+        <div class="sb-info-card">
+          <div class="sb-info-title"><span class="sb-dot" style="background:var(--green)"></span>What gets captured</div>
+          <div class="sb-info-text">All network connection attempts (even if blocked), file writes outside /tmp, processes spawned, and permission denial errors.</div>
+        </div>
+        <div class="sb-info-card">
+          <div class="sb-info-title"><span class="sb-dot" style="background:var(--red)"></span>When it triggers</div>
+          <div class="sb-info-text">Automatically on MEDIUM+ risk (score ≥ 31), or anytime via the <code>--sandbox</code> flag. Container is destroyed — nothing persists.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    Part of the <strong>Agentic Marketing Mastermind</strong> toolkit ·
+    Guide: <code>guides/security-scan-guide.md</code> ·
+    Command: <code>/security-scan</code>
+  </div>
+</footer>
+
+<script>
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function toggleTheme(){const h=document.documentElement,n=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=n;localStorage.setItem('theme',n)}
+(()=>{const s=localStorage.getItem('theme');if(s)document.documentElement.dataset.theme=s})();
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function navTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
+const navLinks=document.querySelectorAll('.nav-link');
+const secIds=['scan','quickstart','pipeline','tiers','calculator','sandbox'];
+window.addEventListener('scroll',()=>{
+  let cur='scan';
+  secIds.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<120)cur=id});
+  navLinks.forEach((l,i)=>l.classList.toggle('active',secIds[i]===cur));
+},{passive:true});
+
+// ── REVEAL ────────────────────────────────────────────────────────────────────
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')}),{threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+
+// ── URL INPUT → LIVE COMMAND UPDATE ──────────────────────────────────────────
+function updateQsCommands(raw) {
+  const url = raw.trim();
+  const qs3 = document.getElementById('qs3-cmd-text');
+  if (!qs3) return;
+  qs3.textContent = url ? `/security-scan ${url}` : '/security-scan https://github.com/owner/repo';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('scanInput');
+  if (input) {
+    input.addEventListener('input', () => updateQsCommands(input.value));
+    input.addEventListener('paste', () => setTimeout(() => updateQsCommands(input.value), 0));
+  }
+});
+
+// ── SERVER DETECTION ──────────────────────────────────────────────────────────
+let serverOnline=false;
+async function pingServer(){
+  try{
+    const r=await fetch('http://localhost:7432/ping',{signal:AbortSignal.timeout(1200)});
+    const ok=r.ok;
+    setServerStatus(ok);
+    return ok;
+  }catch{setServerStatus(false);return false}
+}
+function setServerStatus(online){
+  serverOnline=online;
+  document.getElementById('sdot').className='sdot'+(online?' online':' offline');
+  document.getElementById('sLabel').textContent=online?'server online':'server offline';
+}
+// Poll every 4s
+pingServer();
+setInterval(pingServer,4000);
+
+// ── BROWSER QUICK CHECK ───────────────────────────────────────────────────────
+function parseGitHubUrl(raw){
+  raw=raw.trim().replace(/\.git$/,'');
+  const m=raw.match(/github\.com\/([^\/\s?#]+)\/([^\/\s?#]+)/);
+  if(m)return{owner:m[1],repo:m[2]};
+  const s=raw.match(/^([^\/\s]+)\/([^\/\s]+)$/);
+  if(s)return{owner:s[1],repo:s[2]};
+  return null;
+}
+
+async function runBrowserScan(){
+  const raw=document.getElementById('scanInput').value.trim();
+  if(!raw){flashInput();return}
+  const parsed=parseGitHubUrl(raw);
+  if(!parsed){showError('Paste a GitHub URL or owner/repo format.');return}
+  const {owner,repo}=parsed;
+
+  showResults('scanning','Browser Quick Check');
+  document.getElementById('resultsRepo').textContent=`${owner}/${repo}`;
+  document.getElementById('resultsBody').innerHTML='<div class="check-list" id="checkList"><div class="check-item"><span class="ci-icon">⟳</span><span class="ci-msg">Fetching repo data…</span></div></div>';
+
+  const checks=[];
+  let score=0;
+  // flags that map to calculator toggles
+  const flags={networkHook:false,safeHook:false,suspiciousContent:false,veryNewNoStars:false};
+
+  try{
+    // 1. Repo metadata
+    const meta=await ghFetch(`https://api.github.com/repos/${owner}/${repo}`);
+    if(meta.message==='Not Found'){showError('Repo not found or is private.');return}
+
+    const ageDays=Math.floor((Date.now()-new Date(meta.created_at))/(864e5));
+    if(ageDays<7){score+=8;checks.push({t:'warn',m:`Repo is ${ageDays} day(s) old — very new`})}
+    else if(ageDays<30){score+=3;checks.push({t:'warn',m:`Repo is ${ageDays} days old (new)`})}
+    else{checks.push({t:'ok',m:`Repo age: ${ageDays<365?ageDays+' days':(ageDays/365).toFixed(1)+' years'}`})}
+
+    const stars=meta.stargazers_count;
+    if(stars===0&&ageDays<7){score+=5;flags.veryNewNoStars=true;checks.push({t:'warn',m:'Zero stars on a brand-new repo'})}
+    else{checks.push({t:'ok',m:`Stars: ${stars.toLocaleString()}`})}
+
+    if(meta.fork){score+=2;checks.push({t:'info',m:'This is a fork — check the original repo too'})}
+    if(!meta.license){score+=2;checks.push({t:'info',m:'No license found'})}
+    else{checks.push({t:'ok',m:`License: ${meta.license.name}`})}
+    if(!meta.description){checks.push({t:'info',m:'No description'})}
+
+    renderChecks(checks);
+
+    // 2. Package.json install hooks
+    try{
+      const pkg=await ghFetch(`https://api.github.com/repos/${owner}/${repo}/contents/package.json`);
+      if(pkg.content){
+        const content=JSON.parse(atob(pkg.content.replace(/\n/g,'')));
+        const hooks=['postinstall','install','preinstall','prepare'];
+        const bad=['curl','wget','http','exec','spawn','base64','eval','child_process'];
+        let hookFound=false;
+        for(const h of hooks){
+          if(content.scripts?.[h]){
+            hookFound=true;
+            const v=content.scripts[h];
+            const hasBad=bad.some(p=>v.toLowerCase().includes(p));
+            if(hasBad){score+=20;flags.networkHook=true;checks.push({t:'danger',m:`⚠ Install hook with suspicious command — ${h}: "${v.slice(0,70)}"`})}
+            else{score+=5;flags.safeHook=true;checks.push({t:'warn',m:`Install hook present — ${h}: "${v.slice(0,70)}"`})}
+          }
+        }
+        if(!hookFound)checks.push({t:'ok',m:'No install hooks in package.json'});
+      }
+    }catch{}
+
+    // 3. README patterns
+    try{
+      const readme=await ghFetch(`https://api.github.com/repos/${owner}/${repo}/readme`);
+      if(readme.content){
+        const text=atob(readme.content.replace(/\n/g,''));
+        const badPat=['eval(','base64_decode','fromCharCode','unescape(','document.write('];
+        const found=badPat.filter(p=>text.includes(p));
+        if(found.length){score+=12;flags.suspiciousContent=true;checks.push({t:'warn',m:`Suspicious patterns in README: ${found.join(', ')}`})}
+        else{checks.push({t:'ok',m:'README content looks clean'})}
+      }
+    }catch{}
+
+    renderChecks(checks);
+    const verdict=scoreToVerdict(score);
+    setPill(verdict.cls,verdict.emoji+' '+verdict.label);
+    renderScoreRow(score,verdict);
+    renderNote();
+    syncCalculator(flags);
+  }catch(e){
+    if(e.message?.includes('rate limit')){showError('GitHub API rate limit hit (60/hr). Wait a minute and try again.')}
+    else{showError('Could not fetch repo data. Check the URL and try again.')}
+  }
+}
+
+// map browser scan findings → calculator toggles
+// toggle indices: 0=shell,1=miner,2=creds,3=history,4=ssh,5=obfuscated,6=network-hook,7=binary,8=CVEcrit,9=safe-hook,10=CVEhigh,11=new+stars
+function syncCalculator(flags){
+  const rows=document.querySelectorAll('#toggleGroup .toggle-row');
+  // only touch the 4 rows we can infer — leave the rest as-is
+  const map=[
+    {idx:11,on:flags.veryNewNoStars},
+    {idx:5, on:flags.suspiciousContent},
+    {idx:6, on:flags.networkHook},
+    {idx:9, on:flags.safeHook&&!flags.networkHook},
+  ];
+  let anyChanged=false;
+  map.forEach(({idx,on})=>{
+    const row=rows[idx];if(!row)return;
+    const cb=row.querySelector('input');
+    if(cb.checked!==on){cb.checked=on;anyChanged=true}
+    row.classList.toggle('synced-on',on);
+    setTimeout(()=>row.classList.remove('synced-on'),1800);
+  });
+  if(anyChanged||true){
+    calcScore();
+    const badge=document.getElementById('calcSyncBadge');
+    if(badge){
+      badge.style.display='inline-flex';
+      badge.style.animation='none';
+      requestAnimationFrame(()=>{badge.style.animation='';badge.textContent='⟳ synced from scan'});
+    }
+  }
+}
+
+async function ghFetch(url){
+  const r=await fetch(url,{headers:{Accept:'application/vnd.github+json'}});
+  if(!r.ok&&r.status===403)throw new Error('rate limit');
+  return r.json();
+}
+
+function renderChecks(checks){
+  const list=document.getElementById('checkList');
+  if(!list)return;
+  list.innerHTML=checks.map(c=>{
+    const icon=c.t==='ok'?'✓':c.t==='warn'?'⚠':c.t==='danger'?'✕':'ℹ';
+    return `<div class="check-item"><span class="ci-icon">${icon}</span><span class="ci-msg ${c.t==='danger'?'danger':c.t==='warn'?'warn':c.t==='info'?'info':''}">${c.m}</span></div>`;
+  }).join('');
+}
+
+function renderScoreRow(score,verdict){
+  const body=document.getElementById('resultsBody');
+  const existing=body.querySelector('.check-score');
+  if(existing)existing.remove();
+  const note=body.querySelector('.check-note');
+  const row=document.createElement('div');
+  row.className='check-score';
+  row.innerHTML=`<span class="cs-label">Risk score</span><span class="cs-num" style="color:${verdict.color}">${score}/100 — ${verdict.label}</span>`;
+  body.insertBefore(row,note||null);
+}
+
+function renderNote(){
+  const body=document.getElementById('resultsBody');
+  if(body.querySelector('.check-note'))return;
+  const note=document.createElement('div');
+  note.className='check-note';
+  note.innerHTML='<strong>Browser check covers metadata only.</strong> For code-level analysis, secrets scanning, and CVE checks — run the <strong>Full Local Scan</strong> above or use <code>/security-scan</code> in Claude Code.';
+  body.appendChild(note);
+}
+
+function scoreToVerdict(score){
+  if(score<=15)return{cls:'vp-clean',label:'Safe to Use',emoji:'✅',color:'var(--green)'};
+  if(score<=30)return{cls:'vp-care',label:'Use With Care',emoji:'⚠️',color:'var(--yellow)'};
+  if(score<=60)return{cls:'vp-quarantine',label:'Do Not Run Yet',emoji:'🔶',color:'var(--orange)'};
+  return{cls:'vp-reject',label:'Do Not Install',emoji:'❌',color:'var(--red)'};
+}
+
+// ── FULL LOCAL SCAN ───────────────────────────────────────────────────────────
+async function runLocalScan(){
+  const raw=document.getElementById('scanInput').value.trim();
+  if(!raw){flashInput();return}
+
+  if(!serverOnline){
+    showResults('info','Full Local Scan');
+    document.getElementById('resultsRepo').textContent='';
+    setPill('vp-info','ℹ Server offline');
+    document.getElementById('resultsBody').innerHTML=`
+      <div class="setup-panel">
+        <div class="setup-title">Start the local server first</div>
+        <div class="setup-step">
+          <div class="setup-num">1</div>
+          <div class="setup-body">
+            <div class="setup-label">Open Terminal and navigate to your Agentic folder</div>
+            <div class="setup-cmd" onclick="copySetup('cd ~/Desktop/Agentic',this)"><span>cd ~/Desktop/Agentic</span><span class="scopy">Copy</span></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">2</div>
+          <div class="setup-body">
+            <div class="setup-label">Start the scanner server</div>
+            <div class="setup-cmd" onclick="copySetup('python3 projects/security/server.py',this)"><span>python3 projects/security/server.py</span><span class="scopy">Copy</span></div>
+            <div class="setup-note">Leave that Terminal window open. This page auto-detects when it's ready.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">3</div>
+          <div class="setup-body">
+            <div class="setup-label">Watch the dot turn green, then click Full Local Scan again</div>
+          </div>
+        </div>
+        <div class="setup-or">or run directly in Claude Code</div>
+        <div class="setup-cmd" onclick="copySetup('/security-scan '+document.getElementById('scanInput').value.trim(),this)">
+          <span id="ccCmd">/security-scan ${raw}</span><span class="scopy">Copy</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  showResults('scanning','Full Local Scan');
+  document.getElementById('resultsRepo').textContent=raw;
+  setPill('vp-scanning','⟳ Scanning…');
+  document.getElementById('resultsBody').innerHTML='<div class="local-terminal" id="localTerm"></div>';
+  const term=document.getElementById('localTerm');
+
+  try{
+    const url=`http://localhost:7432/scan?url=${encodeURIComponent(raw)}`;
+    const res=await fetch(url);
+    const reader=res.body.getReader();
+    const decoder=new TextDecoder();
+    let buf='';
+
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const parts=buf.split('\n\n');
+      buf=parts.pop();
+      for(const part of parts){
+        if(!part.startsWith('data:'))continue;
+        try{
+          const d=JSON.parse(part.slice(5).trim());
+          if(d.done){
+            handleScanDone(d);
+            return;
+          }
+          if(d.line!==undefined){
+            const span=document.createElement('span');
+            span.className='lt-line '+lineClass(d.line);
+            span.textContent=d.line+'\n';
+            term.appendChild(span);
+            term.scrollTop=term.scrollHeight;
+          }
+        }catch{}
+      }
+    }
+  }catch(e){
+    setPill('vp-info','⚠ Connection lost');
+    const term=document.getElementById('localTerm');
+    if(term){const s=document.createElement('span');s.className='lt-line lt-err';s.textContent='Error: '+e.message;term.appendChild(s)}
+  }
+}
+
+function lineClass(line){
+  if(/✓|SAFE|CLEAN|ok/i.test(line))return 'lt-ok';
+  if(/⚠|WARN|MEDIUM/i.test(line))return 'lt-warn';
+  if(/✗|ERROR|FAIL|DANGER|REJECT/i.test(line))return 'lt-err';
+  if(/^\s*#|^\s*\[|^\s*─/.test(line))return 'lt-dim';
+  return '';
+}
+
+function handleScanDone(d){
+  const report=d.report;
+  if(report?.verdict){
+    const v=report.verdict;
+    const map={CLEAN:'vp-clean ✅ Safe to Use',CARE:'vp-care ⚠️ Use With Care',QUARANTINE:'vp-quarantine 🔶 Do Not Run Yet',REJECT:'vp-reject ❌ Do Not Install'};
+    const parts=(map[v]||'vp-info ✓ Done').split(' ');
+    setPill(parts[0],parts.slice(1).join(' '));
+  }else{
+    setPill(d.exit_code===0?'vp-clean':'vp-care',d.exit_code===0?'✅ Scan complete':'⚠ Scan finished — review output');
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function showResults(state,mode){
+  const panel=document.getElementById('scanResults');
+  panel.classList.add('visible');
+  document.getElementById('resultsMode').textContent=mode;
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function setPill(cls,text){
+  const p=document.getElementById('verdictPill');
+  p.className='verdict-pill '+cls;
+  p.textContent=text;
+}
+function showError(msg){
+  setPill('vp-info','⚠ '+msg);
+  document.getElementById('resultsBody').innerHTML=`<div class="check-list"><div class="check-item"><span class="ci-icon">⚠</span><span class="ci-msg warn">${msg}</span></div></div>`;
+}
+function flashInput(){
+  const el=document.getElementById('scanInput');
+  el.style.borderColor='var(--red)';
+  el.focus();
+  setTimeout(()=>el.style.borderColor='',1200);
+}
+function copySetup(text,el){
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn=el.querySelector('.scopy');
+  if(btn){const o=btn.textContent;btn.textContent='Copied!';setTimeout(()=>btn.textContent=o,1800)}
+}
+
+// ── PIPELINE ──────────────────────────────────────────────────────────────────
+const PIPE_DATA=[
+  {icon:'🔍',name:'Surface Recon',badge:'No code needed',checks:['Repo age, star count, size anomalies','Package.json install hook inspection','CI workflow file analysis (.github/)','Checks for committed .env / .pem files'],term:`<span class="t-prompt">$</span> <span>curl api.github.com/repos/owner/repo</span>\n<span class="t-ok">✓</span> <span>Repo: 3 years old, 1.2k stars, 48KB</span>\n<span class="t-ok">✓</span> <span>No postinstall hooks found</span>\n<span class="t-ok">✓</span> <span>No .env committed</span>`},
+  {icon:'📦',name:'Isolated Clone',badge:'Never your cwd',checks:['Clones to /tmp/repo-scan-XXXXXX only','Depth-50 by default','Branch and HEAD commit captured','Never touches your working directory'],term:`<span class="t-prompt">$</span> <span>git clone --depth=50 URL /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Cloned: main @ a3f9d12</span>\n<span class="t-ok">✓</span> <span>Location: /tmp/repo-scan-a8f3c</span>\n<span class="t-dim"># Auto-deleted after scan</span>`},
+  {icon:'⚙️',name:'Static Analysis',badge:'Nothing runs',checks:['Gitleaks: secrets in current code','TruffleHog: full git history scan','Semgrep: SAST with security rules','Trivy: CVE database + misconfigs'],term:`<span class="t-prompt">$</span> <span>gitleaks detect --source /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Gitleaks: 0 secrets found</span>\n<span class="t-prompt">$</span> <span>trivy fs /tmp/repo-scan-a8f3c</span>\n<span class="t-warn">⚠</span> <span>lodash@4.17.20: CVE-2021-23337 (HIGH)</span>\n<span class="t-ok">✓</span> <span>Semgrep: 0 critical findings</span>`},
+  {icon:'🧠',name:'AI Review',badge:'All tiers',checks:['Reads each flagged file at flagged line','±20 lines context around each finding','Judges: CONFIRMED / FALSE_POSITIVE','Checks for obfuscation, eval chains'],term:`<span class="t-prompt">Claude</span> <span class="t-dim">reading lodash finding...</span>\n<span class="t-warn">→</span> <span>Prototype pollution. Severity: HIGH</span>\n<span class="t-warn">⚠</span> <span>CONFIRMED — update lodash to ≥4.17.21</span>`},
+  {icon:'🔒',name:'Sandbox Test',badge:'MEDIUM+ risk',checks:['macOS sandbox-exec (built-in, no Docker)','OR Docker: --network none --read-only','Captures all network connection attempts','Container/zone destroyed after test'],term:`<span class="t-prompt">$</span> <span>sandbox-exec -f mac-sandbox.sb bash run.sh</span>\n<span class="t-dim">Network: blocked · Filesystem: /tmp only</span>\n<span class="t-ok">✓</span> <span>Install: completed normally</span>\n<span class="t-ok">✓</span> <span>0 network attempts</span>`},
+  {icon:'⚖️',name:'Risk Scoring',badge:'0–100 scale',checks:['Each finding adds weighted points','Critical: +40–50  High: +15–35','Score maps to 4 verdict tiers','AI adjusts for false positives'],term:`<span class="t-warn">+8</span>  <span>lodash HIGH CVE</span>\n<span class="t-ok">+0</span>  <span>eval() — FALSE POSITIVE (minified)</span>\n<span class="t-dim">─────────────────</span>\n<span class="t-yellow">Score: 8 / 100</span>\n<span class="t-ok">Verdict: SAFE TO USE</span>`},
+  {icon:'📄',name:'Report',badge:'Shareable',checks:['Saved to Security/scans/repo-date.md','Plain English — no security jargon','Single sentence verdict up front','Concrete action checklist at the end'],term:`<span class="t-ok">✓</span> <span>Security/scans/some-repo-2026-04-28.md</span>\n\n<span class="t-white">VERDICT: ✅ SAFE TO USE</span>\n<span class="t-dim">This repo appears safe. Update lodash</span>\n<span class="t-dim">before deploying to production.</span>`},
+  {icon:'🗑️',name:'Clean Up',badge:'Always',checks:['Deletes /tmp/repo-scan-* directory','Removes /tmp/security-scan-results/','Docker container auto-destroyed (--rm)','No repo code remains on your machine'],term:`<span class="t-prompt">$</span> <span>rm -rf /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Temp clone deleted</span>\n<span class="t-ok">✓</span> <span>Nothing left behind</span>`},
+];
+
+let activeDetail=-1;
+function openPipeDetail(i,manual=false){
+  if(manual){clearTimeout(pipeLoopTimer);pipeRunning=false}
+  const d=PIPE_DATA[i],el=document.getElementById('pipeDetail');
+  document.querySelectorAll('.pipe-node').forEach(n=>n.classList.remove('active'));
+  if(manual&&activeDetail===i){el.classList.remove('open');activeDetail=-1;return}
+  document.querySelectorAll('.pipe-node')[i].classList.add('active');
+  activeDetail=i;
+  el.innerHTML=`<div class="pd-header"><div class="pd-icon">${d.icon}</div><div class="pd-title">${d.name}</div><span class="pd-badge">${d.badge}</span></div><div class="pd-body"><div><div class="pd-section-title">What happens here</div><ul class="pd-checks">${d.checks.map(c=>`<li>${c}</li>`).join('')}</ul></div><div><div class="pd-section-title">Terminal output</div><div class="pd-terminal">${d.term}</div></div></div>`;
+  el.classList.add('open');
+  if(manual)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+let pipeCurStep=0,pipeLoopTimer=null,pipeRunning=false;
+function runPipeline(){
+  pipeRunning=true;
+  const nodes=document.querySelectorAll('.pipe-node');
+  nodes.forEach(n=>n.classList.remove('active'));
+  nodes[pipeCurStep].classList.add('active');
+  openPipeDetail(pipeCurStep);
+  pipeCurStep=(pipeCurStep+1)%nodes.length;
+  pipeLoopTimer=setTimeout(runPipeline,2600);
+}
+function resetPipeline(closeDetail=true){
+  pipeRunning=false;
+  clearTimeout(pipeLoopTimer);
+  pipeCurStep=0;
+  document.querySelectorAll('.pipe-node').forEach(n=>n.classList.remove('active'));
+  if(closeDetail){
+    document.getElementById('pipeDetail').classList.remove('open');
+    activeDetail=-1;
+  }
+}
+
+// Auto-play pipeline when scrolled into view
+const pipeObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting&&!pipeRunning){runPipeline()}
+    else if(!e.isIntersecting){resetPipeline()}
+  });
+},{threshold:.2});
+pipeObs.observe(document.getElementById('pipeline'));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── TIERS ─────────────────────────────────────────────────────────────────────
+const TIER_LINES={
+  0:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 0] AI analysis — no extra tools installed'],['t-ok','✓ Repo: 2 years old · 847 stars · 38KB'],['t-ok','✓ No postinstall hooks'],['t-ok','✓ No reverse shells'],['t-ok','✓ No crypto miner signatures'],['t-dim','──────────────────────────'],['t-ok','✅ SAFE TO USE (score 3/100)']],
+  1:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 1] git + curl + jq detected'],['t-ok','✓ Cloned: main @ c8a1b2f'],['t-warn','⚠ Found: postinstall script in package.json'],['t-warn','  → postinstall: "node scripts/setup.js"'],['t-ok','✓ setup.js: creates config file, no network'],['t-dim','──────────────────────────'],['t-yellow','⚠ USE WITH CARE (score 10/100)']],
+  2:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 2] Full tools detected'],['t-ok','✓ trivy · gitleaks · trufflehog · semgrep'],['t-ok','✓ 0 secrets in current code'],['t-ok','✓ 0 secrets in history'],['t-warn','⚠ lodash@4.17.20: CVE-2021-23337 HIGH'],['t-ok','✓ 0 critical SAST findings'],['t-dim','──────────────────────────'],['t-yellow','⚠ USE WITH CARE (score 8/100)'],['t-dim','Update lodash to ≥4.17.21']],
+  3:[['t-prompt','$ /security-scan https://github.com/owner/repo --sandbox'],['t-dim','[Tier 3] Sandbox mode'],['t-dim','sandbox-exec -f mac-sandbox.sb'],['t-dim','  Network: BLOCKED · Writes: /tmp only'],['t-ok','✓ Install complete'],['t-ok','✓ 0 network connection attempts'],['t-ok','✓ 0 writes outside /tmp'],['t-dim','──────────────────────────'],['t-ok','✅ SAFE TO USE (score 8/100)'],['t-dim','Sandbox: normal behavior confirmed']]
+};
+let tierTimers=[];
+function showTier(n){
+  tierTimers.forEach(clearTimeout);tierTimers=[];
+  document.querySelectorAll('.tier-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tier-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tier-tab')[n].classList.add('active');
+  const pane=document.getElementById('tier-'+n);
+  pane.classList.add('active');
+  const term=document.getElementById('term-'+n);
+  term.innerHTML='';
+  TIER_LINES[n].forEach((line,i)=>{
+    const span=document.createElement('span');
+    span.className='t-line '+line[0];
+    span.textContent=line[1];
+    term.appendChild(span);
+    term.appendChild(document.createTextNode('\n'));
+    const t=setTimeout(()=>span.classList.add('show'),i*120+50);
+    tierTimers.push(t);
+  });
+}
+window.addEventListener('load',()=>setTimeout(()=>showTier(2),400));
+
+// ── RISK CALCULATOR ───────────────────────────────────────────────────────────
+let displayedScore=0;
+function calcScore(){
+  let score=0;
+  document.querySelectorAll('#toggleGroup .toggle-row').forEach(row=>{
+    const cb=row.querySelector('input');
+    const pts=+row.dataset.pts;
+    if(cb.checked){score+=pts;row.classList.add('checked')}else row.classList.remove('checked');
+  });
+  animateScore(score);
+  const capped=Math.min(score,100);
+  const bar=document.getElementById('scoreBar');
+  bar.style.width=capped+'%';
+  let cls,emoji,text,action,color;
+  if(score<=15){cls='v-clean';emoji='✅';text='Safe to Use';action='No significant findings. Clone and install normally.';color='var(--green)';bar.style.background='var(--green)'}
+  else if(score<=30){cls='v-care';emoji='⚠️';text='Use With Care';action='Read the specific findings before installing.';color='var(--yellow)';bar.style.background='var(--yellow)'}
+  else if(score<=60){cls='v-quarantine';emoji='🔶';text='Do Not Run Yet';action='Real risks found. Get a second opinion. Sandbox only.';color='var(--orange)';bar.style.background='var(--orange)'}
+  else{cls='v-reject';emoji='❌';text='Do Not Install';action='Active threat indicators. Delete immediately.';color='var(--red)';bar.style.background='var(--red)'}
+  const badge=document.getElementById('verdictBadge');
+  badge.className='verdict-badge '+cls;
+  document.getElementById('verdictEmoji').textContent=emoji;
+  const vt=document.getElementById('verdictText');vt.className='verdict-text '+cls;vt.textContent=text;
+  document.getElementById('verdictAction').textContent=action;
+  document.getElementById('scoreNum').style.color=color;
+}
+function animateScore(target){
+  const el=document.getElementById('scoreNum');
+  const start=displayedScore,diff=target-start;
+  if(diff===0)return;
+  let s=null;
+  const step=ts=>{if(!s)s=ts;const p=Math.min((ts-s)/300,1);el.textContent=Math.round(start+diff*p);if(p<1)requestAnimationFrame(step);else displayedScore=target};
+  requestAnimationFrame(step);
+}
+
+// ── SANDBOX DEMO ──────────────────────────────────────────────────────────────
+let sbRunning=false,sbTimers=[],sbLoopTimer=null;
+const bmIds=['bm-n','bm-ne','bm-e','bm-se','bm-s','bm-sw','bm-w','bm-nw'];
+const rayIds=['ray-n','ray-ne','ray-e','ray-se','ray-s','ray-sw','ray-w','ray-nw'];
+function resetSandbox(){
+  sbTimers.forEach(clearTimeout);sbTimers=[];clearTimeout(sbLoopTimer);sbRunning=false;
+  bmIds.forEach(id=>{const el=document.getElementById(id);if(el)el.setAttribute('opacity','0')});
+  rayIds.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('blocked');el.style.opacity='0'}});
+  const cs=document.getElementById('sbCodeStatus');if(cs)cs.textContent='waiting...';
+  const ml=document.getElementById('sbMonitorLabel');if(ml){ml.style.fill='var(--blue)';ml.textContent='● behavioral monitor active'}
+}
+function runSandboxDemo(){
+  if(sbRunning)return;
+  resetSandbox();sbRunning=true;
+  const cs=document.getElementById('sbCodeStatus');
+  const ml=document.getElementById('sbMonitorLabel');
+  sbTimers.push(setTimeout(()=>{if(cs)cs.textContent='installing…'},400));
+  rayIds.forEach((id,i)=>{sbTimers.push(setTimeout(()=>{const el=document.getElementById(id);if(el){el.classList.add('blocked');el.style.opacity='1'}},800+i*200))});
+  bmIds.forEach((id,i)=>{sbTimers.push(setTimeout(()=>{const el=document.getElementById(id);if(el)el.setAttribute('opacity','1')},900+i*200))});
+  sbTimers.push(setTimeout(()=>{if(ml){ml.style.fill='var(--red)';ml.textContent='⚡ 8 network attempts detected — all blocked'}},2600));
+  sbTimers.push(setTimeout(()=>{if(cs)cs.textContent='complete ✓'},3000));
+  sbTimers.push(setTimeout(()=>{
+    if(ml){ml.style.fill='var(--green)';ml.textContent='✓ sandbox test complete — behavior normal'}
+    sbRunning=false;
+    sbLoopTimer=setTimeout(runSandboxDemo,2800);
+  },3600));
+}
+
+// Auto-play sandbox when scrolled into view
+const sbObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting&&!sbRunning){runSandboxDemo()}
+    else if(!e.isIntersecting){resetSandbox()}
+  });
+},{threshold:.2});
+sbObs.observe(document.getElementById('sandbox'));
+
+// ── COPY ──────────────────────────────────────────────────────────────────────
+function copyToClipboard(text,el){
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn=el.querySelector('.qs-copy-btn');
+  if(btn){const o=btn.textContent;btn.textContent='Copied!';setTimeout(()=>btn.textContent=o,1800)}
+}
+</script>
+</body>
+</html>
