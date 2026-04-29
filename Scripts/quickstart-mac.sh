@@ -3,7 +3,7 @@
 # Creates your workspace, installs all prerequisites, and launches Claude Code.
 #
 # Usage (copy-paste into Terminal):
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-mac.sh)"
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh)"
 
 set -e
 
@@ -181,7 +181,7 @@ if ! xcode-select -p &>/dev/null; then
   echo "  A macOS dialog just opened — click Install and wait for it to finish."
   echo "  Then re-run this script:"
   echo ""
-  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-mac.sh)"'
+  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh)"'
   echo ""
   exit 0
 fi
@@ -296,10 +296,10 @@ info "Created: $WORKSPACE_DIR/memory/"
 
 if [[ -d "$REPO_DIR" ]]; then
   warn "AMM-SA already exists — pulling latest..."
-  git -C "$REPO_DIR" pull origin INT 2>/dev/null || true
+  git -C "$REPO_DIR" pull origin main 2>/dev/null || true
 else
   info "Cloning AMM-SA toolkit..."
-  git clone -b INT "$REPO_URL" "$REPO_DIR"
+  git clone -b main "$REPO_URL" "$REPO_DIR"
 fi
 ok "AMM-SA toolkit ready"
 
@@ -349,7 +349,7 @@ If you set up a second machine, run the quickstart again on that machine —
 your files sync but your MCP config does not carry over automatically.
 
 ## Workspace Layout
-- \`AMM-SA/\`     — toolkit: slash commands, workflows, scripts (do not edit)
+- \`AMM-SA/\`      — toolkit: slash commands, workflows, scripts (do not edit)
 - \`clients/\`   — one subfolder per client with brief.md + assets/
 - \`memory/\`    — persistent notes Claude reads and writes across sessions
 - \`.env\`        — API keys and webhook URLs (never committed to git)
