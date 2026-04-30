@@ -379,8 +379,8 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
     <span class="nav-title">Security Scan</span>
   </a>
   <div class="nav-links">
-    <button class="nav-link active" onclick="navTo('scan')">Scan</button>
-    <button class="nav-link" onclick="navTo('quickstart')">Quick Start</button>
+    <button class="nav-link active" onclick="navTo('quickstart')">Quick Start</button>
+    <button class="nav-link" onclick="navTo('scan')">Scan</button>
     <button class="nav-link" onclick="navTo('pipeline')">How It Works</button>
     <button class="nav-link" onclick="navTo('tiers')">Tiers</button>
     <button class="nav-link" onclick="navTo('calculator')">Risk Score</button>
@@ -396,6 +396,61 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
 
 <div class="page">
 <div class="wrap">
+
+  <!-- ── QUICK START ────────────────────────────────────────────────────────── -->
+  <section id="quickstart" class="rv d1">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Get Started</div>
+    <h2 class="sec-h">Quick Start</h2>
+    <p class="sec-p">Pick your scan method below, then use the scanner to run it.</p>
+
+    <div class="qs-grid">
+      <div class="qs-card" id="qs-option1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 1 · Browser</div>
+          <a class="qs-back-ref" href="#scan" title="Go to scanner">
+            <svg viewBox="0 0 16 16"><polyline points="8 4 12 8 8 12"/><line x1="4" y1="8" x2="12" y2="8"/></svg> scan ↓
+          </a>
+        </div>
+        <div class="qs-title">Instant check, no setup</div>
+        <div class="qs-cmd" onclick="document.getElementById('scanInput').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('scanInput').focus(),400)">
+          <span>Paste any GitHub URL in the scanner ↓</span>
+          <span class="qs-copy-btn">Go ↓</span>
+        </div>
+        <div class="qs-desc">Works right now. Uses GitHub API. No code is downloaded. Good for a first look at any repo.</div>
+      </div>
+      <div class="qs-card" id="qs-option2">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 2 · Local Server</div>
+          <a class="qs-back-ref" href="#scan" title="Go to scanner">
+            <svg viewBox="0 0 16 16"><polyline points="8 4 12 8 8 12"/><line x1="4" y1="8" x2="12" y2="8"/></svg> scan ↓
+          </a>
+        </div>
+        <div class="qs-title">Full scan in this browser</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">Requires the Agentic toolkit repo — run these two commands in Terminal first:</div>
+        <div class="qs-cmd" onclick="copyToClipboard('cd __TOOLKIT_PATH__', this)" style="margin-bottom:6px">
+          <span>① cd __TOOLKIT_PATH__</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-cmd" onclick="copyToClipboard('python3 tools/security/server.py', this)" style="margin-bottom:8px">
+          <span>② python3 tools/security/server.py</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-desc">Leave it running. Come back here — the server dot turns green and Full Local Scan unlocks. Don't have the repo yet? <a href="https://github.com/ruvnet/agentic-mastermind" target="_blank" style="color:var(--purple)">Clone it first →</a></div>
+      </div>
+      <div class="qs-card" id="qs-option3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="qs-step" style="margin-bottom:0">Option 3 · Claude Code</div>
+        </div>
+        <div class="qs-title">Deep AI scan via slash command</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">A <strong style="color:var(--purple)">custom command from this toolkit</strong> — not built into Claude Code. Clone the repo and run <code>setup.sh</code> to install it, then type in Claude Code's chat:</div>
+        <div class="qs-cmd" id="qs3-cmd" onclick="copyToClipboard(document.getElementById('qs3-cmd-text').textContent, this)" style="margin-bottom:8px">
+          <span id="qs3-cmd-text" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">/security-scan https://github.com/owner/repo</span>
+          <span class="qs-copy-btn">Copy</span>
+        </div>
+        <div class="qs-desc">Claude runs a full 4-tier analysis and explains the results in plain English. Add <code>--sandbox</code> at the end to also run the behavioral test inside an isolated zone.</div>
+      </div>
+    </div>
+  </section>
 
   <!-- ── SCANNER ─────────────────────────────────────────────────────────────── -->
   <section id="scan" class="scanner-section rv">
@@ -440,7 +495,6 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
             <div class="sb-mode-cta">
               <svg viewBox="0 0 16 16"><path d="M3 2l11 6-11 6V2z"/></svg> Run quick check
             </div>
-            <a class="sb-setup-link" onclick="event.stopPropagation()" href="#qs-option1">setup guide ↓</a>
           </div>
         </div>
 
@@ -476,7 +530,6 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
                 <span id="sLabel">server offline</span>
               </span>
             </div>
-            <a class="sb-setup-link" onclick="event.stopPropagation()" href="#qs-option2">setup guide ↓</a>
           </div>
         </div>
       </div>
@@ -492,64 +545,6 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
       <div class="results-body" id="resultsBody"></div>
     </div>
 
-  </section>
-
-  <!-- ── QUICK START ────────────────────────────────────────────────────────── -->
-  <section id="quickstart" class="rv d1">
-    <div class="sec-tag"><span class="sec-tag-dot"></span>Get Started</div>
-    <h2 class="sec-h">Quick Start</h2>
-    <p class="sec-p">Setup guide for each scan option above. Click any box to copy.</p>
-
-    <div class="qs-grid">
-      <div class="qs-card" id="qs-option1">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 1 · Browser</div>
-          <a class="qs-back-ref" href="#scan" title="Back to scan options">
-            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
-          </a>
-        </div>
-        <div class="qs-title">Instant check, no setup</div>
-        <div class="qs-cmd" onclick="document.getElementById('scanInput').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('scanInput').focus(),400)">
-          <span>Paste any GitHub URL above ↑</span>
-          <span class="qs-copy-btn">Go ↑</span>
-        </div>
-        <div class="qs-desc">Works right now. Uses GitHub API. No code is downloaded. Good for a first look at any repo.</div>
-      </div>
-      <div class="qs-card" id="qs-option2">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 2 · Local Server</div>
-          <a class="qs-back-ref" href="#scan" title="Back to scan options">
-            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
-          </a>
-        </div>
-        <div class="qs-title">Full scan in this browser</div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">Requires the Agentic toolkit repo — run these two commands in Terminal:</div>
-        <div class="qs-cmd" onclick="copyToClipboard('cd __TOOLKIT_PATH__', this)" style="margin-bottom:6px">
-          <span>① cd __TOOLKIT_PATH__</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-cmd" onclick="copyToClipboard('python3 tools/security/server.py', this)" style="margin-bottom:8px">
-          <span>② python3 tools/security/server.py</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-desc">Leave it running. Come back here — the server dot turns green and Full Local Scan unlocks. Don't have the repo yet? <a href="https://github.com/ruvnet/agentic-mastermind" target="_blank" style="color:var(--purple)">Clone it first →</a></div>
-      </div>
-      <div class="qs-card" id="qs-option3">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 3 · Claude Code</div>
-          <a class="qs-back-ref" href="#scan" title="Back to scan options">
-            <svg viewBox="0 0 16 16"><polyline points="8 12 4 8 8 4"/><line x1="12" y1="8" x2="4" y2="8"/></svg> scan options ↑
-          </a>
-        </div>
-        <div class="qs-title">Deep AI scan via slash command</div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">This is a <strong style="color:var(--purple)">custom command from this toolkit</strong> — not built into Claude Code. You need the repo cloned and <code>setup.sh</code> run first to install it. Then type this in Claude Code's chat:</div>
-        <div class="qs-cmd" id="qs3-cmd" onclick="copyToClipboard(document.getElementById('qs3-cmd-text').textContent, this)" style="margin-bottom:8px">
-          <span id="qs3-cmd-text">/security-scan https://github.com/owner/repo</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-desc">Claude runs a full 4-tier analysis and explains the results in plain English. Add <code>--sandbox</code> at the end to also run the behavioral test inside an isolated zone.</div>
-      </div>
-    </div>
   </section>
 
   <!-- ── PIPELINE ──────────────────────────────────────────────────────────── -->
@@ -845,9 +840,9 @@ function toggleTheme(){const h=document.documentElement,n=h.dataset.theme==='dar
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function navTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
 const navLinks=document.querySelectorAll('.nav-link');
-const secIds=['scan','quickstart','pipeline','tiers','calculator','sandbox'];
+const secIds=['quickstart','scan','pipeline','tiers','calculator','sandbox'];
 window.addEventListener('scroll',()=>{
-  let cur='scan';
+  let cur='quickstart';
   secIds.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<120)cur=id});
   navLinks.forEach((l,i)=>l.classList.toggle('active',secIds[i]===cur));
 },{passive:true});
