@@ -428,19 +428,6 @@ elif [[ -n "$IDE_OPEN_CMD" ]] && [[ "$IDE_NAME" != "Terminal (built-in)" ]]; the
   eval "$IDE_OPEN_CMD" 2>/dev/null || true
 fi
 
-# Always open a new Terminal window at the workspace so claude runs in the right directory
-echo ""
-echo "  Opening a new Terminal window inside your workspace..."
-osascript -e "tell application \"Terminal\"
-  activate
-  do script \"cd '$WORKSPACE_DIR' && clear && echo '' && echo '  ✓ You are inside your workspace: $WORKSPACE_DIR' && echo '' && echo '  Run: claude' && echo ''\"
-end tell" 2>/dev/null || {
-  echo ""
-  echo -e "  ${YELLOW}⚠  Could not open Terminal automatically. Open a new terminal and run:${NC}"
-  echo -e "    ${BOLD}cd $WORKSPACE_DIR${NC}"
-  echo -e "    ${BOLD}claude${NC}"
-}
-
 echo ""
 echo "  ─────────────────────────────────────────────────────"
 echo ""
@@ -485,3 +472,9 @@ echo -e "    ${BOLD}/run-gbp${NC}       — Google Business Profile optimization
 echo ""
 hr
 echo ""
+
+# Drop the user into their workspace in this same terminal window.
+# exec replaces the subshell (bash -c) with a fresh interactive shell
+# at WORKSPACE_DIR — no second window, no manual cd required.
+cd "$WORKSPACE_DIR"
+exec "$SHELL" -l
