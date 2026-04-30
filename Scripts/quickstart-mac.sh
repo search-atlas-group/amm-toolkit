@@ -117,41 +117,52 @@ echo ""
 
 IDE_NAMES=("Cursor" "Warp" "VS Code" "Windsurf" "iTerm2" "Terminal (built-in)")
 IDE_URLS=("https://cursor.com" "https://www.warp.dev" "https://code.visualstudio.com" "https://windsurf.com" "https://iterm2.com" "")
-IDE_OPEN_CMDS=('cursor "$WORKSPACE_DIR"' 'open -a Warp "$WORKSPACE_DIR"' 'if [[ "$VSCODE_APP" == "cli" ]]; then code "$WORKSPACE_DIR"; elif [[ -n "$VSCODE_APP" ]]; then open -a "$VSCODE_APP" "$WORKSPACE_DIR"; fi' 'windsurf "$WORKSPACE_DIR"' 'open -a iTerm "$WORKSPACE_DIR"' '')
 IDE_STATUS=()
 
-for i in "${!IDE_NAMES[@]}"; do
-  case "${IDE_NAMES[$i]}" in
-    "Cursor")
-      ([[ -d "/Applications/Cursor.app" ]] || command -v cursor &>/dev/null) && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
-      ;;
-    "Warp")
-      [[ -d "/Applications/Warp.app" ]] && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
-      ;;
-    "VS Code")
-      VSCODE_APP=""
-      if [[ -d "/Applications/Visual Studio Code.app" ]]; then
-        VSCODE_APP="/Applications/Visual Studio Code.app"
-      elif [[ -d "$HOME/Applications/Visual Studio Code.app" ]]; then
-        VSCODE_APP="$HOME/Applications/Visual Studio Code.app"
-      elif command -v code &>/dev/null; then
-        VSCODE_APP="cli"
-      else
-        VSCODE_APP="$(mdfind "kMDItemCFBundleIdentifier == 'com.microsoft.VSCode'" 2>/dev/null | head -1)"
-      fi
-      [[ -n "$VSCODE_APP" ]] && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
-      ;;
-    "Windsurf")
-      ([[ -d "/Applications/Windsurf.app" ]] || command -v windsurf &>/dev/null) && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
-      ;;
-    "iTerm2")
-      [[ -d "/Applications/iTerm.app" ]] && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
-      ;;
-    "Terminal (built-in)")
-      IDE_STATUS[$i]="ready"
-      ;;
-  esac
-done
+# Find an app by checking standard install locations first, then Spotlight system-wide.
+# Prints the .app path, "cli" if only the CLI is on PATH, or nothing if not found.
+_find_app() {
+  local name="$1" bundle="$2" cli_cmd="$3" found
+  # 1. CLI on PATH (fastest check)
+  [[ -n "$cli_cmd" ]] && command -v "$cli_cmd" &>/dev/null && { echo "cli"; return; }
+  # 2. Standard locations
+  for loc in "/Applications/${name}" "$HOME/Applications/${name}" "$HOME/Downloads/${name}"; do
+    [[ -d "$loc" ]] && { echo "$loc"; return; }
+  done
+  # 3. Spotlight by bundle ID
+  if [[ -n "$bundle" ]]; then
+    found="$(mdfind "kMDItemCFBundleIdentifier == '${bundle}'" 2>/dev/null | head -1)"
+    [[ -n "$found" ]] && { echo "$found"; return; }
+  fi
+  # 4. Spotlight by filename (catches any location: Downloads, Desktop, custom)
+  found="$(mdfind "kMDItemFSName == '${name}'" 2>/dev/null | grep -m1 '\.app$')"
+  [[ -n "$found" ]] && echo "$found"
+}
+
+CURSOR_APP="$(_find_app "Cursor.app"    ""                           "cursor"   )"
+WARP_APP="$(  _find_app "Warp.app"      "dev.warp.Warp-Stable"       ""         )"
+VSCODE_APP="$(_find_app "Visual Studio Code.app" "com.microsoft.VSCode" "code" )"
+WINDSURF_APP="$(_find_app "Windsurf.app" "com.codeium.windsurf"      "windsurf" )"
+ITERM_APP="$( _find_app "iTerm.app"     "com.googlecode.iterm2"      ""         )"
+
+IDE_STATUS=(
+  "$( [[ -n "$CURSOR_APP"   ]] && echo ready || echo 'not installed' )"
+  "$( [[ -n "$WARP_APP"     ]] && echo ready || echo 'not installed' )"
+  "$( [[ -n "$VSCODE_APP"   ]] && echo ready || echo 'not installed' )"
+  "$( [[ -n "$WINDSURF_APP" ]] && echo ready || echo 'not installed' )"
+  "$( [[ -n "$ITERM_APP"    ]] && echo ready || echo 'not installed' )"
+  "ready"
+)
+
+# Open commands — each references its per-IDE path variable, expanded at eval time.
+IDE_OPEN_CMDS=(
+  'if [[ "$CURSOR_APP"   == "cli" ]]; then cursor "$WORKSPACE_DIR"; elif [[ -n "$CURSOR_APP"   ]]; then open -a "$CURSOR_APP"   "$WORKSPACE_DIR"; fi'
+  'if [[ -n "$WARP_APP"     ]]; then open -a "$WARP_APP"     "$WORKSPACE_DIR"; fi'
+  'if [[ "$VSCODE_APP"   == "cli" ]]; then code   "$WORKSPACE_DIR"; elif [[ -n "$VSCODE_APP"   ]]; then open -a "$VSCODE_APP"   "$WORKSPACE_DIR"; fi'
+  'if [[ "$WINDSURF_APP" == "cli" ]]; then windsurf "$WORKSPACE_DIR"; elif [[ -n "$WINDSURF_APP" ]]; then open -a "$WINDSURF_APP" "$WORKSPACE_DIR"; fi'
+  'if [[ -n "$ITERM_APP"    ]]; then open -a "$ITERM_APP"    "$WORKSPACE_DIR"; fi'
+  ''
+)
 
 REC_IDX=5
 REC_NAME="Terminal (built-in)"
