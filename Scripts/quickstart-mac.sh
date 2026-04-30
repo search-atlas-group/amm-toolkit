@@ -423,30 +423,23 @@ if [[ "$IDE_NOT_INSTALLED" == "1" ]]; then
   echo ""
   echo -e "    ${BOLD}${IDE_OPEN_CMDS[$IDX]}${NC}    (or drag the folder into the app)"
   echo ""
-  echo "  Then in the integrated terminal, run:"
-  echo ""
-  echo -e "    ${BOLD}claude${NC}"
-elif [[ "$IDE_NAME" == "Terminal (built-in)" ]]; then
-  echo "  Opening a new Terminal window inside your workspace..."
-  osascript -e "tell application \"Terminal\"
-    activate
-    do script \"cd '$WORKSPACE_DIR' && echo '✓ You are inside your workspace. Now run: claude' && claude\"
-  end tell" 2>/dev/null || true
-elif [[ -n "$IDE_OPEN_CMD" ]]; then
+elif [[ -n "$IDE_OPEN_CMD" ]] && [[ "$IDE_NAME" != "Terminal (built-in)" ]]; then
   echo "  Opening $IDE_NAME at your workspace..."
   eval "$IDE_OPEN_CMD" 2>/dev/null || true
-  echo ""
-  echo "  In $IDE_NAME, open the integrated terminal and run:"
-  echo ""
-  echo -e "    ${BOLD}claude${NC}"
-else
-  echo ""
-  echo -e "  ${YELLOW}⚠  IMPORTANT: you must cd into your workspace first.${NC}"
-  echo "  Running claude from the wrong folder creates files in the wrong place."
-  echo ""
-  echo -e "    ${BOLD}cd ~/Desktop/$WORKSPACE_NAME${NC}"
-  echo -e "    ${BOLD}claude${NC}"
 fi
+
+# Always open a new Terminal window at the workspace so claude runs in the right directory
+echo ""
+echo "  Opening a new Terminal window inside your workspace..."
+osascript -e "tell application \"Terminal\"
+  activate
+  do script \"cd '$WORKSPACE_DIR' && clear && echo '' && echo '  ✓ You are inside your workspace: $WORKSPACE_DIR' && echo '' && echo '  Run: claude' && echo ''\"
+end tell" 2>/dev/null || {
+  echo ""
+  echo -e "  ${YELLOW}⚠  Could not open Terminal automatically. Open a new terminal and run:${NC}"
+  echo -e "    ${BOLD}cd $WORKSPACE_DIR${NC}"
+  echo -e "    ${BOLD}claude${NC}"
+}
 
 echo ""
 echo "  ─────────────────────────────────────────────────────"
