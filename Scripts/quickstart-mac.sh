@@ -274,21 +274,29 @@ NVM_PROFILE
   ok "Node $(node --version) · npm $(npm --version)"
 fi
 
-# ── Step 3: Claude Code ───────────────────────────────────────────────────────
-step "2/3" "Claude Code"
+# ── Step 2: Claude Code + GSD ────────────────────────────────────────────────
+step "2/3" "Claude Code + GSD"
 
 if command -v claude &>/dev/null; then
-  ok "Already installed — $(claude --version 2>/dev/null | head -1)"
+  ok "Claude Code — already installed ($(claude --version 2>/dev/null | head -1))"
 else
-  info "Installing via npm..."
+  info "Installing Claude Code..."
   npm install -g @anthropic-ai/claude-code
   # Make claude available in this session without requiring a shell restart
   NPM_BIN="$(npm root -g 2>/dev/null)/../bin"
   [[ -d "$NPM_BIN" ]] && export PATH="$NPM_BIN:$PATH"
-  ok "Installed — $(claude --version 2>/dev/null | head -1)"
+  ok "Claude Code — $(claude --version 2>/dev/null | head -1)"
 fi
 
-# ── Step 4: Workspace + amm-toolkit Toolkit ───────────────────────────────────────
+if command -v gsd &>/dev/null; then
+  ok "GSD — already installed ($(gsd --version 2>/dev/null | head -1))"
+else
+  info "Installing GSD..."
+  npm install -g gsd-pi@latest
+  ok "GSD — $(gsd --version 2>/dev/null | head -1)"
+fi
+
+# ── Step 3: Workspace + amm-toolkit ──────────────────────────────────────────
 step "3/3" "Setting up workspace"
 
 if [[ -d "$REPO_DIR" ]]; then
