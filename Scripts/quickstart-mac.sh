@@ -117,7 +117,7 @@ echo ""
 
 IDE_NAMES=("Cursor" "Warp" "VS Code" "Windsurf" "iTerm2" "Terminal (built-in)")
 IDE_URLS=("https://cursor.com" "https://www.warp.dev" "https://code.visualstudio.com" "https://windsurf.com" "https://iterm2.com" "")
-IDE_OPEN_CMDS=('cursor "$WORKSPACE_DIR"' 'open -a Warp "$WORKSPACE_DIR"' 'code "$WORKSPACE_DIR"' 'windsurf "$WORKSPACE_DIR"' 'open -a iTerm "$WORKSPACE_DIR"' '')
+IDE_OPEN_CMDS=('cursor "$WORKSPACE_DIR"' 'open -a Warp "$WORKSPACE_DIR"' 'command -v code &>/dev/null && code "$WORKSPACE_DIR" || open -a "Visual Studio Code" "$WORKSPACE_DIR"' 'windsurf "$WORKSPACE_DIR"' 'open -a iTerm "$WORKSPACE_DIR"' '')
 IDE_STATUS=()
 
 for i in "${!IDE_NAMES[@]}"; do
@@ -129,7 +129,7 @@ for i in "${!IDE_NAMES[@]}"; do
       [[ -d "/Applications/Warp.app" ]] && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
       ;;
     "VS Code")
-      ([[ -d "/Applications/Visual Studio Code.app" ]] || command -v code &>/dev/null) && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
+      ([[ -d "/Applications/Visual Studio Code.app" ]] || [[ -d "$HOME/Applications/Visual Studio Code.app" ]] || command -v code &>/dev/null) && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
       ;;
     "Windsurf")
       ([[ -d "/Applications/Windsurf.app" ]] || command -v windsurf &>/dev/null) && IDE_STATUS[$i]="ready" || IDE_STATUS[$i]="not installed"
