@@ -41,11 +41,14 @@ if ! xcode-select -p &>/dev/null; then
   xcode-select --install 2>/dev/null || true
   echo ""
   echo "  A macOS dialog just opened — click Install and wait for it to finish."
-  echo "  Then re-run this script:"
+  echo "  This script will continue automatically once the install is done."
   echo ""
-  echo "  /bin/bash -c \"\$(curl -fsSL $QUICKSTART_URL)\""
+  # Poll until xcode-select reports a valid path (installation complete)
+  while ! xcode-select -p &>/dev/null; do
+    printf "  ⏳ Waiting for Xcode CLT install to complete...\r"
+    sleep 5
+  done
   echo ""
-  exit 0
 fi
 ok "Xcode Command Line Tools"
 echo ""
