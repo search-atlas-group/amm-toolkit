@@ -8,12 +8,12 @@ One command. It will ask you two questions — your workspace name and which IDE
 
 **macOS** — paste into Terminal:
 ```bash
-/bin/bash -c "$(curl -fsSL https://forge.internal.searchatlas.com/search-atlas-group/agentic-marketing-mastermind/amm-toolkit/-/raw/main/Scripts/quickstart-mac.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"
 ```
 
 **Windows** — paste into PowerShell (run as Administrator):
 ```powershell
-irm https://forge.internal.searchatlas.com/search-atlas-group/agentic-marketing-mastermind/amm-toolkit/-/raw/main/Scripts/quickstart-windows.ps1 | iex
+irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex
 ```
 
 The setup will:
@@ -21,7 +21,7 @@ The setup will:
 2. Ask which IDE you use — Cursor, Warp, VS Code, Windsurf, etc.
 3. Install Git and Node.js if not already present
 4. Install Claude Code via npm (`npm install -g @anthropic-ai/claude-code`)
-5. Clone this toolkit into `~/YourWorkspace/AMM-SA/`
+5. Clone this toolkit into `~/YourWorkspace/amm-toolkit/`
 6. Connect the SearchAtlas MCP (OAuth — no API key needed)
 7. Install all slash commands
 8. Open your workspace in your chosen IDE
@@ -29,7 +29,7 @@ The setup will:
 Your workspace will look like this:
 ```
 ~/YourWorkspace/
-├── AMM-SA/       ← this toolkit (commands, workflows, docs)
+├── amm-toolkit/       ← this toolkit (commands, workflows, docs)
 └── clients/      ← one folder per client project
 ```
 

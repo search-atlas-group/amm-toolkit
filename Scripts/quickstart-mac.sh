@@ -3,12 +3,12 @@
 # Creates your workspace, installs all prerequisites, and launches Claude Code.
 #
 # Usage (copy-paste into Terminal):
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh)"
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"
 
 set -e
 
-REPO_URL="https://github.com/jodutoro/AMM-SA.git"
-QUICKSTART_URL="https://raw.githubusercontent.com/jodutoro/AMM-SA/main/Scripts/quickstart-mac.sh"
+REPO_URL="https://github.com/search-atlas-group/amm-toolkit.git"
+QUICKSTART_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh"
 
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
@@ -54,10 +54,10 @@ echo ""
 hr
 echo ""
 
-# Scan Desktop for any existing AMM workspace (has CLAUDE.md + AMM-SA/ inside)
+# Scan Desktop for any existing AMM workspace (has CLAUDE.md + amm-toolkit/ inside)
 EXISTING=()
 for dir in "$HOME/Desktop"/*/; do
-  [[ -f "${dir}CLAUDE.md" && -d "${dir}AMM-SA" ]] && EXISTING+=("${dir%/}")
+  [[ -f "${dir}CLAUDE.md" && -d "${dir}amm-toolkit" ]] && EXISTING+=("${dir%/}")
 done
 
 if [[ ${#EXISTING[@]} -eq 1 ]]; then
@@ -96,7 +96,7 @@ else
   ok "Workspace → $WORKSPACE_DIR"
 fi
 
-REPO_DIR="$WORKSPACE_DIR/AMM-SA"
+REPO_DIR="$WORKSPACE_DIR/amm-toolkit"
 
 # Create the workspace folder immediately so it appears on Desktop right away
 mkdir -p "$WORKSPACE_DIR/clients" "$WORKSPACE_DIR/memory"
@@ -261,17 +261,17 @@ else
   ok "Installed — $(claude --version 2>/dev/null | head -1)"
 fi
 
-# ── Step 4: Workspace + AMM-SA Toolkit ───────────────────────────────────────
+# ── Step 4: Workspace + amm-toolkit Toolkit ───────────────────────────────────────
 step "3/3" "Setting up workspace"
 
 if [[ -d "$REPO_DIR" ]]; then
   info "Toolkit already present — pulling latest..."
   git -C "$REPO_DIR" pull origin main 2>/dev/null || true
 else
-  info "Cloning AMM-SA toolkit..."
+  info "Cloning amm-toolkit toolkit..."
   git clone -b main "$REPO_URL" "$REPO_DIR"
 fi
-ok "AMM-SA toolkit ready"
+ok "amm-toolkit toolkit ready"
 
 # ── CLAUDE.md ─────────────────────────────────────────────────────────────────
 if [[ ! -f "$WORKSPACE_DIR/CLAUDE.md" ]]; then
@@ -319,7 +319,7 @@ If you set up a second machine, run the quickstart again on that machine —
 your files sync but your MCP config does not carry over automatically.
 
 ## Workspace Layout
-- \`AMM-SA/\`     — toolkit: slash commands, workflows, scripts (do not edit)
+- \`amm-toolkit/\`     — toolkit: slash commands, workflows, scripts (do not edit)
 - \`clients/\`   — one subfolder per client with brief.md + assets/
 - \`memory/\`    — persistent notes Claude reads and writes across sessions
 - \`.env\`        — API keys and webhook URLs (never committed to git)
@@ -403,7 +403,7 @@ echo ""
 echo -e "  ${BOLD}Your workspace is ready.${NC}"
 echo ""
 echo "  $WORKSPACE_DIR/"
-echo "  ├── AMM-SA/       ← toolkit (slash commands, workflows)"
+echo "  ├── amm-toolkit/       ← toolkit (slash commands, workflows)"
 echo "  ├── clients/      ← one folder per client"
 echo "  ├── memory/       ← Claude's persistent notes"
 echo "  ├── CLAUDE.md     ← your session rules and client list"

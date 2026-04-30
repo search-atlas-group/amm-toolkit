@@ -2,11 +2,11 @@
 # Creates your workspace, installs all prerequisites, and launches Claude Code.
 #
 # Usage — run in PowerShell as Administrator (Win + X -> Terminal (Admin)):
-#   irm https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-windows.ps1 | iex
+#   irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
-$REPO_URL = "https://github.com/jodutoro/AMM-SA.git"
+$REPO_URL = "https://github.com/search-atlas-group/amm-toolkit.git"
 $GIT_BASH  = "C:\Program Files\Git\bin\bash.exe"
 
 function Write-Ok($msg)   { Write-Host "  [OK] $msg" -ForegroundColor Green }
@@ -46,7 +46,7 @@ $WORKSPACE_NAME = Read-Host "  Workspace name (Enter for 'AMM-Workspace')"
 if ([string]::IsNullOrWhiteSpace($WORKSPACE_NAME)) { $WORKSPACE_NAME = "AMM-Workspace" }
 
 $WORKSPACE_DIR = "$HOME\$WORKSPACE_NAME"
-$REPO_DIR = "$WORKSPACE_DIR\AMM-SA"
+$REPO_DIR = "$WORKSPACE_DIR\amm-toolkit"
 
 Write-Host ""
 Write-Ok "Workspace -> $WORKSPACE_DIR"
@@ -271,7 +271,7 @@ if (Get-Command claude -ErrorAction SilentlyContinue) {
   Write-Ok "Installed"
 }
 
-# ── Step 6: Workspace + AMM-SA Toolkit ───────────────────────────────────────
+# ── Step 6: Workspace + amm-toolkit Toolkit ───────────────────────────────────────
 Write-Step "6/6" "Creating workspace + installing toolkit"
 
 New-Item -ItemType Directory -Force -Path "$WORKSPACE_DIR\clients" | Out-Null
@@ -281,13 +281,13 @@ Write-Info "Created: $WORKSPACE_DIR\clients\"
 Write-Info "Created: $WORKSPACE_DIR\memory\"
 
 if (Test-Path $REPO_DIR) {
-  Write-Warn "AMM-SA already exists — pulling latest..."
+  Write-Warn "amm-toolkit already exists — pulling latest..."
   git -C $REPO_DIR pull origin INT 2>$null
 } else {
-  Write-Info "Cloning AMM-SA toolkit..."
+  Write-Info "Cloning amm-toolkit toolkit..."
   git clone -b INT $REPO_URL $REPO_DIR
 }
-Write-Ok "AMM-SA toolkit ready"
+Write-Ok "amm-toolkit toolkit ready"
 
 # ── CLAUDE.md (workspace session contract) ────────────────────────────────────
 $claudeMdPath = "$WORKSPACE_DIR\CLAUDE.md"
@@ -336,7 +336,7 @@ If you set up a second machine, run the quickstart again on that machine —
 your files sync but your MCP config does not carry over automatically.
 
 ## Workspace Layout
-- ``AMM-SA/``     — toolkit: slash commands, workflows, scripts (do not edit)
+- ``amm-toolkit/``     — toolkit: slash commands, workflows, scripts (do not edit)
 - ``clients/``   — one subfolder per client with brief.md + assets/
 - ``memory/``    — persistent notes Claude reads and writes across sessions
 - ``.env``        — API keys and webhook URLs (never committed to git)
@@ -437,7 +437,7 @@ Write-Host ""
 Write-Host "  Your workspace is ready." -ForegroundColor White
 Write-Host ""
 Write-Host "  $WORKSPACE_DIR\"
-Write-Host "  ├── AMM-SA\       <- toolkit (slash commands, workflows)"
+Write-Host "  ├── amm-toolkit\       <- toolkit (slash commands, workflows)"
 Write-Host "  ├── clients\      <- one folder per client"
 Write-Host "  ├── memory\       <- Claude's persistent notes"
 Write-Host "  ├── CLAUDE.md     <- your session rules and client list"

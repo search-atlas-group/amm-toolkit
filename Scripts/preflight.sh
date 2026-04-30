@@ -23,8 +23,8 @@ MIN_JAVA_MAJOR=17
 
 semver_gte() { [ "$(printf '%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
 
-QUICKSTART_MAC='  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-mac.sh)"'
-QUICKSTART_WIN='  irm https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-windows.ps1 | iex'
+QUICKSTART_MAC='  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"'
+QUICKSTART_WIN='  irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex'
 
 echo ""
 echo "  Checking prerequisites..."
@@ -135,9 +135,9 @@ if [[ "$FAILED" -ne 0 ]]; then
   echo "  Fastest fix — run the one-command quickstart for your platform:"
   echo ""
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-mac.sh)"'
+    echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"'
   else
-    echo "  irm https://raw.githubusercontent.com/jodutoro/AMM-SA/INT/scripts/quickstart-windows.ps1 | iex"
+    echo "  irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex"
   fi
   echo ""
   exit 1

@@ -42,12 +42,12 @@ Getting started is now a single paste into your terminal. The quickstart scripts
 
 **macOS:**
 ```bash
-/bin/bash -c "$(curl -fsSL https://forge.internal.searchatlas.com/search-atlas-group/agentic-marketing-mastermind/amm-toolkit/-/raw/main/Scripts/quickstart-mac.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"
 ```
 
 **Windows (PowerShell as Admin):**
 ```powershell
-irm https://forge.internal.searchatlas.com/search-atlas-group/agentic-marketing-mastermind/amm-toolkit/-/raw/main/Scripts/quickstart-windows.ps1 | iex
+irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex
 ```
 
 What it does:
@@ -61,7 +61,7 @@ What it does:
 Every member now gets a named workspace root with a clear layout:
 ```
 ~/YourAgency-AMM/
-├── AMM-SA/       ← this toolkit
+├── amm-toolkit/       ← this toolkit
 └── clients/      ← one folder per client
 ```
 Claude Code reads a `CLAUDE.md` file at the workspace root, so it understands your setup from the first message.
@@ -116,6 +116,6 @@ Client `CLAUDE.md` files now include an Auto-Sync block. At session start, Claud
 
 Pull the latest toolkit version:
 ```bash
-git -C ~/YourWorkspace/AMM-SA pull origin INT
-bash ~/YourWorkspace/AMM-SA/setup.sh
+git -C ~/YourWorkspace/amm-toolkit pull origin main
+bash ~/YourWorkspace/amm-toolkit/setup.sh
 ```

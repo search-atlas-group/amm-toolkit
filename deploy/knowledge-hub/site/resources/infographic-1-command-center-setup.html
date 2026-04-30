@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Agency — Command Center Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:       #080c14;
+    --surface:  #0d1526;
+    --surface2: #111d35;
+    --border:   #1e3052;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --cyan:     #38bdf8;
+    --green:    #34d399;
+    --orange:   #fb923c;
+    --purple:   #a78bfa;
+    --pink:     #f472b6;
+    --yellow:   #fbbf24;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ─── HERO ─────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, #0a1628 0%, #0f2044 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 64px 40px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(56,189,248,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2em, 5vw, 3.4em);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 span { color: var(--cyan); }
+  .hero p {
+    font-size: 1.15em;
+    color: #94a3b8;
+    max-width: 600px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+  .hero-tools {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .hero-tool {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .hero-tool .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── WRAPPER ───────────────────────────────────── */
+  .wrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* ─── SECTION LABEL ─────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 60px 0 28px;
+  }
+  .section-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .section-header h2 {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .section-header p {
+    font-size: 0.9em;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .divider {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  /* ─── STACK FLOW ────────────────────────────────── */
+  .stack-flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .stack-flow::before {
+    content: '';
+    position: absolute;
+    top: 52px;
+    left: calc(12.5% + 20px);
+    right: calc(12.5% + 20px);
+    height: 2px;
+    background: linear-gradient(to right, var(--cyan), var(--green), var(--orange), var(--purple));
+    z-index: 0;
+  }
+  .stack-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    text-align: center;
+  }
+  .node-icon {
+    width: 104px;
+    height: 104px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.6em;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    position: relative;
+  }
+  .node-icon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 24px;
+    opacity: 0.2;
+  }
+  .node-cyan  { border-color: var(--cyan);   box-shadow: 0 0 32px rgba(56,189,248,0.2); }
+  .node-green { border-color: var(--green);  box-shadow: 0 0 32px rgba(52,211,153,0.2); }
+  .node-orange{ border-color: var(--orange); box-shadow: 0 0 32px rgba(251,146,60,0.2); }
+  .node-purple{ border-color: var(--purple); box-shadow: 0 0 32px rgba(167,139,250,0.2); }
+  .node-label {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #fff;
+  }
+  .node-sub {
+    font-size: 0.78em;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .arrow-label {
+    position: absolute;
+    top: 38px;
+    left: calc(100% - 20px);
+    transform: translateX(-50%);
+    font-size: 0.65em;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 2;
+    white-space: nowrap;
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ─── SETUP STEPS ───────────────────────────────── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .step-card.s-cyan::before   { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .step-card.s-green::before  { background: linear-gradient(90deg, var(--green), transparent); }
+  .step-card.s-orange::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .step-card.s-purple::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .step-card.s-pink::before   { background: linear-gradient(90deg, var(--pink), transparent); }
+  .step-card.s-yellow::before { background: linear-gradient(90deg, var(--yellow), transparent); }
+
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .step-card.s-cyan   .step-num { color: var(--cyan); }
+  .step-card.s-green  .step-num { color: var(--green); }
+  .step-card.s-orange .step-num { color: var(--orange); }
+  .step-card.s-purple .step-num { color: var(--purple); }
+  .step-card.s-pink   .step-num { color: var(--pink); }
+  .step-card.s-yellow .step-num { color: var(--yellow); }
+
+  .step-card h3 {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .step-card p {
+    font-size: 0.85em;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .step-cmd {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75em;
+    color: #a5f3fc;
+    line-height: 1.7;
+    word-break: break-all;
+  }
+  .step-cmd .comment { color: #475569; }
+  .step-cmd .val     { color: var(--green); }
+
+  /* ─── MCP CONNECTIONS ───────────────────────────── */
+  .mcp-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+  .mcp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 18px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .mcp-icon {
+    font-size: 2.2em;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .mcp-name {
+    font-size: 0.9em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .mcp-desc {
+    font-size: 0.72em;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .mcp-tag {
+    display: inline-block;
+    font-size: 0.65em;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tag-active { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+  .tag-http   { background: rgba(56,189,248,0.1);  color: var(--cyan);  border: 1px solid rgba(56,189,248,0.2); }
+
+  .mcp-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65em;
+    color: #475569;
+    margin-top: 8px;
+    word-break: break-all;
+  }
+
+  /* ─── CONNECTION CHECK ──────────────────────────── */
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .check-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .check-card h3 {
+    font-size: 1em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .check-card h3 .tag {
+    font-size: 0.7em;
+    font-weight: 600;
+    background: rgba(56,189,248,0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(56,189,248,0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .cmd-block {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78em;
+    line-height: 1.8;
+  }
+  .cmd-line { display: flex; gap: 8px; }
+  .cmd-prompt { color: #34d399; flex-shrink: 0; }
+  .cmd-text   { color: #a5f3fc; }
+  .cmd-comment{ color: #475569; }
+  .cmd-output { color: #94a3b8; padding-left: 16px; }
+  .cmd-success{ color: var(--green); padding-left: 16px; }
+  .cmd-warn   { color: var(--yellow); padding-left: 16px; }
+
+  /* ─── WARP FEATURES ─────────────────────────────── */
+  .warp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .warp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 18px;
+    border-top: 3px solid transparent;
+  }
+  .warp-card.w1 { border-top-color: var(--cyan); }
+  .warp-card.w2 { border-top-color: var(--green); }
+  .warp-card.w3 { border-top-color: var(--orange); }
+  .warp-card.w4 { border-top-color: var(--purple); }
+  .warp-card .icon { font-size: 1.8em; margin-bottom: 12px; }
+  .warp-card h4 { font-size: 0.9em; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .warp-card p  { font-size: 0.78em; color: #94a3b8; line-height: 1.5; }
+  .warp-card .tip {
+    margin-top: 10px;
+    padding: 6px 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7em;
+    color: var(--cyan);
+  }
+
+  /* ─── FOOTER ────────────────────────────────────── */
+  .footer {
+    margin-top: 64px;
+    padding: 32px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .footer-logo {
+    font-size: 1em;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .footer-logo span { color: var(--cyan); }
+  .footer p { font-size: 0.8em; color: var(--muted); }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    font-size: 0.75em;
+    color: var(--muted);
+  }
+  .footer-links span { color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+  /* print helpers */
+  @media print {
+    body { background: #fff !important; color: #000 !important; }
+    .hero { background: #f8fafc !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <span>◈</span> Infographic 1 of 2 — Agentic Agency Series
+  </div>
+  <h1>Your Agentic Marketing<br><span>Command Center</span></h1>
+  <p>How to set up Warp + Claude Code + Search Atlas MCP for your marketing agency — no coding required.</p>
+  <div class="hero-tools">
+    <div class="hero-tool"><span class="dot" style="background:#38bdf8"></span>Warp Terminal</div>
+    <div class="hero-tool"><span class="dot" style="background:#a78bfa"></span>Claude Code</div>
+    <div class="hero-tool"><span class="dot" style="background:#34d399"></span>Search Atlas MCP</div>
+    <div class="hero-tool"><span class="dot" style="background:#fb923c"></span>ClickUp · Slack · Gmail · GCal</div>
+  </div>
+</div>
+
+<div class="wrapper">
+
+  <!-- ═══════════════════════════════ SECTION 1: THE STACK -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(56,189,248,0.15);color:var(--cyan)">01</div>
+    <div>
+      <h2>The Agentic Stack</h2>
+      <p>Four layers that turn your terminal into a full-service marketing operations platform</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="stack-flow">
+    <div class="stack-node">
+      <div class="node-icon node-cyan">⌨️</div>
+      <div>
+        <div class="node-label">Warp Terminal</div>
+        <div class="node-sub">Your AI-powered command<br>center. Type in plain English.</div>
+      </div>
+    </div>
+    <div class="stack-node">
+      <div class="node-icon node-green">🤖</div>
+      <div>
+        <div class="node-label">Claude Code</div>
+        <div class="node-sub">The AI agent that reads,<br>plans, and executes tasks.</div>
+      </div>
+    </div>
+    <div class="stack-node">
+      <div class="node-icon node-orange">🔌</div>
+      <div>
+        <div class="node-label">MCP Layer</div>
+        <div class="node-sub">Model Context Protocol —<br>Claude's plugin system.</div>
+      </div>
+    </div>
+    <div class="stack-node">
+      <div class="node-icon node-purple">🛠️</div>
+      <div>
+        <div class="node-label">Your Tools</div>
+        <div class="node-sub">Search Atlas · ClickUp<br>Slack · Gmail · GCal</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;margin-bottom:8px;">
+    <div style="padding:0 16px;text-align:center">
+      <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:10px;font-size:0.75em;color:#94a3b8">
+        💡 <strong style="color:#fff">Think of it as:</strong><br>The UI you see & type in
+      </div>
+    </div>
+    <div style="padding:0 16px;text-align:center">
+      <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;font-size:0.75em;color:#94a3b8">
+        💡 <strong style="color:#fff">Think of it as:</strong><br>Your AI employee that never sleeps
+      </div>
+    </div>
+    <div style="padding:0 16px;text-align:center">
+      <div style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:8px;padding:10px;font-size:0.75em;color:#94a3b8">
+        💡 <strong style="color:#fff">Think of it as:</strong><br>USB ports for Claude's brain
+      </div>
+    </div>
+    <div style="padding:0 16px;text-align:center">
+      <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px;font-size:0.75em;color:#94a3b8">
+        💡 <strong style="color:#fff">Think of it as:</strong><br>All your work apps, automated
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 2: SETUP STEPS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(52,211,153,0.15);color:var(--green)">02</div>
+    <div>
+      <h2>One-Time Setup Checklist</h2>
+      <p>Do this once — takes about 15 minutes</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="steps-grid">
+
+    <div class="step-card s-cyan">
+      <div class="step-num">Step 01 · Install Warp</div>
+      <h3>Download Warp Terminal</h3>
+      <p>Warp is a modern, AI-powered terminal. Free to start. Go to warp.dev and download for Mac or Windows.</p>
+      <div class="step-cmd">
+        <span class="comment"># After download, open Warp and sign in</span><br>
+        <span class="comment"># Free tier: 100 AI requests/month</span><br>
+        <span class="comment"># Pro: unlimited — recommended for agencies</span>
+      </div>
+    </div>
+
+    <div class="step-card s-green">
+      <div class="step-num">Step 02 · Install Claude Code</div>
+      <h3>Install the Claude Code CLI</h3>
+      <p>Run this one command in Warp. It installs Claude Code globally so you can use it from any folder.</p>
+      <div class="step-cmd">
+        <span class="val">npm install -g @anthropic-ai/claude-code</span><br>
+        <span class="comment"># Then log in:</span><br>
+        <span class="val">claude</span><br>
+        <span class="comment"># Follow the login prompt (browser opens)</span>
+      </div>
+    </div>
+
+    <div class="step-card s-orange">
+      <div class="step-num">Step 03 · Connect Search Atlas</div>
+      <h3>Add Search Atlas MCP</h3>
+      <p>This gives Claude access to all 60+ Search Atlas tools — SEO, GBP, content, reporting, and more.</p>
+      <div class="step-cmd">
+        <span class="val">claude mcp add searchatlas \</span><br>
+        <span class="val">&nbsp; --transport http \</span><br>
+        <span class="val">&nbsp; https://mcp.searchatlas.com/api/v1/mcp</span><br>
+        <span class="comment"># You'll be prompted for your API key</span>
+      </div>
+    </div>
+
+    <div class="step-card s-purple">
+      <div class="step-num">Step 04 · Add Communication Tools</div>
+      <h3>Connect Slack, ClickUp &amp; More</h3>
+      <p>Claude Code has built-in connections for all major agency tools. Add them one by one or use the built-in command.</p>
+      <div class="step-cmd">
+        <span class="comment"># Inside a Claude session, type:</span><br>
+        <span class="val">/mcp</span><br>
+        <span class="comment"># Browse and add: Slack, ClickUp,</span><br>
+        <span class="comment"># Gmail, Google Calendar, Linear</span>
+      </div>
+    </div>
+
+    <div class="step-card s-pink">
+      <div class="step-num">Step 05 · Install Agency Commands</div>
+      <h3>Set Up Slash Commands</h3>
+      <p>The Agentic Marketing Mastermind gives you 13 pre-built slash commands for SEO, GBP, PPC, content, and reporting.</p>
+      <div class="step-cmd">
+        <span class="comment"># Clone the command library:</span><br>
+        <span class="val">git clone https://github.com/your-repo</span><br>
+        <span class="comment"># Run the setup script:</span><br>
+        <span class="val">./setup.sh</span>
+      </div>
+    </div>
+
+    <div class="step-card s-yellow">
+      <div class="step-num">Step 06 · Write Your CLAUDE.md</div>
+      <h3>Tell Claude About Your Agency</h3>
+      <p>Create a CLAUDE.md file in your working folder. Claude reads this at the start of every session — set it once, works forever.</p>
+      <div class="step-cmd">
+        <span class="comment"># Start Claude, then type:</span><br>
+        <span class="val">/init</span><br>
+        <span class="comment"># Add your clients, tone, preferences</span><br>
+        <span class="comment"># Claude remembers everything here</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 3: MCP CONNECTIONS MAP -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(251,146,60,0.15);color:var(--orange)">03</div>
+    <div>
+      <h2>MCP Connections Map</h2>
+      <p>Every tool Claude can reach — and what it can do with each one</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="mcp-grid">
+
+    <div class="mcp-card" style="border-top:3px solid #fb923c">
+      <span class="mcp-icon">🔍</span>
+      <div class="mcp-name">Search Atlas</div>
+      <div class="mcp-desc">SEO · GBP · PPC · Content · Reports · LLM Visibility · Link Building · Press Releases</div>
+      <span class="mcp-tag tag-active">60+ Tools</span>
+      <div class="mcp-url">mcp.searchatlas.com/api/v1/mcp</div>
+    </div>
+
+    <div class="mcp-card" style="border-top:3px solid #4caf50">
+      <span class="mcp-icon">✅</span>
+      <div class="mcp-name">ClickUp</div>
+      <div class="mcp-desc">Create tasks · Assign work · Track time · Manage projects · Set reminders · Log hours</div>
+      <span class="mcp-tag tag-http">HTTP MCP</span>
+    </div>
+
+    <div class="mcp-card" style="border-top:3px solid #36c5f0">
+      <span class="mcp-icon">💬</span>
+      <div class="mcp-name">Slack</div>
+      <div class="mcp-desc">Post messages · Read channels · Reply to threads · Get user info · @Claude mentions</div>
+      <span class="mcp-tag tag-http">HTTP MCP</span>
+    </div>
+
+    <div class="mcp-card" style="border-top:3px solid #ea4335">
+      <span class="mcp-icon">📧</span>
+      <div class="mcp-name">Gmail</div>
+      <div class="mcp-desc">Search emails · Read threads · Draft replies · Create client updates · Manage labels</div>
+      <span class="mcp-tag tag-http">HTTP MCP</span>
+    </div>
+
+    <div class="mcp-card" style="border-top:3px solid #4285f4">
+      <span class="mcp-icon">📅</span>
+      <div class="mcp-name">Google Calendar</div>
+      <div class="mcp-desc">Create events · Find free time · Schedule client calls · Respond to invites · List meetings</div>
+      <span class="mcp-tag tag-http">HTTP MCP</span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 4: HOW TO CHECK CONNECTIONS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(167,139,250,0.15);color:var(--purple)">04</div>
+    <div>
+      <h2>Checking Your Connections</h2>
+      <p>Verify everything is working before you start a session</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="check-grid">
+
+    <div class="check-card">
+      <h3>Check from the command line <span class="tag">CLI</span></h3>
+      <div class="cmd-block">
+        <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">claude mcp list</span></div>
+        <div class="cmd-output">NAME          STATUS    TRANSPORT</div>
+        <div class="cmd-success">✓ searchatlas  connected  http</div>
+        <div class="cmd-success">✓ slack         connected  http</div>
+        <div class="cmd-success">✓ clickup       connected  http</div>
+        <div class="cmd-success">✓ gmail         connected  http</div>
+        <div class="cmd-warn">⚠ gcal          auth needed</div>
+        <div style="height:8px"></div>
+        <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">claude --version</span></div>
+        <div class="cmd-output">Claude Code 1.x.x  ✓ up to date</div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3>Check from inside a session <span class="tag">In-App</span></h3>
+      <div class="cmd-block">
+        <div class="cmd-comment"># Type these inside Claude Code:</div>
+        <div style="height:6px"></div>
+        <div class="cmd-line"><span class="cmd-prompt">&gt;</span><span class="cmd-text">/mcp</span></div>
+        <div class="cmd-output">→ Opens the MCP management panel</div>
+        <div class="cmd-output">→ Shows all servers + green/red status</div>
+        <div class="cmd-output">→ Click to reconnect or re-auth</div>
+        <div style="height:6px"></div>
+        <div class="cmd-line"><span class="cmd-prompt">&gt;</span><span class="cmd-text">/status</span></div>
+        <div class="cmd-output">→ Account, model, version info</div>
+        <div style="height:6px"></div>
+        <div class="cmd-line"><span class="cmd-prompt">&gt;</span><span class="cmd-text">what MCP tools do you have access to?</span></div>
+        <div class="cmd-output">→ Claude lists all available tool names</div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3>Fix a broken connection <span class="tag">Troubleshoot</span></h3>
+      <div class="cmd-block">
+        <div class="cmd-comment"># Re-add a server (safe to run again):</div>
+        <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">claude mcp remove searchatlas</span></div>
+        <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">claude mcp add searchatlas \</span></div>
+        <div class="cmd-output">  --transport http \</div>
+        <div class="cmd-output">  https://mcp.searchatlas.com/api/v1/mcp</div>
+        <div style="height:8px"></div>
+        <div class="cmd-comment"># Diagnose Claude Code itself:</div>
+        <div class="cmd-line"><span class="cmd-prompt">$</span><span class="cmd-text">claude doctor</span></div>
+        <div class="cmd-output">→ Runs full health check</div>
+        <div class="cmd-output">→ Points to the exact issue</div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3>Test Search Atlas is working <span class="tag">Quick Test</span></h3>
+      <div class="cmd-block">
+        <div class="cmd-comment"># Start Claude and type this:</div>
+        <div style="height:6px"></div>
+        <div class="cmd-line"><span class="cmd-prompt">&gt;</span><span class="cmd-text">/my-account</span></div>
+        <div class="cmd-output">→ Claude should list your Search Atlas</div>
+        <div class="cmd-output">  projects, GBP locations, campaigns</div>
+        <div style="height:6px"></div>
+        <div class="cmd-comment"># Or ask directly:</div>
+        <div class="cmd-line"><span class="cmd-prompt">&gt;</span><span class="cmd-text">show me my Search Atlas projects</span></div>
+        <div class="cmd-success">✓ Connected: returns your OTTO projects</div>
+        <div class="cmd-warn">✗ "credentials not provided" = check API key</div>
+        <div class="cmd-warn">✗ "Tool not found" = re-add MCP server</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SECTION 5: WARP SUPERPOWERS -->
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(244,114,182,0.15);color:var(--pink)">05</div>
+    <div>
+      <h2>Why Warp — The Non-Developer's Superpower</h2>
+      <p>Warp makes the terminal approachable for non-technical users</p>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="warp-grid">
+    <div class="warp-card w1">
+      <div class="icon">💬</div>
+      <h4>Natural Language Commands</h4>
+      <p>Type <code>#</code> followed by plain English. Warp's AI converts it to the correct command for you.</p>
+      <div class="tip"># show me files from this week</div>
+    </div>
+    <div class="warp-card w2">
+      <div class="icon">🚦</div>
+      <h4>Error Explainer</h4>
+      <p>Right-click any error and select "Ask Warp AI." Get a plain-English explanation instantly.</p>
+      <div class="tip">Right-click → Explain this error</div>
+    </div>
+    <div class="warp-card w3">
+      <div class="icon">💾</div>
+      <h4>Saved Workflows (Drive)</h4>
+      <p>Save your most-used commands. Share them with your team. One-click reuse — no memorization.</p>
+      <div class="tip">Cmd+P → Search saved workflows</div>
+    </div>
+    <div class="warp-card w4">
+      <div class="icon">🔄</div>
+      <h4>Claude Code Integration</h4>
+      <p>Claude Code is designed for Warp. Start sessions, see outputs clearly, and run workflows side-by-side.</p>
+      <div class="tip">claude "run monthly SEO for all clients"</div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- FOOTER -->
+<div class="footer" style="border-top:1px solid var(--border);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;max-width:1280px;margin:64px auto 0">
+  <div>
+    <div class="footer-logo">Agentic <span>Agency</span> Series</div>
+    <p style="font-size:0.8em;color:var(--muted);margin-top:4px">Infographic 1 of 2 — Command Center Setup</p>
+  </div>
+  <div style="text-align:center;font-size:0.8em;color:var(--muted)">
+    Powered by <strong style="color:#fff">Claude Code</strong> · <strong style="color:#fff">Search Atlas MCP</strong> · <strong style="color:#fff">Warp</strong>
+  </div>
+  <div class="footer-links">
+    <span>warp.dev</span>
+    <span>searchatlas.com</span>
+    <span>claude.ai/code</span>
+  </div>
+</div>
+
+</body>
+</html>
