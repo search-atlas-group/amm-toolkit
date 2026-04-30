@@ -261,6 +261,9 @@ if command -v claude &>/dev/null; then
 else
   info "Installing via npm..."
   npm install -g @anthropic-ai/claude-code
+  # Make claude available in this session without requiring a shell restart
+  NPM_BIN="$(npm root -g 2>/dev/null)/../bin"
+  [[ -d "$NPM_BIN" ]] && export PATH="$NPM_BIN:$PATH"
   ok "Installed — $(claude --version 2>/dev/null | head -1)"
 fi
 

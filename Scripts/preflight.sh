@@ -19,7 +19,6 @@ WARNED=0
 
 MIN_NODE_MAJOR=18
 MIN_GIT="2.30"
-MIN_JAVA_MAJOR=17
 
 semver_gte() { [ "$(printf '%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
 
@@ -90,33 +89,6 @@ else
   FAILED=1
 fi
 
-# ── Java ──────────────────────────────────────────────────────────────────────
-if command -v java &>/dev/null; then
-  JAVA_VER=$(java -version 2>&1 | head -1 | awk -F'"' '{print $2}')
-  JAVA_MAJOR=$(echo "$JAVA_VER" | cut -d. -f1)
-  [[ "$JAVA_MAJOR" == "1" ]] && JAVA_MAJOR=$(echo "$JAVA_VER" | cut -d. -f2)
-  if [[ "$JAVA_MAJOR" -ge "$MIN_JAVA_MAJOR" ]]; then
-    ok "Java — $JAVA_VER"
-  else
-    warn "Java $JAVA_VER installed but outdated (need $MIN_JAVA_MAJOR+)"
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      warn "Upgrade: brew install openjdk@21"
-    else
-      warn "Upgrade: winget install Microsoft.OpenJDK.21"
-    fi
-    WARNED=1
-  fi
-else
-  fail "Java not found (required for SearchAtlas MCP features)"
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    warn "Install: brew install openjdk@21  — or run the one-command quickstart:"
-    warn "$QUICKSTART_MAC"
-  else
-    warn "Install: winget install Microsoft.OpenJDK.21  — or run the one-command quickstart (PowerShell as Admin):"
-    warn "$QUICKSTART_WIN"
-  fi
-  FAILED=1
-fi
 
 # ── Claude Code ───────────────────────────────────────────────────────────────
 if command -v claude &>/dev/null; then
