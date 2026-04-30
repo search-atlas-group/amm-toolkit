@@ -29,8 +29,22 @@ The setup will:
 Your workspace will look like this:
 ```
 ~/YourWorkspace/
-├── amm-toolkit/       ← this toolkit (commands, workflows, docs)
-└── clients/      ← one folder per client project
+├── amm-toolkit/                   ← this toolkit (do not edit)
+│   ├── commands/                  ← slash commands (/run-seo, /business-report, etc.)
+│   ├── workflows/                 ← YAML workflow templates
+│   ├── integrations/              ← Slack, Discord, email, Circle scripts
+│   ├── tools/
+│   │   ├── security/              ← repo security scanner (UI + server)
+│   │   └── guardian/              ← AMM guardian dashboard
+│   ├── guides/                    ← how-to guides (security, Windows setup, etc.)
+│   ├── docs/                      ← MCP setup, tool reference, golden rules
+│   ├── Scripts/                   ← quickstart + setup scripts (mac/windows)
+│   ├── CLAUDE.md                  ← toolkit context for Claude Code
+│   └── WHATS-NEW.md               ← changelog
+└── clients/                       ← one folder per client (created by /onboard-client)
+    └── your-client/
+        ├── CLAUDE.md              ← client session context (IDs, brand voice)
+        └── brand-profile.md       ← brand data synced with SearchAtlas
 ```
 
 **First use:** Open your workspace in Claude Code (`claude` in terminal), then run `/my-account`. Claude will prompt you to authorize your SearchAtlas account — one-time OAuth flow.
