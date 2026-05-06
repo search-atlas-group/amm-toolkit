@@ -2547,7 +2547,6 @@ var SNAV={
     {lbl:'The Loop',id:'ra-loop'},
   ],
   resources:[
-    {lbl:'Sessions',id:'res-sessions'},
     {lbl:'Guides',id:'res-guides'},
     {lbl:'Quick Links',id:'res-links'},
   ],
@@ -3123,183 +3122,15 @@ function toggleGuide(card){card.classList.toggle('open');}
 <div class="sa-page-hdr">
   <div class="sa-page-hdr-inner">
     <div class="sa-page-hdr-row"><svg class="sa-page-hdr-star" viewBox="0 0 20 20" width="13" height="13" aria-hidden="true"><path d="M10 0L11.5 8.5L20 10L11.5 11.5L10 20L8.5 11.5L0 10L8.5 8.5L10 0Z" fill="#926BD9"/></svg><span class="sa-page-hdr-label">SearchAtlas &middot; AMM</span></div>
-    <div class="sa-page-hdr-title">Resources &amp; Sessions</div>
-    <div class="sa-page-hdr-sub">Session archive, guides, and every link you need &mdash; all in one place.</div>
+    <div class="sa-page-hdr-title">Resources</div>
+    <div class="sa-page-hdr-sub">Guides, tools, and every link you need &mdash; all in one place.</div>
   </div>
 </div>
-
-<!-- 01 SESSION ARCHIVE -->
-<section id="res-sessions" class="wrap section-gap">
-  <div class="rv">
-    <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--purple)"></span>01 &mdash; Sessions</div>
-    <h2 class="sec-h">Session <span class="hl-purple">Archive</span></h2>
-    <p class="sec-p">Every recorded session &mdash; weekly calls, monthly deep-dives, and 1-on-1 setups.</p>
-  </div>
-<div class="jd-tip wrap rv"><img class="jd-tip-avatar" src="jd-memoji.png" alt="JD"><div class="jd-tip-body"><div class="jd-tip-label">JD Says</div><p class="jd-tip-text">If you only watch one session, watch the most recent weekly call first. <strong>The pattern clicks faster when you see it in action than when you read about it.</strong></p></div></div>
-
-  <!-- SA QUICK LINKS BANNER -->
-  <div class="rv d2" style="margin:32px 0 0">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-      <a href="https://app.searchatlas.com" target="_blank" style="text-decoration:none">
-        <div class="card" style="padding:18px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-top:2px solid #926BD9;transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-          <svg viewBox="0 0 20 20" width="16" height="16"><path d="M10 0L11.5 8.5L20 10L11.5 11.5L10 20L8.5 11.5L0 10L8.5 8.5L10 0Z" fill="#926BD9"/></svg>
-          <div style="font-size:.82rem;font-weight:700;color:var(--text)">SearchAtlas App</div>
-          <div style="font-size:.72rem;color:var(--text3)">Your SA dashboard &rarr;</div>
-        </div>
-      </a>
-      <a href="https://searchatlas.com/blog" target="_blank" style="text-decoration:none">
-        <div class="card" style="padding:18px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-top:2px solid #00FFD4;transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00FFD4" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <div style="font-size:.82rem;font-weight:700;color:var(--text)">SA Blog</div>
-          <div style="font-size:.72rem;color:var(--text3)">Latest strategies &rarr;</div>
-        </div>
-      </a>
-      <a href="https://searchatlas.com/academy" target="_blank" style="text-decoration:none">
-        <div class="card" style="padding:18px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-top:2px solid #38bdf8;transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          <div style="font-size:.82rem;font-weight:700;color:var(--text)">SA Academy</div>
-          <div style="font-size:.72rem;color:var(--text3)">Courses &amp; tutorials &rarr;</div>
-        </div>
-      </a>
-      <a href="https://community.searchatlas.com" target="_blank" style="text-decoration:none">
-        <div class="card" style="padding:18px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border-top:2px solid #34d399;transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <div style="font-size:.82rem;font-weight:700;color:var(--text)">Community</div>
-          <div style="font-size:.72rem;color:var(--text3)">AMM Circle &rarr;</div>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <div class="rv d1" style="margin-bottom:10px;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-      <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;display:inline-block;"></span>
-      <span style="font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);">Weekly Sessions</span>
-    </div>
-  </div>
-  <div class="wf-grid rv d2" style="margin-bottom:32px;">
-    <a href="Catchup/Catchup-Weekly.html#apr23" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Apr 23, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Group Session</span>
-        <div class="wf-card-name">Missions: Enterprise SEO Audit, Satellite Sites, Google Ads Audit, Keyword Ranking Boost</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">4 member missions with structured deliverables</div>
-          <div class="wf-flow-step">First session with Andy Zelt &mdash; cohort at 12 members</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html#apr9" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Apr 9, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Group Session</span>
-        <div class="wf-card-name">OTTO V2 demo, SA MCP deep-dive, member site showcases</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">Command centers, design frameworks, platform gaps</div>
-          <div class="wf-flow-step">Justin Hual joins as newest member</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html#apr2" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Apr 2, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Group Session</span>
-        <div class="wf-card-name">PPC workflows, content pipelines, Website Studio updates</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">Speed builds and design component deep-dive</div>
-          <div class="wf-flow-step">Bryan launches two full sites in three hours each</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html#mar26" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Mar 26, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Group Session</span>
-        <div class="wf-card-name">File structure deep-dive, Bryan's WizArts hub, Clayton's attribution report</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">File structure is the #1 root cause of push failures</div>
-          <div class="wf-flow-step">Post-session learning loop introduced by Justin</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html#mar19" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Mar 19, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Group Session</span>
-        <div class="wf-card-name">Justin's SOP workflow, Clayton's HubSpot attribution, Bryan's website live</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">$1.1M untracked attribution surfaced via Atlas Brain</div>
-          <div class="wf-flow-step">Role-framing Claude for domain expert output</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html#mar16" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--purple);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--purple);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Mar 16, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:6px;">Weekly Kickoff</span>
-        <div class="wf-card-name">First group session. Stack walkthrough, first SA MCP runs, member intros</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">Manick sets the agentic foundation</div>
-          <div class="wf-flow-step">Search Atlas MCP day-one introduction</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--purple);">View Notes &rarr;</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="rv d3" style="margin-bottom:10px;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-      <span style="width:8px;height:8px;border-radius:50%;background:var(--cyan);flex-shrink:0;display:inline-block;"></span>
-      <span style="font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);">Monthly Calls with Manick</span>
-    </div>
-  </div>
-  <div class="wf-grid rv d4" style="grid-template-columns:repeat(2,1fr);">
-    <a href="Catchup/Catchup-Manick-Monthly.html#april13" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--cyan);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--cyan);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Apr 13, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);display:block;margin-bottom:6px;">Monthly Deep-Dive</span>
-        <div class="wf-card-name">OTTO V2, AI workflows, product roadmap, member Q&amp;A with Manick</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">Full product roadmap walkthrough</div>
-          <div class="wf-flow-step">Open Q&amp;A with Manick Bhan</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--cyan);">View Notes &rarr;</div>
-      </div>
-    </a>
-    <a href="Catchup/Catchup-Manick-Monthly.html#mar16" target="_blank" style="text-decoration:none;color:inherit;">
-      <div class="wf-card" style="border-left:2px solid var(--cyan);cursor:pointer;">
-        <div class="wf-card-top-line" style="background:var(--cyan);"></div>
-        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text3);background:var(--code-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;">Mar 16, 2026</span>
-        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);display:block;margin-bottom:6px;">Monthly Kickoff</span>
-        <div class="wf-card-name">Manick's vision call. Stack foundation, member challenge set.</div>
-        <div class="wf-card-flow" style="margin-top:10px;">
-          <div class="wf-flow-step">Program vision and strategic direction</div>
-          <div class="wf-flow-step">Member challenges introduced</div>
-        </div>
-        <div style="margin-top:14px;font-size:.75rem;font-weight:600;color:var(--cyan);">View Notes &rarr;</div>
-      </div>
-    </a>
-  </div>
-</section>
-
-<div class="divider"></div>
 
 <!-- 02 GUIDES & TOOLS -->
 <section id="res-guides" class="wrap section-gap">
   <div class="rv">
-    <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--green)"></span>02 &mdash; Guides</div>
+    <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--green)"></span>01 &mdash; Guides</div>
     <h2 class="sec-h">Toolkit &amp; <span class="hl-cyan">Guides</span></h2>
     <p class="sec-p">Reference docs, visual breakdowns, and setup walkthroughs.</p>
   </div>
@@ -3483,7 +3314,7 @@ function toggleGuide(card){card.classList.toggle('open');}
 <!-- 03 QUICK LINKS -->
 <section id="res-links" class="wrap section-gap">
   <div class="rv">
-    <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--orange)"></span>03 &mdash; Quick Links</div>
+    <div class="sec-tag"><span class="sec-tag-dot" style="background:var(--orange)"></span>02 &mdash; Quick Links</div>
     <h2 class="sec-h">Essential <span class="hl-orange">Links</span></h2>
     <p class="sec-p">The tools, platforms, and channels the whole cohort uses.</p>
   </div>
@@ -3508,9 +3339,6 @@ function toggleGuide(card){card.classList.toggle('open');}
     </a>
     <a href="https://github.com/searchatlasgroup/search-atlas-mcp" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:100px;background:var(--bg2);border:1px solid var(--bdr);color:var(--text2);font-size:.8rem;font-weight:600;text-decoration:none;transition:all .2s;" onmouseover="this.style.borderColor='var(--bdr2)';this.style.color='var(--text)';" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--text2)';">
       SA MCP GitHub <span style="font-size:.75rem;opacity:.6;">&#8599;</span>
-    </a>
-    <a href="Catchup/Catchup-Weekly.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:100px;background:var(--bg2);border:1px solid var(--bdr);color:var(--text2);font-size:.8rem;font-weight:600;text-decoration:none;transition:all .2s;" onmouseover="this.style.borderColor='var(--bdr2)';this.style.color='var(--text)';" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--text2)';">
-      Session Recordings <span style="font-size:.75rem;opacity:.6;">&#8599;</span>
     </a>
   </div>
 </section>
@@ -3852,7 +3680,6 @@ function initBrainGraph(){
     {id:'project', lbl:'Projects',     g:'mem',     r:10},
     {id:'ref',     lbl:'Reference',    g:'mem',     r:9},
     {id:'research',lbl:'Research',     g:'agent',   r:12},
-    {id:'sessions',lbl:'Sessions',     g:'storage', r:9},
     {id:'sa',      lbl:'SA MCP',       g:'tool',    r:12},
     {id:'clients', lbl:'Clients',      g:'storage', r:10},
   ];
