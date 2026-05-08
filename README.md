@@ -165,7 +165,6 @@ bash scripts/verify-setup.sh
 - [Golden Rules](docs/GOLDEN_RULES.md) — Best practices for reliable tool usage
 - [Workflows Guide](docs/WORKFLOWS.md) — How workflow templates work
 - [Intent Mapping](docs/INTENT_MAPPING.md) — Keyword-to-tool routing reference
-- [Setup Guide (printable)](docs/Agentic-Marketing-Mastermind-Setup-Guide.html)
 
 ## Updating
 
