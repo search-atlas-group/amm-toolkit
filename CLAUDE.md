@@ -70,6 +70,31 @@ The toolkit is cloned to a user-chosen location — never assume a path like `~/
 - **HTML / static UI** → use the literal placeholder `__TOOLKIT_PATH__`; `setup.sh` stamps the real path at install time via `sed`
 - **Never** write a literal path like `/Users/anyone/...` or `~/Desktop/anything`
 
+### Rule 8: Tools Only — No Internal or Presentation Files (HARD RULE)
+This repo is the public toolkit clients actively clone and use. **Only files clients need to operate the toolkit ship to the repo.** Internal collateral does not.
+
+**Allowed in the repo:**
+- Slash command runbooks (`commands/*.md`)
+- Workflow YAML templates (`workflows/*.yaml`)
+- Integration scripts clients run (`integrations/`, `Scripts/`, `tools/`)
+- Setup + onboarding docs clients read while installing (`README.md`, `setup.sh`, `docs/MCP_SETUP.md`, `docs/TOOL_REFERENCE.md`, etc.)
+- Public release notes (`WHATS-NEW.md`)
+
+**NOT allowed in the repo:**
+- Demo / walkthrough / autoplay HTML built for summit, sales, or marketing presentations
+- Internal screenshots, mockups, pitch decks, carousel exports, video thumbnails
+- Pricing-tier comparisons, "you are here vs. Mastermind" ladders, internal positioning copy
+- Anything that exposes how we sell, what's coming next, or how we segment paid vs. free
+- Pipe-cleaner reports, test runs against real client data, scratch HTML
+- Anything labeled "for Manick / Arman / Sophia / Justin" — that's an internal artifact, ship via DM not git
+
+**Where internal-only assets live:**
+- `docs/visuals/` is gitignored — local-only working folder for HTMLs that should never push
+- `clients/` is gitignored — every client subfolder stays local
+- Desktop share folders + zips for DM distribution
+
+**The check:** before adding any file to the repo, ask "would a client cloning this toolkit need this to run a command?" If no, it doesn't ship. When in doubt, keep it local.
+
 ---
 
 ## 4. Parameter Quick Reference

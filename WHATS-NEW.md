@@ -35,11 +35,6 @@ Pick one of 19 plays from the May Summit. Each play is intentionally bounded —
 
 `/scout` says **what to run**. `/summit-shot` **runs it**. Re-run `/scout` next month to measure the lift.
 
-### Visual demos
-
-- `docs/scout-summit-shot-workflow.html` — static walkthrough (read this first)
-- `docs/scout-demo.html` — autoplay end-to-end demo (~35s, real data, loops)
-
 ### To update
 
 ```bash
