@@ -9,6 +9,10 @@ Display this command reference to the user:
 ```
 🧠 Agentic Marketing Mastermind — Commands
 
+🎯 START HERE
+  /scout               Run-first diagnostic — pillar audit + action plan + client report
+  /summit-shot         Run a single play taught at the summit (atomic, bounded)
+
 📊 ACCOUNT & REPORTING
   /my-account          Show all businesses, projects, campaigns, and GBP locations
   /business-report     Deep dive report on a single business
