@@ -6,6 +6,50 @@ Latest additions and updates to the Agentic Marketing Mastermind toolkit.
 
 <!-- AMM Guardian adds entries here automatically. Newest at top. -->
 
+## 2026-05-08 — Summit Toolkit: `/scout` + `/summit-shot`
+
+The May Summit takeaway is live. Two new commands turn the curriculum into a working agency runbook.
+
+### `/scout {domain}` — diagnostic, run-first
+
+Read-only audit across all seven SearchAtlas pillars in parallel. Returns a prioritized hit-list of next moves, each tied to the exact command to run.
+
+- Pulls **OTTO health, holistic SEO pillar scores, Site Explorer, Brand Vault, GBP, PPC, LLM Visibility** in one fan-out
+- Skips cleanly when a pillar isn't connected — never blocks
+- Scores each pillar ✅ healthy / ⚠️ needs work / ❌ missing
+- Picks top 4–6 priorities and ties each to a `/summit-shot N` or `/run-*` command
+- Saves a self-contained HTML dashboard + a sibling `notes.md` (source of truth) per run, so future scouts can read prior context for continuity
+- Generates a client-shareable SearchAtlas Report Builder report (when the create tool is exposed via MCP)
+
+### `/summit-shot {N}` — atomic playbook executor
+
+Pick one of 19 plays from the May Summit. Each play is intentionally bounded — 1 article, 1 PR, drafts by default — so the toolkit stays valuable without crossing into full DFY territory.
+
+- **Day 1 — Foundation:** Brand Vault Setup · OTTO Engage · First PR · LLM Visibility Setup
+- **Day 2 — Content & Local:** Topical Map · Trophy Content · Blog Article · GBP Optimize
+- **Day 3 — Authority:** PR Blast · Cloudstack · Guest Post Discovery · Local Citations · LLM Citation Discovery
+- **Day 4 — Paid (drafts only):** Branded Google Ads · Core Google Ads · PPC Landing Page
+- **Day 5 — LLM Visibility Deep Dive:** Expand AI Topics · Refine AI Prompts · Find Visibility Gaps
+
+### How they pair
+
+`/scout` says **what to run**. `/summit-shot` **runs it**. Re-run `/scout` next month to measure the lift.
+
+### Visual demos
+
+- `docs/scout-summit-shot-workflow.html` — static walkthrough (read this first)
+- `docs/scout-demo.html` — autoplay end-to-end demo (~35s, real data, loops)
+
+### To update
+
+```bash
+cd amm-toolkit && git pull
+```
+
+Then in Claude Code: `/scout your-domain.com`
+
+---
+
 ## 2026-04-27 — Claude Code v2.1.118: Hooks Can Now Call MCP Tools Directly
 
 Claude Code v2.1.118 shipped a change that matters for SA workflows: **hooks can now invoke MCP tools directly**, without a shell script in between. Set `"type": "mcp_tool"` in any hook and point it at a SearchAtlas tool — no bash wrapper needed.
