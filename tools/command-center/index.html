@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AMM Command Center</title>
+<style>
+  :root {
+    --bg: #06050e;
+    --bg-2: #0d0b1a;
+    --panel: #12101e;
+    --panel-2: #1a1730;
+    --border: #25223a;
+    --border-soft: #1d1b2e;
+    --text: #f3f1ff;
+    --text-dim: #9893b5;
+    --text-faint: #5e5a7a;
+    --purple: #926BD9;
+    --purple-bright: #b08fef;
+    --cyan: #00FFD4;
+    --good: #00FFD4;
+    --warn: #ffc857;
+    --error: #ff6464;
+    --gradient: linear-gradient(135deg, #926BD9 0%, #00FFD4 100%);
+    --gradient-soft: linear-gradient(135deg, rgba(146,107,217,0.18), rgba(0,255,212,0.12));
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--text); min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(900px 600px at 15% 20%, rgba(146,107,217,0.16), transparent 60%),
+      radial-gradient(800px 500px at 85% 80%, rgba(0,255,212,0.08), transparent 60%);
+  }
+
+  .app {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 28px 36px 60px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 36px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--gradient); display: grid; place-items: center;
+    font-weight: 700; color: #06050e; letter-spacing: -0.5px;
+    box-shadow: 0 8px 24px -8px rgba(146,107,217,0.6);
+  }
+  .brand-name { font-weight: 600; font-size: 14px; }
+  .brand-name span { color: var(--text-dim); margin-left: 8px; font-weight: 400; }
+  .header-meta {
+    display: flex; gap: 18px; align-items: center;
+    font-size: 12px; color: var(--text-faint); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.2px;
+  }
+  .conn-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--good); box-shadow: 0 0 8px var(--good);
+    margin-right: 6px; display: inline-block; animation: pulse 2s infinite;
+  }
+  .conn-dot.bad { background: var(--error); box-shadow: 0 0 8px var(--error); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .progress-tag {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(146,107,217,0.08);
+    border: 1px solid rgba(146,107,217,0.25);
+    font-size: 11px; color: var(--purple-bright);
+    font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .progress-tag .progress-bar {
+    width: 60px; height: 4px; border-radius: 999px;
+    background: rgba(146,107,217,0.2); overflow: hidden;
+  }
+  .progress-tag .progress-fill {
+    height: 100%; background: var(--gradient);
+    border-radius: 999px; transition: width 0.4s ease;
+  }
+  .progress-tag .progress-num { font-variant-numeric: tabular-nums; }
+
+  /* HERO */
+  .hero { margin-bottom: 36px; }
+  .hero-eyebrow {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--purple-bright); font-weight: 700; margin-bottom: 10px;
+  }
+  .hero h1 {
+    font-size: 38px; font-weight: 600; letter-spacing: -1px;
+    line-height: 1.1; margin-bottom: 8px;
+  }
+  .hero p { color: var(--text-dim); font-size: 16px; max-width: 640px; line-height: 1.55; }
+
+  /* STEPPER */
+  .stepper {
+    display: flex; gap: 6px; margin-bottom: 28px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px;
+  }
+  .step-pill {
+    flex: 1; padding: 12px 14px; border-radius: 8px;
+    font-size: 12.5px; color: var(--text-faint); font-weight: 600;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .step-pill:hover { color: var(--text-dim); }
+  .step-pill .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--panel-2); display: grid; place-items: center;
+    font-size: 11px; font-variant-numeric: tabular-nums;
+  }
+  .step-pill.is-current { background: rgba(146,107,217,0.12); color: var(--text); }
+  .step-pill.is-current .step-num { background: var(--purple); color: #06050e; }
+  .step-pill.is-done { color: var(--cyan); }
+  .step-pill.is-done .step-num { background: rgba(0,255,212,0.15); color: var(--cyan); }
+  .step-pill.is-done .step-num::after {
+    content: ""; width: 8px; height: 4px;
+    border-left: 1.5px solid var(--cyan); border-bottom: 1.5px solid var(--cyan);
+    transform: rotate(-45deg) translate(0, -1px); display: block;
+  }
+  .step-pill.is-done .step-text-num { display: none; }
+
+  /* FORM CARDS */
+  .form-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 18px; padding: 36px 40px;
+    display: none;
+  }
+  .form-card.is-active { display: block; }
+  .form-card.is-active.is-entering { animation: card-in 0.35s ease; }
+  @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card-eyebrow {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--purple-bright); font-weight: 700; margin-bottom: 8px;
+  }
+  .card-title {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px;
+  }
+  .card-sub { color: var(--text-dim); font-size: 14.5px; line-height: 1.55; margin-bottom: 30px; max-width: 600px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .field-block { margin-bottom: 18px; }
+  .field-block.full { grid-column: 1 / -1; }
+  .field-label {
+    font-size: 12.5px; color: var(--text); font-weight: 600;
+    margin-bottom: 8px; display: flex; gap: 8px; align-items: center;
+  }
+  .field-hint { font-size: 12px; color: var(--text-faint); font-weight: 400; }
+
+  input[type="text"], input[type="url"], textarea, select {
+    width: 100%; padding: 14px 16px;
+    background: rgba(6,5,14,0.65);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 15px; font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--purple);
+    box-shadow: 0 0 0 4px rgba(146,107,217,0.15);
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.55; }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239893b5' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* DOMAIN STEP */
+  .domain-input-wrap {
+    display: flex; gap: 12px; align-items: stretch; max-width: 640px;
+  }
+  .domain-input-wrap input {
+    flex: 1; font-size: 17px; padding: 16px 18px;
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+  }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px; padding: 38px 24px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    background: rgba(6,5,14,0.4);
+    margin-bottom: 16px;
+    user-select: none;
+  }
+  .drop-zone:hover, .drop-zone.is-dragging {
+    border-color: var(--purple);
+    background: rgba(146,107,217,0.08);
+  }
+  .drop-zone .drop-icon {
+    font-size: 28px; margin-bottom: 10px; color: var(--purple-bright);
+    line-height: 1;
+  }
+  .drop-zone .drop-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .drop-zone .drop-sub { font-size: 13px; color: var(--text-faint); line-height: 1.5; }
+
+  .file-list { margin-bottom: 18px; }
+  .file-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: rgba(6,5,14,0.5);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px; margin-bottom: 6px; font-size: 13px;
+  }
+  .file-row .file-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--gradient-soft);
+    display: grid; place-items: center;
+    font-size: 11px; color: var(--purple-bright); font-weight: 700;
+  }
+  .file-row .file-name { flex: 1; }
+  .file-row .file-size { color: var(--text-faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .file-row .file-remove {
+    background: transparent; border: none; color: var(--text-faint);
+    cursor: pointer; padding: 4px 8px; font-size: 14px; border-radius: 4px;
+  }
+  .file-row .file-remove:hover { color: var(--error); background: rgba(255,100,100,0.1); }
+
+  /* SERVICE CARDS — div, not label, to avoid double-toggle */
+  .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .service-card {
+    display: flex; gap: 14px; padding: 18px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: rgba(6,5,14,0.5); cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    user-select: none;
+  }
+  .service-card:hover { border-color: rgba(146,107,217,0.4); }
+  .service-card .box {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px solid var(--border); flex-shrink: 0;
+    margin-top: 2px; transition: all 0.2s ease;
+    display: grid; place-items: center;
+  }
+  .service-card.is-on { border-color: rgba(146,107,217,0.6); background: rgba(146,107,217,0.08); }
+  .service-card.is-on .box { background: var(--purple); border-color: var(--purple); }
+  .service-card.is-on .box::after {
+    content: ""; width: 9px; height: 4px;
+    border-left: 2px solid #06050e; border-bottom: 2px solid #06050e;
+    transform: rotate(-45deg) translate(0, -1px);
+  }
+  .service-card .pill-text { flex: 1; }
+  .service-card .pill-title { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
+  .service-card .pill-desc { font-size: 13px; color: var(--text-dim); line-height: 1.4; }
+
+  /* WARNING BANNER (empty-section nudge) */
+  .warning-banner {
+    display: none;
+    padding: 14px 18px;
+    background: rgba(255,200,87,0.08);
+    border: 1px solid rgba(255,200,87,0.3);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--warn);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+  .warning-banner.is-visible { display: flex; gap: 12px; align-items: flex-start; }
+  .warning-banner .warn-icon { font-size: 16px; flex-shrink: 0; }
+  .warning-banner strong { color: var(--text); font-weight: 600; }
+
+  /* NAV BUTTONS */
+  .nav-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-soft);
+  }
+  .nav-back, .nav-next, .nav-fire, .nav-cancel, .nav-restart {
+    padding: 13px 24px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all 0.15s ease;
+    border: none;
+  }
+  .nav-back, .nav-cancel {
+    background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+  }
+  .nav-back:hover { color: var(--text); border-color: var(--border-soft); }
+  .nav-next {
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid rgba(146,107,217,0.4);
+  }
+  .nav-next:hover { background: rgba(146,107,217,0.15); }
+  .nav-fire {
+    background: var(--gradient); color: #06050e;
+    padding: 16px 32px; font-size: 15px; font-weight: 700;
+    box-shadow: 0 12px 30px -10px rgba(146,107,217,0.6);
+    letter-spacing: -0.2px;
+  }
+  .nav-fire:hover { transform: translateY(-1px); }
+  .nav-fire:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* RUN SCREEN */
+  .run-stage {
+    display: grid; grid-template-columns: 1fr 320px; gap: 24px;
+    margin-top: 4px;
+  }
+  .run-feed {
+    background: rgba(6,5,14,0.4); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px;
+    height: 480px; overflow-y: auto;
+    font-size: 13.5px; line-height: 1.65;
+  }
+  .run-feed::-webkit-scrollbar { width: 4px; }
+  .run-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .feed-item {
+    padding: 6px 0; display: flex; gap: 12px; align-items: flex-start;
+    opacity: 0; transform: translateY(4px);
+    animation: line-in 0.3s ease forwards;
+  }
+  @keyframes line-in { to { opacity: 1; transform: translateY(0); } }
+  .feed-item .feed-icon {
+    width: 18px; height: 18px; border-radius: 5px;
+    flex-shrink: 0; margin-top: 2px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    display: grid; place-items: center;
+  }
+  .feed-item .feed-text { flex: 1; color: var(--text-dim); }
+  .feed-item.phase {
+    margin-top: 14px;
+  }
+  .feed-item.phase:first-child { margin-top: 0; }
+  .feed-item.phase .feed-icon {
+    background: var(--gradient-soft);
+    border-color: rgba(146,107,217,0.4);
+  }
+  .feed-item.phase .feed-icon::after {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--purple-bright);
+    box-shadow: 0 0 6px var(--purple-bright);
+  }
+  .feed-item.phase .feed-text {
+    color: var(--text); font-weight: 600;
+    font-size: 14px; letter-spacing: -0.1px;
+  }
+  .feed-item.work .feed-icon {
+    background: rgba(146,107,217,0.15);
+    border-color: rgba(146,107,217,0.4);
+  }
+  .feed-item.work .feed-icon::after {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    border: 2px solid var(--purple-bright); border-top-color: transparent;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .feed-item.work .feed-text { color: var(--text-dim); font-style: italic; }
+  .feed-item.done .feed-icon {
+    background: rgba(0,255,212,0.12);
+    border-color: rgba(0,255,212,0.4);
+  }
+  .feed-item.done .feed-icon::after {
+    content: ""; width: 7px; height: 4px;
+    border-left: 1.6px solid var(--cyan); border-bottom: 1.6px solid var(--cyan);
+    transform: rotate(-45deg) translate(0, -1px);
+  }
+  .feed-item.done .feed-text { color: var(--text); }
+  .feed-item.note .feed-icon { background: transparent; border: none; }
+  .feed-item.error .feed-icon {
+    background: rgba(255,100,100,0.15);
+    border-color: rgba(255,100,100,0.4);
+  }
+  .feed-item.error .feed-icon::after { content: "!"; color: var(--error); font-size: 11px; font-weight: 700; }
+  .feed-item.error .feed-text { color: var(--error); }
+  .feed-empty { color: var(--text-faint); font-style: italic; padding: 12px 0; }
+
+  .run-side .run-summary, .run-side .run-status {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .run-side h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-faint); margin-bottom: 14px; font-weight: 700;
+  }
+  .run-side .stat-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; font-size: 13px;
+  }
+  .run-side .stat-row .lbl { color: var(--text-dim); }
+  .run-side .stat-row .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .run-status {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px; font-size: 13px; margin-bottom: 0;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--purple-bright); box-shadow: 0 0 8px var(--purple-bright);
+    animation: pulse 1.4s infinite; flex-shrink: 0;
+  }
+  .status-dot.done { background: var(--good); box-shadow: 0 0 8px var(--good); animation: none; }
+  .status-dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); animation: none; }
+
+  /* CELEBRATION OVERLAY */
+  .celebrate {
+    position: fixed; inset: 0;
+    background: rgba(6,5,14,0.85); backdrop-filter: blur(20px);
+    display: grid; place-items: center; z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  .celebrate.is-visible { opacity: 1; pointer-events: auto; }
+  .celebrate-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 24px; padding: 48px 56px;
+    text-align: center; max-width: 540px;
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 0 1px rgba(146,107,217,0.25), 0 24px 80px -20px rgba(146,107,217,0.5);
+  }
+  .celebrate.is-visible .celebrate-card { transform: translateY(0) scale(1); }
+  .celebrate-emoji {
+    font-size: 56px; margin-bottom: 18px; line-height: 1;
+    animation: pop 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  .celebrate-title {
+    font-size: 28px; font-weight: 600; letter-spacing: -0.6px;
+    line-height: 1.2; margin-bottom: 12px;
+  }
+  .celebrate-title .gradient {
+    background: var(--gradient);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .celebrate-sub {
+    color: var(--text-dim); font-size: 15px;
+    line-height: 1.55; margin-bottom: 32px;
+  }
+  .celebrate-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; padding: 24px 0;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 28px;
+  }
+  .celebrate-stats .stat-num {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.5px;
+    color: var(--text); margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .celebrate-stats .stat-num.purple { color: var(--purple-bright); }
+  .celebrate-stats .stat-num.cyan { color: var(--cyan); }
+  .celebrate-stats .stat-label {
+    font-size: 11px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  }
+  .celebrate-actions {
+    display: flex; gap: 12px; justify-content: center;
+  }
+  .celebrate-btn {
+    padding: 12px 22px; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer; border: none;
+    transition: all 0.15s ease; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .celebrate-btn.primary {
+    background: var(--gradient); color: #06050e;
+  }
+  .celebrate-btn.primary:hover { transform: translateY(-1px); }
+  .celebrate-btn.secondary {
+    background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+  }
+  .celebrate-btn.secondary:hover { color: var(--text); border-color: var(--border-soft); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 12px 20px; border-radius: 10px;
+    font-size: 13px; color: var(--text);
+    box-shadow: 0 16px 40px -10px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+  .toast.is-visible { transform: translateX(-50%) translateY(0); }
+  .toast.error { border-color: rgba(255,100,100,0.5); }
+
+  @media (max-width: 900px) {
+    .grid-2, .services-grid { grid-template-columns: 1fr; }
+    .run-stage { grid-template-columns: 1fr; }
+    .stepper { overflow-x: auto; }
+    .step-pill .step-text { display: none; }
+    .form-card { padding: 24px 22px; }
+    .domain-input-wrap { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="mark">A</div>
+      <div class="brand-name">AMM Command Center<span>· local</span></div>
+    </div>
+    <div class="header-meta">
+      <div class="progress-tag" id="progressTag" title="Brand vault completion">
+        <span>Brand vault</span>
+        <span class="progress-bar"><span class="progress-fill" id="progressFill" style="width: 0%"></span></span>
+        <span class="progress-num" id="progressNum">0%</span>
+      </div>
+      <div><span class="conn-dot" id="connDot"></span><span id="connText">Checking…</span></div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-eyebrow">New Client</div>
+    <h1>Onboard a client into SearchAtlas</h1>
+    <p>Drop in their domain. We crawl the site for the basics, you fill in what the website doesn't say, and SearchAtlas does the rest.</p>
+  </div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- STEP 1 — DOMAIN -->
+  <section class="form-card" data-step="1">
+    <div class="card-eyebrow">Step 1 · Domain</div>
+    <h2 class="card-title">What's the client's website?</h2>
+    <p class="card-sub">Paste the URL. We'll crawl the site to extract the basics — business name, address, phone, hours, services, brand colors. You only fill in what the site doesn't say.</p>
+
+    <div class="domain-input-wrap">
+      <input type="text" name="domain" placeholder="coastaldentalgroup.com" autocomplete="off" autofocus />
+    </div>
+
+    <div class="warning-banner" id="warn-1">
+      <span class="warn-icon">!</span>
+      <span><strong>Domain looks empty.</strong> Without a domain, we can't crawl the site or create the brand vault. Continue anyway?</span>
+    </div>
+
+    <div class="nav-row">
+      <span></span>
+      <button class="nav-next" data-action="next">Continue →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 — BRAND VOICE -->
+  <section class="form-card" data-step="2">
+    <div class="card-eyebrow">Step 2 · Brand voice</div>
+    <h2 class="card-title">How do they sound?</h2>
+    <p class="card-sub">This becomes the voice profile every article, GBP post, ad copy, and email is generated against. Get this right once and everything downstream sounds like the client.</p>
+
+    <div class="grid-2">
+      <div class="field-block">
+        <label class="field-label">Tone</label>
+        <select name="tone">
+          <option value="">Let SA detect from site</option>
+          <option>Professional & reassuring</option>
+          <option>Warm & approachable</option>
+          <option>Bold & authoritative</option>
+          <option>Playful & casual</option>
+          <option>Technical & precise</option>
+          <option>Educational & helpful</option>
+          <option>Premium & exclusive</option>
+        </select>
+      </div>
+      <div class="field-block">
+        <label class="field-label">Reading level</label>
+        <select name="readingLevel">
+          <option value="">Default</option>
+          <option>5th–8th grade (consumer)</option>
+          <option>9th–12th grade (professional)</option>
+          <option>College+ (specialist)</option>
+        </select>
+      </div>
+      <div class="field-block full">
+        <label class="field-label">Style notes <span class="field-hint">— how they actually talk. Phrases they use, ones they don't.</span></label>
+        <textarea name="styleNotes" placeholder="We always say 'gentle dentistry' not 'painless'. Never use 'cheap' — say 'affordable'. Avoid medical jargon (write 'cleaning' not 'prophylaxis'). End every blog with a question that invites a call."></textarea>
+      </div>
+      <div class="field-block full">
+        <label class="field-label">Avoid list <span class="field-hint">— words, claims, or topics never to mention</span></label>
+        <textarea name="avoidList" placeholder="Don't mention competitors by name. Avoid superlatives like 'best' or 'cheapest' (compliance). Don't quote prices in content."></textarea>
+      </div>
+    </div>
+
+    <div class="warning-banner" id="warn-2">
+      <span class="warn-icon">!</span>
+      <span><strong>Brand voice is empty.</strong> SA can detect tone from the site's existing copy, but you'll get sharper results if you set it explicitly. Continue anyway?</span>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-back" data-action="back">← Back</button>
+      <button class="nav-next" data-action="next">Continue →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 — KNOWLEDGE DROP -->
+  <section class="form-card" data-step="3">
+    <div class="card-eyebrow">Step 3 · Knowledge drop</div>
+    <h2 class="card-title">What does the website not say?</h2>
+    <p class="card-sub">Drop in anything off the site — sales call transcripts, customer interviews, brand decks, lingo notes, owner letters, photos, pricing sheets. This is the part that makes onboarding actually good.</p>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" multiple accept=".txt,.md,.pdf,.doc,.docx,.rtf,.csv,.json,image/*" hidden />
+      <div class="drop-icon">⤓</div>
+      <div class="drop-title">Drag files here, or click to browse</div>
+      <div class="drop-sub">Transcripts · Brand docs · Photos · Anything off-website. We'll feed it into the brand vault.</div>
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <div class="field-block full" style="margin-top: 8px;">
+      <label class="field-label">Or paste it directly <span class="field-hint">— customer profile, pricing, recent wins, internal lingo, sales objections, anything</span></label>
+      <textarea name="knowledge" placeholder="Real customers: women 35–60 with kids in the practice, $280 avg ticket, half discover us via competitor's bad reviews.
+Pricing: New patient exam $89 incl x-rays · cleaning $120 · crowns from $1,200 · whitening $399.
+Recent win: pediatric patient refused by 3 dentists due to anxiety — completed full restoration. Mom now refers everyone. Use as 'we take the hard cases' angle.
+Sales objections we hear: 'insurance doesn't cover that' (we offer in-house plan $35/mo) · 'is it going to hurt' (biggest fear) · 'why so expensive' (explain same-day crown).
+Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Owner hates 'cosmetic' — say 'aesthetic'." rows="9"></textarea>
+    </div>
+
+    <div class="warning-banner" id="warn-3">
+      <span class="warn-icon">!</span>
+      <span><strong>No off-website context.</strong> Onboarding will work, but every article and ad will be tuned to public website copy only — same as a website scraper. The agency edge comes from this step. Continue anyway?</span>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-back" data-action="back">← Back</button>
+      <button class="nav-next" data-action="next">Continue →</button>
+    </div>
+  </section>
+
+  <!-- STEP 4 — SERVICES + FIRE -->
+  <section class="form-card" data-step="4">
+    <div class="card-eyebrow">Step 4 · Services</div>
+    <h2 class="card-title">What should we kick off?</h2>
+    <p class="card-sub">Each service runs an existing SearchAtlas onboarding playbook. Pick what you want set up today — you can add more later.</p>
+
+    <div class="services-grid">
+      <div class="service-card is-on" data-svc="svcSeo">
+        <span class="box"></span>
+        <span class="pill-text">
+          <div class="pill-title">SEO</div>
+          <div class="pill-desc">OTTO project · holistic audit · brand vault · keyword research · topical map · first content batch</div>
+        </span>
+      </div>
+      <div class="service-card is-on" data-svc="svcGbp">
+        <span class="box"></span>
+        <span class="pill-text">
+          <div class="pill-title">Google Business Profile</div>
+          <div class="pill-desc">Find listing on Google · profile audit · categories · services · attributes · AI description</div>
+        </span>
+      </div>
+      <div class="service-card" data-svc="svcPpc">
+        <span class="box"></span>
+        <span class="pill-text">
+          <div class="pill-title">PPC / Google Ads</div>
+          <div class="pill-desc">Business setup · product discovery · keyword clusters · ad copy · Google Ads submission</div>
+        </span>
+      </div>
+      <div class="service-card" data-svc="svcPr">
+        <span class="box"></span>
+        <span class="pill-text">
+          <div class="pill-title">Authority / PR</div>
+          <div class="pill-desc">Press release · cloud stack · digital PR outreach · backlink monitoring</div>
+        </span>
+      </div>
+      <div class="service-card" data-svc="svcLlm">
+        <span class="box"></span>
+        <span class="pill-text">
+          <div class="pill-title">LLM Visibility</div>
+          <div class="pill-desc">Brand mentions across ChatGPT, Perplexity, Gemini · sentiment · prompt simulation · SERP</div>
+        </span>
+      </div>
+    </div>
+
+    <div class="warning-banner" id="warn-4">
+      <span class="warn-icon">!</span>
+      <span><strong>No services selected.</strong> We'll still create the brand vault and client files, but no playbooks will run. Continue anyway?</span>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-back" data-action="back">← Back</button>
+      <button class="nav-fire" data-action="run">Onboard client →</button>
+    </div>
+  </section>
+
+  <!-- STEP 5 — RUN -->
+  <section class="form-card" data-step="5">
+    <div class="card-eyebrow">Onboarding</div>
+    <h2 class="card-title" id="runTitle">Onboarding in progress…</h2>
+    <p class="card-sub">Hands-free. We're crawling the site, syncing SearchAtlas, building the brand vault, and kicking off your selected playbooks.</p>
+
+    <div class="run-stage">
+      <div id="runFeed" class="run-feed">
+        <div class="feed-empty">Waiting for the engine to start…</div>
+      </div>
+      <div class="run-side">
+        <div class="run-summary">
+          <h4>Live</h4>
+          <div class="stat-row"><span class="lbl">Elapsed</span><span class="val" id="runElapsed">0.0s</span></div>
+          <div class="stat-row"><span class="lbl">Steps done</span><span class="val" id="runTools">0</span></div>
+          <div class="stat-row"><span class="lbl">Phase</span><span class="val" id="runPhase">starting</span></div>
+        </div>
+        <div class="run-status">
+          <span class="status-dot" id="runDot"></span>
+          <span id="runStatusText">Streaming…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-cancel" id="runCancel">Cancel</button>
+      <span></span>
+    </div>
+  </section>
+
+</div>
+
+<!-- CELEBRATION OVERLAY -->
+<div class="celebrate" id="celebrate">
+  <div class="celebrate-card">
+    <div class="celebrate-emoji">🎉</div>
+    <div class="celebrate-title">You just onboarded <span class="gradient" id="celebrateBiz">your client</span> hands-free.</div>
+    <div class="celebrate-sub" id="celebrateSub">Everything's synced with SearchAtlas — voice profile, knowledge graph, OTTO project, GBP. You can run any workflow on them right now.</div>
+    <div class="celebrate-stats">
+      <div>
+        <div class="stat-num purple" id="celebrateTime">—</div>
+        <div class="stat-label">Total time</div>
+      </div>
+      <div>
+        <div class="stat-num cyan" id="celebrateSaved">—</div>
+        <div class="stat-label">Saved vs manual</div>
+      </div>
+      <div>
+        <div class="stat-num" id="celebrateSteps">—</div>
+        <div class="stat-label">Steps automated</div>
+      </div>
+    </div>
+    <div class="celebrate-actions">
+      <button class="celebrate-btn primary" id="celebrateNext">Onboard another</button>
+      <button class="celebrate-btn secondary" id="celebrateClose">Stay here</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = (s, ctx = document) => ctx.querySelector(s);
+  const $$ = (s, ctx = document) => ctx.querySelectorAll(s);
+
+  const STEPS = [
+    { n: 1, label: "Domain" },
+    { n: 2, label: "Voice" },
+    { n: 3, label: "Knowledge" },
+    { n: 4, label: "Services" },
+    { n: 5, label: "Run" },
+  ];
+
+  // Brand vault completion: weighted fields → 0–100%
+  const COMPLETION_FIELDS = {
+    domain:       { weight: 25, key: "domain",       step: 1 },
+    tone:         { weight: 8,  key: "tone",         step: 2 },
+    styleNotes:   { weight: 12, key: "styleNotes",   step: 2 },
+    avoidList:    { weight: 5,  key: "avoidList",    step: 2 },
+    knowledge:    { weight: 25, key: "knowledge",    step: 3 },
+    files:        { weight: 5,  key: "_filesCount",  step: 3 },
+    services:     { weight: 20, key: "_servicesCount", step: 4 },
+  };
+
+  let currentStep = 1;
+  const formData = {};
+  const droppedFiles = [];
+  const warnedSteps = new Set(); // empty-section warning shown once per step
+
+  // ----- Stepper -----
+  const renderStepper = () => {
+    const wrap = $("#stepper");
+    wrap.innerHTML = STEPS.map(s => {
+      const cls = s.n < currentStep ? "is-done" : (s.n === currentStep ? "is-current" : "");
+      return `<div class="step-pill ${cls}" data-go="${s.n}">
+        <span class="step-num"><span class="step-text-num">${s.n}</span></span>
+        <span class="step-text">${s.label}</span>
+      </div>`;
+    }).join("");
+  };
+  $("#stepper").addEventListener("click", (e) => {
+    const pill = e.target.closest(".step-pill");
+    if (!pill) return;
+    const target = parseInt(pill.dataset.go, 10);
+    if (target < currentStep && currentStep < 5) goToStep(target);
+  });
+
+  // ----- Goto step -----
+  const goToStep = (n) => {
+    if (n < 1 || n > STEPS.length) return;
+    captureCurrentStep();
+    currentStep = n;
+    $$(".form-card").forEach(c => c.classList.remove("is-active", "is-entering"));
+    $$(".warning-banner").forEach(b => b.classList.remove("is-visible"));
+    const card = $(`.form-card[data-step="${n}"]`);
+    card.classList.add("is-active", "is-entering");
+    setTimeout(() => card.classList.remove("is-entering"), 400);
+    renderStepper();
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const captureCurrentStep = () => {
+    const card = $(`.form-card[data-step="${currentStep}"]`);
+    if (!card) return;
+    $$("input, textarea, select", card).forEach(input => {
+      if (input.type === "file") return;
+      formData[input.name] = (input.value || "").trim();
+    });
+  };
+
+  // ----- Service cards (div, manual toggle) -----
+  $$(".service-card").forEach(card => {
+    const svc = card.dataset.svc;
+    formData[svc] = card.classList.contains("is-on");
+    card.addEventListener("click", () => {
+      const next = !card.classList.contains("is-on");
+      card.classList.toggle("is-on", next);
+      formData[svc] = next;
+      updateProgress();
+    });
+  });
+
+  // ----- Domain field: strip protocol live -----
+  const domainInput = $('input[name="domain"]');
+  const cleanDomain = (raw) => {
+    let v = (raw || "").trim();
+    v = v.replace(/^https?:\/\//i, "");
+    v = v.replace(/^www\./i, "");
+    v = v.split(/[\/\?\#]/)[0]; // drop path/query/hash
+    return v.toLowerCase();
+  };
+  domainInput.addEventListener("input", () => {
+    const cleaned = cleanDomain(domainInput.value);
+    if (cleaned !== domainInput.value) domainInput.value = cleaned;
+    formData.domain = cleaned;
+    updateProgress();
+  });
+  domainInput.addEventListener("paste", () => {
+    setTimeout(() => domainInput.dispatchEvent(new Event("input")), 0);
+  });
+
+  // Voice/Knowledge live progress
+  ["tone", "readingLevel", "styleNotes", "avoidList", "knowledge"].forEach(name => {
+    document.body.addEventListener("input", (e) => {
+      if (e.target && e.target.name === name) {
+        formData[name] = (e.target.value || "").trim();
+        updateProgress();
+      }
+    }, true);
+  });
+
+  // ----- Empty-section detection -----
+  const stepIsEmpty = (n) => {
+    if (n === 1) return !cleanDomain(domainInput.value);
+    if (n === 2) return !(formData.tone || formData.styleNotes || formData.avoidList || formData.readingLevel);
+    if (n === 3) return !formData.knowledge && droppedFiles.length === 0;
+    if (n === 4) {
+      const any = ["svcSeo","svcGbp","svcPpc","svcPr","svcLlm"].some(k => formData[k]);
+      return !any;
+    }
+    return false;
+  };
+
+  const tryAdvance = () => {
+    captureCurrentStep();
+    // Step 1 hard-block: empty domain stays — but we still warn first
+    if (stepIsEmpty(currentStep) && !warnedSteps.has(currentStep)) {
+      warnedSteps.add(currentStep);
+      const banner = $(`#warn-${currentStep}`);
+      if (banner) banner.classList.add("is-visible");
+      // Step 1: don't proceed without a domain at all
+      if (currentStep === 1) return;
+      // Other steps: nudge once, but allow proceeding next click
+      return;
+    }
+    // hard requirement: domain must exist before continuing
+    if (currentStep === 1 && !cleanDomain(domainInput.value)) {
+      toast("Domain is required", "error");
+      return;
+    }
+    goToStep(currentStep + 1);
+  };
+
+  // ----- Nav -----
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    if (action === "next") tryAdvance();
+    if (action === "back") goToStep(currentStep - 1);
+    if (action === "run") runOnboarding();
+  });
+
+  // ----- Drop zone -----
+  const dropZone = $("#dropZone");
+  const fileInput = $("#fileInput");
+  dropZone.addEventListener("click", () => fileInput.click());
+  ["dragenter", "dragover"].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add("is-dragging"); })
+  );
+  ["dragleave", "drop"].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove("is-dragging"); })
+  );
+  dropZone.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+  fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+  const fmtSize = (n) => {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  };
+
+  const handleFiles = async (files) => {
+    for (const f of files) {
+      const isImage = f.type.startsWith("image/");
+      const isText = !isImage && f.size < 1024 * 200;
+      let content = "", kind = "binary";
+      try {
+        if (isImage) { content = await readAsDataURL(f); kind = "image"; }
+        else if (isText) { content = await readAsText(f); kind = "text"; }
+      } catch {}
+      droppedFiles.push({ name: f.name, size: f.size, content, kind, type: f.type });
+    }
+    renderFileList();
+    updateProgress();
+  };
+
+  const readAsText = (f) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsText(f);
+  });
+  const readAsDataURL = (f) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(f);
+  });
+
+  const renderFileList = () => {
+    const wrap = $("#fileList");
+    wrap.innerHTML = droppedFiles.map((f, i) => {
+      const ext = (f.name.split(".").pop() || "?").slice(0, 4).toUpperCase();
+      return `<div class="file-row">
+        <div class="file-icon">${ext}</div>
+        <div class="file-name">${f.name}</div>
+        <div class="file-size">${fmtSize(f.size)} · ${f.kind}</div>
+        <button class="file-remove" data-i="${i}" title="Remove">✕</button>
+      </div>`;
+    }).join("");
+    wrap.querySelectorAll(".file-remove").forEach(btn => {
+      btn.addEventListener("click", () => {
+        droppedFiles.splice(parseInt(btn.dataset.i, 10), 1);
+        renderFileList();
+        updateProgress();
+      });
+    });
+  };
+
+  // ----- Progress -----
+  const updateProgress = () => {
+    let total = 0, achieved = 0;
+    for (const k of Object.keys(COMPLETION_FIELDS)) {
+      const f = COMPLETION_FIELDS[k];
+      total += f.weight;
+      if (f.key === "_filesCount") {
+        if (droppedFiles.length > 0) achieved += f.weight;
+      } else if (f.key === "_servicesCount") {
+        const any = ["svcSeo","svcGbp","svcPpc","svcPr","svcLlm"].some(k2 => formData[k2]);
+        if (any) achieved += f.weight;
+      } else if (formData[f.key]) {
+        achieved += f.weight;
+      }
+    }
+    const pct = Math.min(100, Math.round((achieved / total) * 100));
+    $("#progressFill").style.width = pct + "%";
+    $("#progressNum").textContent = pct + "%";
+  };
+
+  // ----- Connection check -----
+  const checkConn = async () => {
+    try {
+      const res = await fetch("/api/health");
+      const data = await res.json();
+      const ok = data.claude_available && data.searchatlas_mcp_configured;
+      $("#connDot").classList.toggle("bad", !ok);
+      $("#connText").textContent = ok ? "Claude + SA MCP ready"
+        : (data.claude_available ? "SA MCP not configured" : "Claude CLI not found");
+    } catch {
+      $("#connDot").classList.add("bad");
+      $("#connText").textContent = "Server offline";
+    }
+  };
+
+  // ----- Toast -----
+  const toast = (msg, type = "") => {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.className = `toast ${type}`;
+    requestAnimationFrame(() => el.classList.add("is-visible"));
+    setTimeout(() => el.classList.remove("is-visible"), 4000);
+  };
+
+  // ----- Run -----
+  let runStartTime = 0, runTimer = null, stepCount = 0, activeStream = null;
+  let businessName = "";
+
+  const runOnboarding = async () => {
+    captureCurrentStep();
+    goToStep(5);
+
+    $("#runFeed").innerHTML = "";
+    $("#runDot").className = "status-dot";
+    $("#runStatusText").textContent = "Starting…";
+    $("#runPhase").textContent = "starting";
+    stepCount = 0;
+    $("#runTools").textContent = "0";
+    businessName = "";
+
+    runStartTime = performance.now();
+    runTimer = setInterval(() => {
+      const t = (performance.now() - runStartTime) / 1000;
+      $("#runElapsed").textContent = `${t.toFixed(1)}s`;
+    }, 100);
+
+    const payload = {
+      ...formData,
+      domain: cleanDomain(formData.domain || ""),
+      files: droppedFiles.map(f => ({
+        name: f.name, size: f.size, kind: f.kind,
+        content: f.kind === "binary" ? null : f.content,
+      })),
+    };
+
+    try {
+      const res = await fetch("/api/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok || !res.body) {
+        addFeed("error", `Server error: ${await res.text()}`);
+        finishRun(false); return;
+      }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buffer = "";
+      activeStream = reader;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += dec.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const p = line.slice(5).trim();
+          if (!p) continue;
+          handleStreamEvent(p);
+        }
+      }
+      finishRun(true);
+    } catch (e) {
+      addFeed("error", `Connection error: ${e.message}`);
+      finishRun(false);
+    }
+  };
+
+  const handleStreamEvent = (raw) => {
+    let evt;
+    try { evt = JSON.parse(raw); } catch { return; }
+
+    if (evt.type === "phase") {
+      addFeed("phase", evt.label);
+      $("#runPhase").textContent = (evt.label || "").toLowerCase();
+      $("#runStatusText").textContent = evt.label;
+    }
+    else if (evt.type === "work") {
+      addFeed("work", evt.label);
+      $("#runStatusText").textContent = evt.label;
+    }
+    else if (evt.type === "done") {
+      addFeed("done", evt.label);
+      stepCount += 1;
+      $("#runTools").textContent = stepCount;
+    }
+    else if (evt.type === "note") {
+      addFeed("note", evt.label);
+    }
+    else if (evt.type === "biz") {
+      businessName = evt.name || businessName;
+    }
+    else if (evt.type === "error") {
+      addFeed("error", evt.message);
+    }
+    else if (evt.type === "complete") {
+      // server signaled successful end
+    }
+  };
+
+  const addFeed = (cls, text) => {
+    if (!text) return;
+    const empty = $("#runFeed .feed-empty");
+    if (empty) empty.remove();
+    const div = document.createElement("div");
+    div.className = `feed-item ${cls}`;
+    div.innerHTML = `<span class="feed-icon"></span><span class="feed-text"></span>`;
+    div.querySelector(".feed-text").textContent = text;
+    $("#runFeed").appendChild(div);
+    $("#runFeed").scrollTop = $("#runFeed").scrollHeight;
+  };
+
+  const finishRun = (success) => {
+    if (runTimer) { clearInterval(runTimer); runTimer = null; }
+    activeStream = null;
+    const elapsed = (performance.now() - runStartTime) / 1000;
+    if (success) {
+      $("#runDot").className = "status-dot done";
+      $("#runStatusText").textContent = "Onboarding complete · synced with SearchAtlas";
+      $("#runTitle").textContent = `${businessName || "Client"} is onboarded.`;
+      celebrate(elapsed);
+    } else {
+      $("#runDot").className = "status-dot error";
+      $("#runStatusText").textContent = "Stopped — see log";
+    }
+    $("#runCancel").style.display = "none";
+  };
+
+  $("#runCancel").addEventListener("click", () => {
+    if (activeStream) { try { activeStream.cancel(); } catch {} }
+    finishRun(false);
+    $("#runStatusText").textContent = "Cancelled";
+  });
+
+  // ----- Celebrate -----
+  const fmtTime = (s) => {
+    if (s < 60) return `${s.toFixed(0)}s`;
+    return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+  };
+  const celebrate = (elapsed) => {
+    // industry rule of thumb: manual onboarding ≈ 4 hours
+    const savedMinutes = Math.max(60, Math.round((4 * 3600 - elapsed) / 60));
+    const savedDisplay = savedMinutes >= 60
+      ? `${(savedMinutes / 60).toFixed(1)}h`
+      : `${savedMinutes}m`;
+    $("#celebrateBiz").textContent = businessName || formData.domain || "your client";
+    $("#celebrateTime").textContent = fmtTime(elapsed);
+    $("#celebrateSaved").textContent = savedDisplay;
+    $("#celebrateSteps").textContent = stepCount;
+    $("#celebrateSub").textContent = `${businessName || "They"} are ready to run in SearchAtlas — voice profile, knowledge graph, OTTO project, GBP. Run any workflow on them right now.`;
+    $("#celebrate").classList.add("is-visible");
+  };
+  $("#celebrateNext").addEventListener("click", () => location.reload());
+  $("#celebrateClose").addEventListener("click", () => $("#celebrate").classList.remove("is-visible"));
+
+  // ----- Init -----
+  renderStepper();
+  $(`.form-card[data-step="1"]`).classList.add("is-active");
+  updateProgress();
+  checkConn();
+  setInterval(checkConn, 30000);
+})();
+</script>
+</body>
+</html>

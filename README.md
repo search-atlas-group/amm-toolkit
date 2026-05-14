@@ -35,7 +35,8 @@ Your workspace will look like this:
 │   ├── integrations/              ← Slack, Discord, email, Circle scripts
 │   ├── tools/
 │   │   ├── security/              ← repo security scanner (UI + server)
-│   │   └── guardian/              ← AMM guardian dashboard
+│   │   ├── guardian/              ← AMM guardian dashboard
+│   │   └── command-center/        ← web UI for /onboard-client (4-step wizard)
 │   ├── guides/                    ← how-to guides (security, Windows setup, etc.)
 │   ├── docs/                      ← MCP setup, tool reference, golden rules
 │   ├── Scripts/                   ← quickstart + setup scripts (mac/windows)
@@ -55,9 +56,13 @@ Your workspace will look like this:
 ```
 /my-account          # All businesses, projects, campaigns, GBP locations
 /business-report     # Deep dive on a single business
+/scout               # Read-only diagnostic across all pillars + prioritized action plan
+/summit-shot         # Atomic single-play executor (19 plays from the May Summit)
 /onboard-client      # Guided new client setup (brand vault pull or manual)
 /sync-client         # Two-way sync: local brand-profile.md ↔ SA brand vault
 ```
+
+Prefer a web UI for `/onboard-client`? `cd tools/command-center && bash run.sh` opens a four-step wizard at `http://localhost:8765`.
 
 ### Execute Workflows
 ```
@@ -87,6 +92,8 @@ Your workspace will look like this:
 | Command | Description |
 |---------|-------------|
 | `/my-account` | Show all businesses, projects, campaigns, and GBP locations |
+| `/scout` | Read-only diagnostic across all pillars; returns a prioritized action plan |
+| `/summit-shot` | Atomic single-play executor — 19 plays from the May Summit |
 | `/onboard-client` | Guided client onboarding — pull from brand vault or enter manually |
 | `/sync-client` | Two-way sync between local brand-profile.md and SearchAtlas brand vault |
 | `/business-report` | Deep dive report on a single business |

@@ -6,6 +6,33 @@ Latest additions and updates to the Agentic Marketing Mastermind toolkit.
 
 <!-- AMM Guardian adds entries here automatically. Newest at top. -->
 
+## 2026-05-14 — Command Center: web UI for `/onboard-client`
+
+A local web UI now ships with the toolkit so members can onboard clients without typing the slash command. Same playbooks, same SearchAtlas sync underneath.
+
+### What it is
+
+A four-step wizard. No commands typed.
+
+1. **Domain** — paste the client's website. Claude crawls for business basics.
+2. **Brand voice** — tone, style notes, avoid list.
+3. **Knowledge drop** — drag in transcripts, brand decks, photos, sales notes, or paste text. This is the layer that beats a plain website scrape.
+4. **Services** — pick which onboarding playbooks to run, hit fire.
+
+Then watch the activity feed stream every step live as Claude crawls, builds the brand vault, discovers the GBP, and kicks off each selected workflow.
+
+### Launch it
+
+```bash
+cd tools/command-center && bash run.sh
+```
+
+Opens at `http://localhost:8765`. First run sets up a `.venv` and installs FastAPI + Uvicorn (only deps). Requires `claude` CLI on PATH and the SearchAtlas MCP configured — same prereqs as the slash command itself.
+
+Both routes are now first-class: web UI for non-technical members, `/onboard-client` slash command for CLI-native ones. Pick what fits.
+
+---
+
 ## 2026-05-08 — Summit Toolkit: `/scout` + `/summit-shot`
 
 The May Summit takeaway is live. Two new commands turn the curriculum into a working agency runbook.
