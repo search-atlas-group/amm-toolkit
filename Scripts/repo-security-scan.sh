@@ -32,8 +32,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$OUTPUT_DIR"
-REPORT_JSON="$OUTPUT_DIR/report.json"
+REPORT_JSON="$OUTPUT_DIR/security-report.json"
 SCAN_LOG="$OUTPUT_DIR/scan.log"
+# Clear stale outputs from previous runs so a failure can't surface old data
+rm -f "$REPORT_JSON" "$OUTPUT_DIR/report.json" "$SCAN_LOG" \
+      "$OUTPUT_DIR/suspicious-patterns.txt" \
+      "$OUTPUT_DIR/gitleaks.json" "$OUTPUT_DIR/trufflehog.json" \
+      "$OUTPUT_DIR/semgrep.json" "$OUTPUT_DIR/trivy.json" \
+      "$OUTPUT_DIR/npm-audit.json" "$OUTPUT_DIR/pip-audit.json" 2>/dev/null || true
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 log()  { echo -e "${CYAN}[scan]${RESET} $*" | tee -a "$SCAN_LOG"; }
@@ -260,38 +266,58 @@ if $HAS_PYTHON && tool_available pip-audit; then
 fi
 
 # ── Step 9: Custom Malware Pattern Scan ──────────────────────────────────────
+# Patterns are tight to avoid false positives. The strong signal is the COMBO,
+# not the lone keyword — we require malware shape, not just suspicious words.
 log "Scanning for suspicious code patterns..."
 
+# Single quotes so `\` stays literal — bash doesn't pre-process the regex.
+# `|` is grep -E alternation. `\|` would be a LITERAL pipe (NOT what we want).
+PATTERNS_LABELS=(
+  "Reverse shell / C2 callback"
+  "Obfuscated code (chained eval/atob)"
+  "Crypto miner signatures"
+  "Clipboard hijacker (wallet swap)"
+  "SSH key exfiltration"
+  "Hardcoded cloud credentials"
+  "DNS tunneling"
+)
 PATTERNS=(
-  # Reverse shells / command execution
-  "bash -i.*>&.*0>&1|nc -e|/dev/tcp/|mkfifo|python -c.*import socket"
-  # Obfuscation
-  "eval(base64_decode|eval(atob(|fromCharCode\(|\\\\x[0-9a-fA-F]\{2\}\{10,\}"
-  # Crypto miners
-  "stratum\+tcp://|pool\.minexmr|xmrig|cryptonight|monero.*wallet|coinhive"
-  # Clipboard hijacking
-  "pyperclip\|xclip\|pbcopy\|clipboard\.set\|writeText.*wallet"
-  # SSH harvesting
-  "\.ssh/id_rsa\|authorized_keys\|StrictHostKeyChecking.*no.*os\.system"
-  # Env/credential exfil
-  "AWS_SECRET_ACCESS_KEY\|GITHUB_TOKEN\|\.env.*requests\.post\|os\.environ.*http"
-  # DNS tunneling
-  "socket\.gethostbyname.*encode\|nslookup.*\$\|dig.*\+"
+  'bash -i[[:space:]]+[^"]*>&[^"]*[[:space:]]0>&1|nc -e[[:space:]]+/bin/(ba)?sh|/dev/tcp/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+|python[[:space:]]+-c[[:space:]]+["'\''][^"'\'']*socket\.socket[^"'\'']*connect|perl[[:space:]]+-e[[:space:]]+["'\''][^"'\'']*Socket[^"'\'']*connect'
+  'eval[[:space:]]*\([[:space:]]*base64_decode[[:space:]]*\(|eval[[:space:]]*\([[:space:]]*atob[[:space:]]*\(|String\.fromCharCode\([[:space:]]*[0-9]+([[:space:]]*,[[:space:]]*[0-9]+){9,}'
+  'stratum\+(tcp|ssl)://|pool\.minexmr|pool\.supportxmr|xmrig[[:space:]]+--|cryptonight[_-]|coinhive\.com'
+  '(pyperclip\.(copy|paste)|navigator\.clipboard|pbcopy|xclip)[^\n]*(0x[a-fA-F0-9]{40}|walletAddress|btcAddress|ethAddress|bitcoin_address)'
+  '(cat|tar|cp|scp|base64)[[:space:]]+[^|]*\.ssh/(id_(rsa|dsa|ecdsa|ed25519)|authorized_keys)|StrictHostKeyChecking=no[[:space:]]+[^|]*[A-Za-z0-9.-]+@[A-Za-z0-9.-]+'
+  'AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|ghs_[A-Za-z0-9]{36}|sk_live_[0-9a-zA-Z]{24,}|xox[bp]-[0-9]{10,}-[0-9]{10,}-[A-Za-z0-9]{24}'
+  'socket\.gethostbyname\([^)]*\.(encode|decode)\(|dnspython[^\n]*resolve[^\n]*\.encode\(|nslookup[[:space:]]+\$\([^)]*encode'
 )
 
 PATTERN_FINDINGS=""
-for PATTERN in "${PATTERNS[@]}"; do
+SELF_BASENAME=$(basename "${BASH_SOURCE[0]}")
+
+for i in "${!PATTERNS[@]}"; do
+  PATTERN="${PATTERNS[$i]}"
+  LABEL="${PATTERNS_LABELS[$i]}"
   MATCHES=$(grep -rEn "$PATTERN" "$SCAN_TARGET" \
-    --include="*.py" --include="*.js" --include="*.ts" \
-    --include="*.sh" --include="*.rb" --include="*.php" \
-    --exclude-dir=".git" --exclude-dir="node_modules" \
+    --include="*.py" --include="*.js" --include="*.ts" --include="*.mjs" --include="*.cjs" \
+    --include="*.sh" --include="*.bash" --include="*.zsh" \
+    --include="*.rb" --include="*.php" --include="*.pl" \
+    --exclude-dir=".git" \
+    --exclude-dir="node_modules" \
+    --exclude-dir=".venv" --exclude-dir="venv" --exclude-dir="env" \
+    --exclude-dir="__pycache__" --exclude-dir=".pytest_cache" \
+    --exclude-dir=".next" --exclude-dir="dist" --exclude-dir="build" --exclude-dir=".cache" \
+    --exclude-dir="vendor" --exclude-dir="target" \
+    --exclude="$SELF_BASENAME" \
+    --exclude="repo-security-scan.sh" --exclude="install-security-tools.sh" \
     2>/dev/null | head -5 || true)
   if [[ -n "$MATCHES" ]]; then
-    PATTERN_FINDINGS+="$MATCHES"$'\n'
+    PATTERN_FINDINGS+="[$LABEL]"$'\n'"$MATCHES"$'\n\n'
     PATTERNS_FOUND=$((PATTERNS_FOUND + 1))
     RISK_SCORE=$((RISK_SCORE + 30))
-    fail "Suspicious pattern found: $PATTERN"
+    fail "Suspicious pattern: $LABEL"
     echo "$MATCHES" | head -3 | tee -a "$SCAN_LOG"
+    add_finding "HIGH" "$LABEL" "see suspicious-patterns.txt" \
+      "$(echo "$MATCHES" | head -1)" 0
   fi
 done
 
@@ -300,48 +326,81 @@ if [[ -n "$PATTERN_FINDINGS" ]]; then
 fi
 
 # ── Step 10: Binary / Unusual File Detection ─────────────────────────────────
+# Only match actual compiled binaries — ELF / Mach-O / PE32 / DOS executables.
+# Do NOT match text scripts that `file` describes as "executable" (Python, Ruby,
+# Perl shebang scripts), or static assets like images and fonts.
 log "Checking for embedded binaries and unusual files..."
 
 BINARIES=$(find "$SCAN_TARGET" \
   -not -path "*/.git/*" \
   -not -path "*/node_modules/*" \
-  -not -name "*.png" -not -name "*.jpg" -not -name "*.gif" -not -name "*.ico" \
-  -not -name "*.woff" -not -name "*.woff2" -not -name "*.ttf" -not -name "*.eot" \
+  -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/env/*" \
+  -not -path "*/__pycache__/*" -not -path "*/.pytest_cache/*" \
+  -not -path "*/.next/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.cache/*" \
+  -not -path "*/vendor/*" -not -path "*/target/*" \
+  -not -name "*.png" -not -name "*.jpg" -not -name "*.jpeg" -not -name "*.gif" \
+  -not -name "*.ico" -not -name "*.svg" -not -name "*.webp" -not -name "*.avif" \
+  -not -name "*.woff" -not -name "*.woff2" -not -name "*.ttf" -not -name "*.eot" -not -name "*.otf" \
+  -not -name "*.pdf" -not -name "*.mp4" -not -name "*.mp3" -not -name "*.zip" -not -name "*.gz" \
+  -not -name "*.pyc" -not -name "*.pyo" \
   -type f -exec file {} \; 2>/dev/null \
-  | grep -iE "ELF|Mach-O|PE32|executable" \
-  | grep -v "shell script" | head -10 || true)
+  | grep -E ": (ELF |Mach-O |PE32|MS Windows executable|DOS executable|MS-DOS executable)" \
+  | head -10 || true)
 
 if [[ -n "$BINARIES" ]]; then
-  fail "Embedded executables found:"
+  fail "Embedded compiled binaries found:"
   echo "$BINARIES" | tee -a "$SCAN_LOG"
   BINARY_COUNT=$(echo "$BINARIES" | wc -l | tr -d ' ')
-  add_finding "HIGH" "Embedded executables detected" "repository" \
-    "$BINARY_COUNT binary/executable files found outside expected asset locations" 20
+  add_finding "HIGH" "Embedded compiled binaries" "repository" \
+    "$BINARY_COUNT compiled binary files found outside expected asset locations" 20
   RISK_SCORE=$((RISK_SCORE + BINARY_COUNT * 20))
 fi
 
 # ── Step 11: .env / Secret File Check ────────────────────────────────────────
+# Skip example/sample/template files — those are documentation, not secrets.
+# Skip public keys (*.pub). For .env, only flag forms that are not clearly example files.
 log "Checking for committed secret files..."
 
 SECRET_FILES=$(find "$SCAN_TARGET" \
   -not -path "*/.git/*" \
-  \( -name ".env" -o -name ".env.*" -o -name "*.pem" -o -name "*.key" \
-     -o -name "credentials.json" -o -name "secrets.yaml" -o -name "secrets.yml" \
-     -o -name "*.pfx" -o -name "*.p12" \) \
+  -not -path "*/node_modules/*" \
+  -not -path "*/.venv/*" -not -path "*/venv/*" \
+  -not -path "*/__pycache__/*" \
+  \( \
+    -name ".env" -o -name ".env.local" -o -name ".env.production" \
+    -o -name ".env.staging" -o -name ".env.development" -o -name ".env.prod" \
+    -o -name "id_rsa" -o -name "id_dsa" -o -name "id_ecdsa" -o -name "id_ed25519" \
+    -o -name "*.pem" -o -name "*.pfx" -o -name "*.p12" -o -name "*.jks" \
+    -o -name "credentials.json" -o -name "service-account*.json" \
+    -o -name "secrets.yaml" -o -name "secrets.yml" \
+  \) \
+  ! -name "*.example" ! -name "*.sample" ! -name "*.template" ! -name "*.tmpl" \
+  ! -name "*.pub" \
   2>/dev/null | head -10 || true)
 
 if [[ -n "$SECRET_FILES" ]]; then
   while IFS= read -r f; do
-    fail "Secret file committed: $f"
-    add_finding "CRITICAL" "Secret file in repository" "$f" \
-      "File contains or may contain credentials" 40
+    # Only flag a .pem/.key file as CRITICAL if it actually looks like a private key.
+    if [[ "$f" == *.pem || "$f" == *.key ]]; then
+      if head -3 "$f" 2>/dev/null | grep -qE "BEGIN (RSA |EC |DSA |OPENSSH |ENCRYPTED |)PRIVATE KEY"; then
+        fail "Secret file committed: $f"
+        add_finding "CRITICAL" "Private key in repository" "$f" \
+          "File starts with PRIVATE KEY header" 40
+      fi
+    else
+      fail "Secret file committed: $f"
+      add_finding "CRITICAL" "Secret file in repository" "$f" \
+        "Likely contains credentials" 40
+    fi
   done <<< "$SECRET_FILES"
 fi
 
 # ── Step 12: Compute Verdict ──────────────────────────────────────────────────
+# Thresholds match the frontend's scoreToVerdict() so a score from either side
+# maps to the same label. Labels: CLEAN / CARE / QUARANTINE / REJECT.
 if   [[ "$RISK_SCORE" -ge 61 ]]; then VERDICT="REJECT"
 elif [[ "$RISK_SCORE" -ge 31 ]]; then VERDICT="QUARANTINE"
-elif [[ "$RISK_SCORE" -ge 16 ]]; then VERDICT="REVIEW"
+elif [[ "$RISK_SCORE" -ge 16 ]]; then VERDICT="CARE"
 else                                   VERDICT="CLEAN"
 fi
 
@@ -389,10 +448,10 @@ echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 case "$VERDICT" in
-  "CLEAN")     echo -e "  Verdict:     ${GREEN}✅ CLEAN${RESET}" ;;
-  "REVIEW")    echo -e "  Verdict:     ${YELLOW}⚠️  REVIEW${RESET}" ;;
-  "QUARANTINE") echo -e "  Verdict:    ${YELLOW}🔶 QUARANTINE${RESET}" ;;
-  "REJECT")    echo -e "  Verdict:     ${RED}❌ REJECT${RESET}" ;;
+  "CLEAN")      echo -e "  Verdict:     ${GREEN}✅ CLEAN — Safe to Use${RESET}" ;;
+  "CARE")       echo -e "  Verdict:     ${YELLOW}⚠️  USE WITH CARE${RESET}" ;;
+  "QUARANTINE") echo -e "  Verdict:     ${YELLOW}🔶 DO NOT RUN YET${RESET}" ;;
+  "REJECT")     echo -e "  Verdict:     ${RED}❌ DO NOT INSTALL${RESET}" ;;
 esac
 
 echo -e "  Risk Score:  ${BOLD}$RISK_SCORE / 100${RESET}"

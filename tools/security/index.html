@@ -96,6 +96,16 @@ section{margin-bottom:80px}
 .scanner-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-lt)}
 .scanner-input::placeholder{color:var(--text3);font-size:.82rem}
 
+.scanner-hint{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;margin-bottom:16px;background:var(--purple-lt);border:1px solid rgba(147,107,218,.18);border-radius:var(--r-sm);font-size:.76rem;color:var(--text2);line-height:1.55;transition:opacity .3s,max-height .3s,padding .3s,margin .3s,border-color .3s}
+.scanner-hint.hidden{opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;border-color:transparent;overflow:hidden;pointer-events:none}
+.sh-icon{font-size:.95rem;flex-shrink:0;line-height:1.4}
+.sh-text{flex:1;min-width:0}
+.sh-cmd{font-family:var(--mono);font-size:.78em;background:rgba(0,0,0,.18);color:var(--mono-clr);padding:1px 7px;border-radius:5px;cursor:pointer;transition:background .2s;border:1px solid transparent}
+[data-theme="light"] .sh-cmd{background:rgba(255,255,255,.6);border-color:var(--bdr)}
+.sh-cmd:hover{background:rgba(0,0,0,.28)}
+[data-theme="light"] .sh-cmd:hover{background:#fff;border-color:var(--purple)}
+.sh-cmd.copied{background:var(--green-lt);color:var(--green)}
+
 .scan-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
 .sbtn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:100px;font-size:.82rem;font-weight:700;transition:all .2s;letter-spacing:.01em}
 .sbtn-primary{background:var(--purple);color:#fff;box-shadow:0 4px 16px var(--purple-glow)}
@@ -169,10 +179,35 @@ section{margin-bottom:80px}
 .check-note{padding:12px 18px;border-top:1px solid var(--bdr);font-size:.75rem;color:var(--text3);line-height:1.55;background:var(--bg2)}
 .check-note strong{color:var(--text2)}
 
-/* local terminal */
-.local-terminal{padding:16px 18px;font-family:var(--mono);font-size:.73rem;line-height:1.85;color:var(--text2);max-height:380px;overflow-y:auto;background:var(--bg)}
-.lt-line{display:block}
-.lt-ok{color:var(--green)}.lt-warn{color:var(--yellow)}.lt-err{color:var(--red)}.lt-dim{color:var(--text3)}.lt-purple{color:var(--purple)}.lt-blue{color:var(--blue)}
+/* in-progress + summary panel */
+.scan-progress{padding:24px 22px;display:flex;align-items:center;gap:14px;background:var(--bg)}
+.scan-spinner{width:18px;height:18px;border:2px solid var(--bdr2);border-top-color:var(--purple);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-progress-text{font-size:.8rem;color:var(--text2);line-height:1.6}
+.scan-progress-text strong{color:var(--text);font-weight:600}
+.scan-progress-hint{font-size:.7rem;color:var(--text3);margin-top:3px}
+
+.local-summary{padding:18px 22px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.ls-row{display:flex;flex-wrap:wrap;gap:8px}
+.ls-stat{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:8px 12px;font-size:.72rem;display:flex;flex-direction:column;gap:2px;min-width:104px;flex:1}
+.ls-stat-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.ls-stat-val{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text)}
+.ls-stat.danger .ls-stat-val{color:var(--red)}
+.ls-stat.warn .ls-stat-val{color:var(--yellow)}
+.ls-stat.ok .ls-stat-val{color:var(--green)}
+.ls-findings{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.ls-finding{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);font-size:.78rem;line-height:1.5}
+.ls-finding-sev{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:1px}
+.ls-finding-sev.CRITICAL{background:var(--red-lt);color:var(--red)}
+.ls-finding-sev.HIGH{background:var(--orange-lt);color:var(--orange)}
+.ls-finding-sev.MEDIUM{background:var(--yellow-lt);color:var(--yellow)}
+.ls-finding-sev.LOW{background:var(--blue-lt);color:var(--blue)}
+.ls-finding-body{flex:1;min-width:0}
+.ls-finding-title{font-weight:600;color:var(--text)}
+.ls-finding-file{font-family:var(--mono);font-size:.7rem;color:var(--text3);margin-top:2px;word-break:break-all}
+.ls-empty{padding:14px;text-align:center;font-size:.78rem;color:var(--text3);background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm)}
+.ls-note{font-size:.7rem;color:var(--text3);line-height:1.55;padding-top:4px}
+.ls-note code{font-size:.85em}
 
 /* setup instructions */
 .setup-panel{padding:22px 24px}
@@ -224,8 +259,7 @@ section{margin-bottom:80px}
 .pd-checks{list-style:none;display:flex;flex-direction:column;gap:7px}
 .pd-checks li{font-size:.8rem;color:var(--text2);display:flex;align-items:baseline;gap:8px;line-height:1.5}
 .pd-checks li::before{content:'›';color:var(--purple);font-size:.9rem;flex-shrink:0}
-.pd-terminal{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:14px 16px;font-family:var(--mono);font-size:.72rem;line-height:1.8;color:var(--text2);overflow:hidden}
-.pd-terminal .t-green{color:var(--green)}.pd-terminal .t-red{color:var(--red)}.pd-terminal .t-yellow{color:var(--yellow)}.pd-terminal .t-purple{color:var(--purple)}.pd-terminal .t-dim{color:var(--text3)}
+.pd-detail-text{font-size:.84rem;color:var(--text2);line-height:1.7;margin:0}
 
 /* TIER EXPLORER */
 .tier-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
@@ -259,15 +293,12 @@ section{margin-bottom:80px}
 .tier-caps li{font-size:.8rem;color:var(--text2);display:flex;align-items:baseline;gap:8px;line-height:1.5}
 .tier-caps li span.cap-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
 .t0 .cap-dot{background:#4b5563}.t1 .cap-dot{background:var(--blue)}.t2 .cap-dot{background:var(--green)}.t3 .cap-dot{background:var(--purple)}
-.tier-terminal{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
-.terminal-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:6px}
-.terminal-dot{width:10px;height:10px;border-radius:50%}
-.td-red{background:#f87171}.td-yellow{background:#fbbf24}.td-green{background:#34d399}
-.terminal-title{font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-left:8px}
-.terminal-body{padding:16px;font-family:var(--mono);font-size:.74rem;line-height:1.85;color:var(--text2);min-height:220px;position:relative}
-.t-line{display:block;opacity:0;transform:translateX(-4px);transition:opacity .25s,transform .25s}
-.t-line.show{opacity:1;transform:none}
-.t-prompt{color:var(--purple)}.t-ok{color:var(--green)}.t-warn{color:var(--yellow)}.t-err{color:var(--red)}.t-dim{color:var(--text3)}.t-white{color:var(--text)}.t-blue{color:var(--blue)}
+.tier-output{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:22px 24px;display:flex;flex-direction:column;gap:12px;min-height:220px}
+.to-title{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+.to-desc{font-size:.86rem;color:var(--text2);line-height:1.7;margin:0}
+.to-desc code{font-size:.85em}
+.to-best{margin-top:auto;font-size:.74rem;color:var(--text3);padding-top:12px;border-top:1px solid var(--bdr);line-height:1.55}
+.t0 .to-best{color:#9ca3af}.t1 .to-best{color:var(--blue)}.t2 .to-best{color:var(--green)}.t3 .to-best{color:var(--purple)}
 
 /* RISK CALCULATOR */
 .calc-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
@@ -338,28 +369,6 @@ section{margin-bottom:80px}
 .btn-secondary{padding:9px 16px;border:1px solid var(--bdr);border-radius:100px;font-size:.78rem;color:var(--text2);transition:all .2s}
 .btn-secondary:hover{border-color:var(--bdr2);color:var(--text)}
 
-/* QUICK START */
-.qs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:720px){.qs-grid{grid-template-columns:1fr}}
-.qs-card{background:linear-gradient(160deg,var(--bg2),var(--bg3));border:1px solid var(--bdr);border-radius:var(--r);padding:20px;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
-.qs-card:hover{border-color:var(--bdr2);box-shadow:0 4px 24px rgba(0,0,0,.3)}
-.qs-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.qs-card:nth-child(1)::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
-.qs-card:nth-child(2)::before{background:linear-gradient(90deg,var(--green),var(--blue))}
-.qs-card:nth-child(3)::before{background:linear-gradient(90deg,var(--purple),var(--green))}
-.qs-step{font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.qs-title{font-family:var(--tight);font-size:.95rem;font-weight:700;margin-bottom:10px}
-.qs-cmd{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:10px 12px;font-family:var(--mono);font-size:.72rem;color:var(--mono-clr);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;transition:border-color .2s}
-.qs-cmd:hover{border-color:var(--purple)}
-.qs-copy-btn{font-size:.6rem;font-weight:700;background:var(--purple-lt);color:var(--purple);border:1px solid rgba(147,107,218,.2);padding:2px 7px;border-radius:4px;transition:all .2s;flex-shrink:0;white-space:nowrap}
-.qs-cmd:hover .qs-copy-btn{background:var(--purple);color:#fff}
-.qs-desc{font-size:.75rem;color:var(--text3);margin-top:8px;line-height:1.5}
-
-.sb-setup-link{font-size:.67rem;font-weight:600;color:var(--text3);letter-spacing:.02em;transition:color .2s;text-decoration:none;padding:2px 0}
-.sb-setup-link:hover{color:var(--purple)}
-.qs-back-ref{display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;text-decoration:none;transition:color .2s}
-.qs-back-ref:hover{color:var(--purple)}
-.qs-back-ref svg{width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .calc-sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:.67rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:100px;background:var(--purple-lt);color:var(--purple);border:1px solid rgba(147,107,218,.25);animation:badge-in .35s cubic-bezier(.34,1.56,.64,1)}
 @keyframes badge-in{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
 .toggle-row.synced-on{outline:2px solid var(--purple);outline-offset:1px;transition:outline .2s}
@@ -379,12 +388,11 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
     <span class="nav-title">Security Scan</span>
   </a>
   <div class="nav-links">
-    <button class="nav-link active" onclick="navTo('quickstart')">Quick Start</button>
-    <button class="nav-link" onclick="navTo('scan')">Scan</button>
-    <button class="nav-link" onclick="navTo('pipeline')">How It Works</button>
-    <button class="nav-link" onclick="navTo('tiers')">Tiers</button>
+    <button class="nav-link active" onclick="navTo('scan')">Scan</button>
     <button class="nav-link" onclick="navTo('calculator')">Risk Score</button>
     <button class="nav-link" onclick="navTo('sandbox')">Sandbox</button>
+    <button class="nav-link" onclick="navTo('pipeline')">How It Works</button>
+    <button class="nav-link" onclick="navTo('tiers')">Tiers</button>
   </div>
   <div class="nav-right">
     <button class="theme-btn" onclick="toggleTheme()">
@@ -396,61 +404,6 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
 
 <div class="page">
 <div class="wrap">
-
-  <!-- ── QUICK START ────────────────────────────────────────────────────────── -->
-  <section id="quickstart" class="rv d1">
-    <div class="sec-tag"><span class="sec-tag-dot"></span>Get Started</div>
-    <h2 class="sec-h">Quick Start</h2>
-    <p class="sec-p">Pick your scan method below, then use the scanner to run it.</p>
-
-    <div class="qs-grid">
-      <div class="qs-card" id="qs-option1">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 1 · Browser</div>
-          <a class="qs-back-ref" href="#scan" title="Go to scanner">
-            <svg viewBox="0 0 16 16"><polyline points="8 4 12 8 8 12"/><line x1="4" y1="8" x2="12" y2="8"/></svg> scan ↓
-          </a>
-        </div>
-        <div class="qs-title">Instant check, no setup</div>
-        <div class="qs-cmd" onclick="document.getElementById('scanInput').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('scanInput').focus(),400)">
-          <span>Paste any GitHub URL in the scanner ↓</span>
-          <span class="qs-copy-btn">Go ↓</span>
-        </div>
-        <div class="qs-desc">Works right now. Uses GitHub API. No code is downloaded. Good for a first look at any repo.</div>
-      </div>
-      <div class="qs-card" id="qs-option2">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 2 · Local Server</div>
-          <a class="qs-back-ref" href="#scan" title="Go to scanner">
-            <svg viewBox="0 0 16 16"><polyline points="8 4 12 8 8 12"/><line x1="4" y1="8" x2="12" y2="8"/></svg> scan ↓
-          </a>
-        </div>
-        <div class="qs-title">Full scan in this browser</div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">Requires the Agentic toolkit repo — run these two commands in Terminal first:</div>
-        <div class="qs-cmd" onclick="copyToClipboard('cd __TOOLKIT_PATH__', this)" style="margin-bottom:6px">
-          <span>① cd __TOOLKIT_PATH__</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-cmd" onclick="copyToClipboard('python3 tools/security/server.py', this)" style="margin-bottom:8px">
-          <span>② python3 tools/security/server.py</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-desc">Leave it running. Come back here — the server dot turns green and Full Local Scan unlocks. Don't have the repo yet? <a href="https://github.com/ruvnet/agentic-mastermind" target="_blank" style="color:var(--purple)">Clone it first →</a></div>
-      </div>
-      <div class="qs-card" id="qs-option3">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="qs-step" style="margin-bottom:0">Option 3 · Claude Code</div>
-        </div>
-        <div class="qs-title">Deep AI scan via slash command</div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:8px">A <strong style="color:var(--purple)">custom command from this toolkit</strong> — not built into Claude Code. Clone the repo and run <code>setup.sh</code> to install it, then type in Claude Code's chat:</div>
-        <div class="qs-cmd" id="qs3-cmd" onclick="copyToClipboard(document.getElementById('qs3-cmd-text').textContent, this)" style="margin-bottom:8px">
-          <span id="qs3-cmd-text" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">/security-scan https://github.com/owner/repo</span>
-          <span class="qs-copy-btn">Copy</span>
-        </div>
-        <div class="qs-desc">Claude runs a full 4-tier analysis and explains the results in plain English. Add <code>--sandbox</code> at the end to also run the behavioral test inside an isolated zone.</div>
-      </div>
-    </div>
-  </section>
 
   <!-- ── SCANNER ─────────────────────────────────────────────────────────────── -->
   <section id="scan" class="scanner-section rv">
@@ -466,6 +419,11 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
                placeholder="https://github.com/owner/repo"
                autocomplete="off" spellcheck="false"
                onkeydown="if(event.key==='Enter')runBrowserScan()">
+      </div>
+
+      <div class="scanner-hint" id="scannerHint">
+        <span class="sh-icon">⚡</span>
+        <span class="sh-text">Want the full local scan? Run <code class="sh-cmd" onclick="copyHint(this)">python3 tools/security/server.py</code> in Terminal — the dot below turns green when it's ready.</span>
       </div>
 
       <div class="sb-modes">
@@ -545,165 +503,6 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
       <div class="results-body" id="resultsBody"></div>
     </div>
 
-  </section>
-
-  <!-- ── PIPELINE ──────────────────────────────────────────────────────────── -->
-  <section id="pipeline" class="rv d1">
-    <div class="sec-tag"><span class="sec-tag-dot"></span>How It Works</div>
-    <h2 class="sec-h">The Scan Pipeline</h2>
-    <p class="sec-p">Each step cycles automatically. Click any card to pause and read the details.</p>
-
-    <div class="pipeline-wrap">
-
-      <div class="pipeline-grid" id="pipelineGrid">
-        <div class="pipe-node" data-step="0" onclick="openPipeDetail(0,true)">
-          <div class="pipe-num">01 <span>SURFACE</span></div>
-          <span class="pipe-icon">🔍</span>
-          <div class="pipe-name">Surface Recon</div>
-          <div class="pipe-desc">GitHub API check — repo age, stars, install hooks. No code downloaded.</div>
-        </div>
-        <div class="pipe-node" data-step="1" onclick="openPipeDetail(1,true)">
-          <div class="pipe-num">02 <span>CLONE</span></div>
-          <span class="pipe-icon">📦</span>
-          <div class="pipe-name">Isolated Clone</div>
-          <div class="pipe-desc">Clone to <code>/tmp</code> — never your working directory. Auto-deleted after.</div>
-        </div>
-        <div class="pipe-node" data-step="2" onclick="openPipeDetail(2,true)">
-          <div class="pipe-num">03 <span>STATIC</span></div>
-          <span class="pipe-icon">⚙️</span>
-          <div class="pipe-name">Static Analysis</div>
-          <div class="pipe-desc">Secrets scan, CVE check, SAST rules, pattern matching. Nothing executes.</div>
-        </div>
-        <div class="pipe-node" data-step="3" onclick="openPipeDetail(3,true)">
-          <div class="pipe-num">04 <span>AI</span></div>
-          <span class="pipe-icon">🧠</span>
-          <div class="pipe-name">AI Review</div>
-          <div class="pipe-desc">Claude reads flagged files, distinguishes true threats from false positives.</div>
-        </div>
-        <div class="pipe-node" data-step="4" onclick="openPipeDetail(4,true)">
-          <div class="pipe-num">05 <span>SANDBOX</span></div>
-          <span class="pipe-icon">🔒</span>
-          <div class="pipe-name">Sandbox Test</div>
-          <div class="pipe-desc">Install runs in a sealed zone — no internet, no host file access.</div>
-        </div>
-        <div class="pipe-node" data-step="5" onclick="openPipeDetail(5,true)">
-          <div class="pipe-num">06 <span>SCORE</span></div>
-          <span class="pipe-icon">⚖️</span>
-          <div class="pipe-name">Risk Scoring</div>
-          <div class="pipe-desc">Points tallied. Score maps to a plain-English verdict.</div>
-        </div>
-        <div class="pipe-node" data-step="6" onclick="openPipeDetail(6,true)">
-          <div class="pipe-num">07 <span>REPORT</span></div>
-          <span class="pipe-icon">📄</span>
-          <div class="pipe-name">Report</div>
-          <div class="pipe-desc">Shareable Markdown report saved to <code>Security/scans/</code>.</div>
-        </div>
-        <div class="pipe-node" data-step="7" onclick="openPipeDetail(7,true)">
-          <div class="pipe-num">08 <span>CLEAN UP</span></div>
-          <span class="pipe-icon">🗑️</span>
-          <div class="pipe-name">Clean Up</div>
-          <div class="pipe-desc">Temp clone deleted. No repo code remains on your machine.</div>
-        </div>
-      </div>
-
-      <div class="pipe-detail" id="pipeDetail"></div>
-    </div>
-  </section>
-
-  <!-- ── TIER EXPLORER ──────────────────────────────────────────────────────── -->
-  <section id="tiers" class="rv d2">
-    <div class="sec-tag"><span class="sec-tag-dot"></span>Progressive Enhancement</div>
-    <h2 class="sec-h">The 4 Scan Tiers</h2>
-    <p class="sec-p">The scanner never fails — click each tier to see what it can detect.</p>
-
-    <div class="tier-tabs">
-      <button class="tier-tab t0" onclick="showTier(0)"><span class="tier-dot"></span>Tier 0 — AI Only</button>
-      <button class="tier-tab t1" onclick="showTier(1)"><span class="tier-dot"></span>Tier 1 — Basic Tools</button>
-      <button class="tier-tab t2 active" onclick="showTier(2)"><span class="tier-dot"></span>Tier 2 — Full Scan</button>
-      <button class="tier-tab t3" onclick="showTier(3)"><span class="tier-dot"></span>Tier 3 — Sandbox</button>
-    </div>
-
-    <div id="tier-0" class="t0 tier-pane">
-      <div class="tier-card">
-        <span class="tier-label">Tier 0 · Always available</span>
-        <div class="tier-name">AI Analysis Only</div>
-        <div class="tier-reqs"><strong>Requires:</strong> Just Claude Code — nothing else to install</div>
-        <ul class="tier-caps">
-          <li><span class="cap-dot"></span>Surface recon via GitHub API (age, stars, size)</li>
-          <li><span class="cap-dot"></span>Install hook inspection (postinstall, prepare)</li>
-          <li><span class="cap-dot"></span>Reverse shell pattern detection</li>
-          <li><span class="cap-dot"></span>Obfuscated code detection (eval/base64 chains)</li>
-          <li><span class="cap-dot"></span>Crypto miner signature scanning</li>
-          <li><span class="cap-dot"></span>Credential theft pattern scanning (.ssh, clipboard)</li>
-          <li><span class="cap-dot"></span>Embedded binary detection</li>
-          <li><span class="cap-dot"></span>Committed secret files (.env, .pem, .key)</li>
-        </ul>
-      </div>
-      <div class="tier-terminal">
-        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan</span></div>
-        <div class="terminal-body" id="term-0"></div>
-      </div>
-    </div>
-
-    <div id="tier-1" class="t1 tier-pane">
-      <div class="tier-card">
-        <span class="tier-label">Tier 1 · Basic tools</span>
-        <div class="tier-name">Pattern Scanning</div>
-        <div class="tier-reqs"><strong>Requires:</strong> git + curl + jq (usually pre-installed)</div>
-        <ul class="tier-caps">
-          <li><span class="cap-dot"></span>Everything in Tier 0</li>
-          <li><span class="cap-dot"></span>Clone to isolated /tmp directory</li>
-          <li><span class="cap-dot"></span>Full codebase grep across all files</li>
-          <li><span class="cap-dot"></span>Dependency file deep inspection</li>
-          <li><span class="cap-dot"></span>CI workflow file analysis (.github/)</li>
-          <li><span class="cap-dot"></span>File type scanning for hidden executables</li>
-        </ul>
-      </div>
-      <div class="tier-terminal">
-        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 1)</span></div>
-        <div class="terminal-body" id="term-1"></div>
-      </div>
-    </div>
-
-    <div id="tier-2" class="t2 tier-pane active">
-      <div class="tier-card">
-        <span class="tier-label">Tier 2 · Recommended</span>
-        <div class="tier-name">Full Automated Scan</div>
-        <div class="tier-reqs"><strong>Requires:</strong> trivy · gitleaks · trufflehog · semgrep &nbsp;(<code>bash scripts/install-security-tools.sh</code>)</div>
-        <ul class="tier-caps">
-          <li><span class="cap-dot"></span>Everything in Tiers 0 & 1</li>
-          <li><span class="cap-dot"></span>CVE database lookup (Trivy)</li>
-          <li><span class="cap-dot"></span>Secrets in current code (Gitleaks)</li>
-          <li><span class="cap-dot"></span>Secrets in full git history (TruffleHog)</li>
-          <li><span class="cap-dot"></span>Professional SAST rules (Semgrep)</li>
-          <li><span class="cap-dot"></span>npm audit / pip-audit / bundle audit</li>
-        </ul>
-      </div>
-      <div class="tier-terminal">
-        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 2)</span></div>
-        <div class="terminal-body" id="term-2"></div>
-      </div>
-    </div>
-
-    <div id="tier-3" class="t3 tier-pane">
-      <div class="tier-card">
-        <span class="tier-label">Tier 3 · Maximum coverage</span>
-        <div class="tier-name">Sandbox Execution</div>
-        <div class="tier-reqs"><strong>Requires:</strong> Docker Desktop &nbsp;<em>or</em>&nbsp; built-in macOS sandbox-exec (no install)</div>
-        <ul class="tier-caps">
-          <li><span class="cap-dot"></span>Everything in Tiers 0, 1 & 2</li>
-          <li><span class="cap-dot"></span>Install runs in a sealed container</li>
-          <li><span class="cap-dot"></span>All network connections blocked</li>
-          <li><span class="cap-dot"></span>Network attempts captured and logged</li>
-          <li><span class="cap-dot"></span>File system writes monitored</li>
-          <li><span class="cap-dot"></span>Container destroyed after test</li>
-        </ul>
-      </div>
-      <div class="tier-terminal">
-        <div class="terminal-bar"><div class="terminal-dot td-red"></div><div class="terminal-dot td-yellow"></div><div class="terminal-dot td-green"></div><span class="terminal-title">claude — /security-scan (Tier 3)</span></div>
-        <div class="terminal-body" id="term-3"></div>
-      </div>
-    </div>
   </section>
 
   <!-- ── RISK CALCULATOR ───────────────────────────────────────────────────── -->
@@ -820,6 +619,169 @@ footer{border-top:1px solid var(--bdr);padding:24px 0;text-align:center;font-siz
     </div>
   </section>
 
+  <!-- ── PIPELINE ──────────────────────────────────────────────────────────── -->
+  <section id="pipeline" class="rv d1">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>How It Works</div>
+    <h2 class="sec-h">The Scan Pipeline</h2>
+    <p class="sec-p">Each step cycles automatically. Click any card to pause and read the details.</p>
+
+    <div class="pipeline-wrap">
+
+      <div class="pipeline-grid" id="pipelineGrid">
+        <div class="pipe-node" data-step="0" onclick="openPipeDetail(0,true)">
+          <div class="pipe-num">01 <span>SURFACE</span></div>
+          <span class="pipe-icon">🔍</span>
+          <div class="pipe-name">Surface Recon</div>
+          <div class="pipe-desc">GitHub API check — repo age, stars, install hooks. No code downloaded.</div>
+        </div>
+        <div class="pipe-node" data-step="1" onclick="openPipeDetail(1,true)">
+          <div class="pipe-num">02 <span>CLONE</span></div>
+          <span class="pipe-icon">📦</span>
+          <div class="pipe-name">Isolated Clone</div>
+          <div class="pipe-desc">Clone to <code>/tmp</code> — never your working directory. Auto-deleted after.</div>
+        </div>
+        <div class="pipe-node" data-step="2" onclick="openPipeDetail(2,true)">
+          <div class="pipe-num">03 <span>STATIC</span></div>
+          <span class="pipe-icon">⚙️</span>
+          <div class="pipe-name">Static Analysis</div>
+          <div class="pipe-desc">Secrets scan, CVE check, SAST rules, pattern matching. Nothing executes.</div>
+        </div>
+        <div class="pipe-node" data-step="3" onclick="openPipeDetail(3,true)">
+          <div class="pipe-num">04 <span>AI</span></div>
+          <span class="pipe-icon">🧠</span>
+          <div class="pipe-name">AI Review</div>
+          <div class="pipe-desc">Claude reads flagged files, distinguishes true threats from false positives.</div>
+        </div>
+        <div class="pipe-node" data-step="4" onclick="openPipeDetail(4,true)">
+          <div class="pipe-num">05 <span>SANDBOX</span></div>
+          <span class="pipe-icon">🔒</span>
+          <div class="pipe-name">Sandbox Test</div>
+          <div class="pipe-desc">Install runs in a sealed zone — no internet, no host file access.</div>
+        </div>
+        <div class="pipe-node" data-step="5" onclick="openPipeDetail(5,true)">
+          <div class="pipe-num">06 <span>SCORE</span></div>
+          <span class="pipe-icon">⚖️</span>
+          <div class="pipe-name">Risk Scoring</div>
+          <div class="pipe-desc">Points tallied. Score maps to a plain-English verdict.</div>
+        </div>
+        <div class="pipe-node" data-step="6" onclick="openPipeDetail(6,true)">
+          <div class="pipe-num">07 <span>REPORT</span></div>
+          <span class="pipe-icon">📄</span>
+          <div class="pipe-name">Report</div>
+          <div class="pipe-desc">Shareable Markdown report saved to <code>Security/scans/</code>.</div>
+        </div>
+        <div class="pipe-node" data-step="7" onclick="openPipeDetail(7,true)">
+          <div class="pipe-num">08 <span>CLEAN UP</span></div>
+          <span class="pipe-icon">🗑️</span>
+          <div class="pipe-name">Clean Up</div>
+          <div class="pipe-desc">Temp clone deleted. No repo code remains on your machine.</div>
+        </div>
+      </div>
+
+      <div class="pipe-detail" id="pipeDetail"></div>
+    </div>
+  </section>
+
+  <!-- ── TIER EXPLORER ──────────────────────────────────────────────────────── -->
+  <section id="tiers" class="rv d2">
+    <div class="sec-tag"><span class="sec-tag-dot"></span>Progressive Enhancement</div>
+    <h2 class="sec-h">The 4 Scan Tiers</h2>
+    <p class="sec-p">The scanner never fails — click each tier to see what it can detect.</p>
+
+    <div class="tier-tabs">
+      <button class="tier-tab t0" onclick="showTier(0)"><span class="tier-dot"></span>Tier 0 — AI Only</button>
+      <button class="tier-tab t1" onclick="showTier(1)"><span class="tier-dot"></span>Tier 1 — Basic Tools</button>
+      <button class="tier-tab t2 active" onclick="showTier(2)"><span class="tier-dot"></span>Tier 2 — Full Scan</button>
+      <button class="tier-tab t3" onclick="showTier(3)"><span class="tier-dot"></span>Tier 3 — Sandbox</button>
+    </div>
+
+    <div id="tier-0" class="t0 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 0 · Always available</span>
+        <div class="tier-name">AI Analysis Only</div>
+        <div class="tier-reqs"><strong>Requires:</strong> Just Claude Code — nothing else to install</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Surface recon via GitHub API (age, stars, size)</li>
+          <li><span class="cap-dot"></span>Install hook inspection (postinstall, prepare)</li>
+          <li><span class="cap-dot"></span>Reverse shell pattern detection</li>
+          <li><span class="cap-dot"></span>Obfuscated code detection (eval/base64 chains)</li>
+          <li><span class="cap-dot"></span>Crypto miner signature scanning</li>
+          <li><span class="cap-dot"></span>Credential theft pattern scanning (.ssh, clipboard)</li>
+          <li><span class="cap-dot"></span>Embedded binary detection</li>
+          <li><span class="cap-dot"></span>Committed secret files (.env, .pem, .key)</li>
+        </ul>
+      </div>
+      <div class="tier-output">
+        <div class="to-title">What you'll see when this tier runs</div>
+        <p class="to-desc">A short summary: repo age, star count, size, whether install hooks exist, and which static patterns matched. Findings are quoted at file and line. Verdict lands in 5–15 seconds.</p>
+        <div class="to-best">Best for · a first look at any unfamiliar repo before cloning.</div>
+      </div>
+    </div>
+
+    <div id="tier-1" class="t1 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 1 · Basic tools</span>
+        <div class="tier-name">Pattern Scanning</div>
+        <div class="tier-reqs"><strong>Requires:</strong> git + curl + jq (usually pre-installed)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tier 0</li>
+          <li><span class="cap-dot"></span>Clone to isolated /tmp directory</li>
+          <li><span class="cap-dot"></span>Full codebase grep across all files</li>
+          <li><span class="cap-dot"></span>Dependency file deep inspection</li>
+          <li><span class="cap-dot"></span>CI workflow file analysis (.github/)</li>
+          <li><span class="cap-dot"></span>File type scanning for hidden executables</li>
+        </ul>
+      </div>
+      <div class="tier-output">
+        <div class="to-title">What you'll see when this tier runs</div>
+        <p class="to-desc">Tier 0 output, plus a list of dependency anomalies and any CI workflow steps that fetch or execute external code. Hidden binaries outside expected asset folders are listed by path.</p>
+        <div class="to-best">Best for · checking repos you intend to clone and read locally.</div>
+      </div>
+    </div>
+
+    <div id="tier-2" class="t2 tier-pane active">
+      <div class="tier-card">
+        <span class="tier-label">Tier 2 · Recommended</span>
+        <div class="tier-name">Full Automated Scan</div>
+        <div class="tier-reqs"><strong>Requires:</strong> trivy · gitleaks · trufflehog · semgrep &nbsp;(<code>bash Scripts/install-security-tools.sh</code>)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tiers 0 & 1</li>
+          <li><span class="cap-dot"></span>CVE database lookup (Trivy)</li>
+          <li><span class="cap-dot"></span>Secrets in current code (Gitleaks)</li>
+          <li><span class="cap-dot"></span>Secrets in full git history (TruffleHog)</li>
+          <li><span class="cap-dot"></span>Professional SAST rules (Semgrep)</li>
+          <li><span class="cap-dot"></span>npm audit / pip-audit / bundle audit</li>
+        </ul>
+      </div>
+      <div class="tier-output">
+        <div class="to-title">What you'll see when this tier runs</div>
+        <p class="to-desc">A verdict plus per-tool counts: how many secrets Gitleaks found in the working tree, how many TruffleHog found in history, how many CVEs Trivy mapped, and which SAST rules Semgrep tripped. Each finding lists severity, file, and detail.</p>
+        <div class="to-best">Best for · the default choice when you'll actually install or run the repo.</div>
+      </div>
+    </div>
+
+    <div id="tier-3" class="t3 tier-pane">
+      <div class="tier-card">
+        <span class="tier-label">Tier 3 · Maximum coverage</span>
+        <div class="tier-name">Sandbox Execution</div>
+        <div class="tier-reqs"><strong>Requires:</strong> Docker Desktop &nbsp;<em>or</em>&nbsp; built-in macOS sandbox-exec (no install)</div>
+        <ul class="tier-caps">
+          <li><span class="cap-dot"></span>Everything in Tiers 0, 1 & 2</li>
+          <li><span class="cap-dot"></span>Install runs in a sealed container</li>
+          <li><span class="cap-dot"></span>All network connections blocked</li>
+          <li><span class="cap-dot"></span>Network attempts captured and logged</li>
+          <li><span class="cap-dot"></span>File system writes monitored</li>
+          <li><span class="cap-dot"></span>Container destroyed after test</li>
+        </ul>
+      </div>
+      <div class="tier-output">
+        <div class="to-title">What you'll see when this tier runs</div>
+        <p class="to-desc">Tier 2 output, plus a behavioral report: did install try to reach the network, did it try to write outside <code>/tmp</code>, did it spawn unexpected processes. Any blocked attempts are listed with the destination it was trying to reach.</p>
+        <div class="to-best">Best for · packages with install hooks, or any repo with an unclear postinstall step.</div>
+      </div>
+    </div>
+  </section>
+
 
 </div>
 </div>
@@ -840,9 +802,9 @@ function toggleTheme(){const h=document.documentElement,n=h.dataset.theme==='dar
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function navTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
 const navLinks=document.querySelectorAll('.nav-link');
-const secIds=['quickstart','scan','pipeline','tiers','calculator','sandbox'];
+const secIds=['scan','calculator','sandbox','pipeline','tiers'];
 window.addEventListener('scroll',()=>{
-  let cur='quickstart';
+  let cur='scan';
   secIds.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<120)cur=id});
   navLinks.forEach((l,i)=>l.classList.toggle('active',secIds[i]===cur));
 },{passive:true});
@@ -851,21 +813,6 @@ window.addEventListener('scroll',()=>{
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')}),{threshold:.08});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-
-// ── URL INPUT → LIVE COMMAND UPDATE ──────────────────────────────────────────
-function updateQsCommands(raw) {
-  const url = raw.trim();
-  const qs3 = document.getElementById('qs3-cmd-text');
-  if (!qs3) return;
-  qs3.textContent = url ? `/security-scan ${url}` : '/security-scan https://github.com/owner/repo';
-}
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('scanInput');
-  if (input) {
-    input.addEventListener('input', () => updateQsCommands(input.value));
-    input.addEventListener('paste', () => setTimeout(() => updateQsCommands(input.value), 0));
-  }
-});
 
 // ── SERVER DETECTION ──────────────────────────────────────────────────────────
 let serverOnline=false;
@@ -881,6 +828,16 @@ function setServerStatus(online){
   serverOnline=online;
   document.getElementById('sdot').className='sdot'+(online?' online':' offline');
   document.getElementById('sLabel').textContent=online?'server online':'server offline';
+  // hide the "run the python script" hint once the server is up
+  const hint=document.getElementById('scannerHint');
+  if(hint)hint.classList.toggle('hidden',online);
+}
+function copyHint(el){
+  navigator.clipboard.writeText(el.textContent.trim()).catch(()=>{});
+  el.classList.add('copied');
+  const orig=el.textContent;
+  el.textContent='copied ✓';
+  setTimeout(()=>{el.textContent=orig;el.classList.remove('copied')},1400);
 }
 // Poll every 4s
 pingServer();
@@ -1065,22 +1022,15 @@ async function runLocalScan(){
         <div class="setup-step">
           <div class="setup-num">1</div>
           <div class="setup-body">
-            <div class="setup-label">Open Terminal and navigate to your Agentic folder</div>
-            <div class="setup-cmd" onclick="copySetup('cd ~/Desktop/Agentic',this)"><span>cd ~/Desktop/Agentic</span><span class="scopy">Copy</span></div>
+            <div class="setup-label">In Terminal, from the toolkit folder, run:</div>
+            <div class="setup-cmd" onclick="copySetup('python3 tools/security/server.py',this)"><span>python3 tools/security/server.py</span><span class="scopy">Copy</span></div>
+            <div class="setup-note">Leave that Terminal window open. This page auto-detects when it's ready — the dot in the scanner box turns green.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">2</div>
           <div class="setup-body">
-            <div class="setup-label">Start the scanner server</div>
-            <div class="setup-cmd" onclick="copySetup('python3 tools/security/server.py',this)"><span>python3 tools/security/server.py</span><span class="scopy">Copy</span></div>
-            <div class="setup-note">Leave that Terminal window open. This page auto-detects when it's ready.</div>
-          </div>
-        </div>
-        <div class="setup-step">
-          <div class="setup-num">3</div>
-          <div class="setup-body">
-            <div class="setup-label">Watch the dot turn green, then click Full Local Scan again</div>
+            <div class="setup-label">Click <strong>Full Local Scan</strong> again — the scan kicks off automatically.</div>
           </div>
         </div>
         <div class="setup-or">or run directly in Claude Code</div>
@@ -1094,8 +1044,14 @@ async function runLocalScan(){
   showResults('scanning','Full Local Scan');
   document.getElementById('resultsRepo').textContent=raw;
   setPill('vp-scanning','⟳ Scanning…');
-  document.getElementById('resultsBody').innerHTML='<div class="local-terminal" id="localTerm"></div>';
-  const term=document.getElementById('localTerm');
+  document.getElementById('resultsBody').innerHTML=`
+    <div class="scan-progress">
+      <div class="scan-spinner"></div>
+      <div>
+        <div class="scan-progress-text"><strong>Running full scan</strong> — clone, secrets, CVEs, SAST, patterns, sandbox.</div>
+        <div class="scan-progress-hint">This usually takes 30s–2min depending on repo size. Verdict appears here when done.</div>
+      </div>
+    </div>`;
 
   try{
     const url=`http://localhost:7432/scan?url=${encodeURIComponent(raw)}`;
@@ -1118,40 +1074,120 @@ async function runLocalScan(){
             handleScanDone(d);
             return;
           }
-          if(d.line!==undefined){
-            const span=document.createElement('span');
-            span.className='lt-line '+lineClass(d.line);
-            span.textContent=d.line+'\n';
-            term.appendChild(span);
-            term.scrollTop=term.scrollHeight;
-          }
+          // streamed log lines are intentionally ignored — only the final
+          // verdict + summary is shown to keep the UI uncluttered.
         }catch{}
       }
     }
   }catch(e){
     setPill('vp-info','⚠ Connection lost');
-    const term=document.getElementById('localTerm');
-    if(term){const s=document.createElement('span');s.className='lt-line lt-err';s.textContent='Error: '+e.message;term.appendChild(s)}
+    document.getElementById('resultsBody').innerHTML=`
+      <div class="local-summary">
+        <div class="ls-empty" style="color:var(--red)">Connection lost: ${e.message}. Make sure <code>python3 tools/security/server.py</code> is still running.</div>
+      </div>`;
   }
-}
-
-function lineClass(line){
-  if(/✓|SAFE|CLEAN|ok/i.test(line))return 'lt-ok';
-  if(/⚠|WARN|MEDIUM/i.test(line))return 'lt-warn';
-  if(/✗|ERROR|FAIL|DANGER|REJECT/i.test(line))return 'lt-err';
-  if(/^\s*#|^\s*\[|^\s*─/.test(line))return 'lt-dim';
-  return '';
 }
 
 function handleScanDone(d){
   const report=d.report;
   if(report?.verdict){
-    const v=report.verdict;
-    const map={CLEAN:'vp-clean ✅ Safe to Use',CARE:'vp-care ⚠️ Use With Care',QUARANTINE:'vp-quarantine 🔶 Do Not Run Yet',REJECT:'vp-reject ❌ Do Not Install'};
-    const parts=(map[v]||'vp-info ✓ Done').split(' ');
-    setPill(parts[0],parts.slice(1).join(' '));
+    const verdict=scoreToVerdict(report.risk_score ?? 0);
+    setPill(verdict.cls, verdict.emoji+' '+verdict.label);
+    renderLocalSummary(report, verdict);
+    syncCalculatorFromReport(report);
   }else{
-    setPill(d.exit_code===0?'vp-clean':'vp-care',d.exit_code===0?'✅ Scan complete':'⚠ Scan finished — review output');
+    const ok=d.exit_code===0;
+    setPill(ok?'vp-clean':'vp-care', ok?'✅ Scan complete':'⚠ Scan finished — see Terminal for details');
+    document.getElementById('resultsBody').innerHTML=`
+      <div class="local-summary">
+        <div class="ls-empty">Scan finished but no report was written. Check the Terminal where <code>server.py</code> is running.</div>
+      </div>`;
+  }
+}
+
+// Renders the final summary panel after a full local scan completes.
+function renderLocalSummary(report, verdict){
+  const s=report.summary||{};
+  const findings=Array.isArray(report.findings)?report.findings:[];
+
+  const statHtml = (label, val, danger) => {
+    const cls = val>0 ? (danger||'warn') : 'ok';
+    return `<div class="ls-stat ${cls}"><span class="ls-stat-label">${label}</span><span class="ls-stat-val">${val}</span></div>`;
+  };
+
+  const findingsHtml = findings.length
+    ? findings.slice(0,12).map(f=>{
+        const sev=(f.severity||'').toUpperCase();
+        const file=f.file && f.file!=='repository' ? `<div class="ls-finding-file">${escapeHtml(f.file)}</div>` : '';
+        return `<div class="ls-finding">
+          <span class="ls-finding-sev ${sev}">${sev||'INFO'}</span>
+          <div class="ls-finding-body">
+            <div class="ls-finding-title">${escapeHtml(f.title||'')}</div>
+            ${file}
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="ls-empty">No findings. Nothing flagged across secrets, CVEs, SAST, patterns, or binaries.</div>';
+
+  document.getElementById('resultsBody').innerHTML=`
+    <div class="local-summary">
+      <div class="check-score" style="border:none;padding:0">
+        <span class="cs-label">Risk score</span>
+        <span class="cs-num" style="color:${verdict.color}">${report.risk_score}/100 — ${verdict.label}</span>
+      </div>
+      <div class="ls-row">
+        ${statHtml('Secrets', (s.secrets_gitleaks||0)+(s.secrets_trufflehog||0), 'danger')}
+        ${statHtml('CVEs (high+)', (s.deps_critical||0)+(s.deps_high||0), 'warn')}
+        ${statHtml('SAST', (s.sast_critical||0)+(s.sast_high||0), 'warn')}
+        ${statHtml('Patterns', s.suspicious_patterns||0, 'warn')}
+      </div>
+      <div class="ls-findings">${findingsHtml}</div>
+      <div class="ls-note">Full JSON report: <code>/tmp/security-scan-results/security-report.json</code> · log: <code>scan.log</code></div>
+    </div>`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Auto-populate the Live Risk Calculator from a full local scan report.
+// Toggle indices (must match the .toggle-row order in the calculator):
+//   0=shell  1=miner  2=creds  3=history  4=ssh  5=obfuscated
+//   6=net-hook  7=binary  8=CVEcrit  9=safe-hook  10=CVEhigh  11=new+stars
+function syncCalculatorFromReport(report){
+  if(!report) return;
+  const s = report.summary||{};
+  const findings = Array.isArray(report.findings)?report.findings:[];
+  const titleHas = (kw) => findings.some(f => (f.title||'').toLowerCase().includes(kw));
+
+  const networkHook = titleHas('install hook') && titleHas('network');
+  const safeHook    = titleHas('install hook') && !networkHook;
+  const binary      = titleHas('binary') || titleHas('executable');
+
+  const rows = document.querySelectorAll('#toggleGroup .toggle-row');
+  const map = [
+    {idx: 2,  on: (s.secrets_gitleaks||0) > 0},
+    {idx: 3,  on: (s.secrets_trufflehog||0) > 0},
+    {idx: 6,  on: networkHook},
+    {idx: 7,  on: binary},
+    {idx: 8,  on: (s.deps_critical||0) > 0},
+    {idx: 9,  on: safeHook},
+    {idx: 10, on: (s.deps_high||0) > 0},
+  ];
+  map.forEach(({idx, on}) => {
+    const row = rows[idx]; if (!row) return;
+    const cb = row.querySelector('input');
+    if (cb.checked !== on) cb.checked = on;
+    row.classList.toggle('synced-on', on);
+    setTimeout(() => row.classList.remove('synced-on'), 1800);
+  });
+  calcScore();
+
+  const badge=document.getElementById('calcSyncBadge');
+  if(badge){
+    badge.style.display='inline-flex';
+    badge.style.animation='none';
+    requestAnimationFrame(()=>{badge.style.animation='';badge.textContent='⟳ synced from scan'});
   }
 }
 
@@ -1185,14 +1221,30 @@ function copySetup(text,el){
 
 // ── PIPELINE ──────────────────────────────────────────────────────────────────
 const PIPE_DATA=[
-  {icon:'🔍',name:'Surface Recon',badge:'No code needed',checks:['Repo age, star count, size anomalies','Package.json install hook inspection','CI workflow file analysis (.github/)','Checks for committed .env / .pem files'],term:`<span class="t-prompt">$</span> <span>curl api.github.com/repos/owner/repo</span>\n<span class="t-ok">✓</span> <span>Repo: 3 years old, 1.2k stars, 48KB</span>\n<span class="t-ok">✓</span> <span>No postinstall hooks found</span>\n<span class="t-ok">✓</span> <span>No .env committed</span>`},
-  {icon:'📦',name:'Isolated Clone',badge:'Never your cwd',checks:['Clones to /tmp/repo-scan-XXXXXX only','Depth-50 by default','Branch and HEAD commit captured','Never touches your working directory'],term:`<span class="t-prompt">$</span> <span>git clone --depth=50 URL /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Cloned: main @ a3f9d12</span>\n<span class="t-ok">✓</span> <span>Location: /tmp/repo-scan-a8f3c</span>\n<span class="t-dim"># Auto-deleted after scan</span>`},
-  {icon:'⚙️',name:'Static Analysis',badge:'Nothing runs',checks:['Gitleaks: secrets in current code','TruffleHog: full git history scan','Semgrep: SAST with security rules','Trivy: CVE database + misconfigs'],term:`<span class="t-prompt">$</span> <span>gitleaks detect --source /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Gitleaks: 0 secrets found</span>\n<span class="t-prompt">$</span> <span>trivy fs /tmp/repo-scan-a8f3c</span>\n<span class="t-warn">⚠</span> <span>lodash@4.17.20: CVE-2021-23337 (HIGH)</span>\n<span class="t-ok">✓</span> <span>Semgrep: 0 critical findings</span>`},
-  {icon:'🧠',name:'AI Review',badge:'All tiers',checks:['Reads each flagged file at flagged line','±20 lines context around each finding','Judges: CONFIRMED / FALSE_POSITIVE','Checks for obfuscation, eval chains'],term:`<span class="t-prompt">Claude</span> <span class="t-dim">reading lodash finding...</span>\n<span class="t-warn">→</span> <span>Prototype pollution. Severity: HIGH</span>\n<span class="t-warn">⚠</span> <span>CONFIRMED — update lodash to ≥4.17.21</span>`},
-  {icon:'🔒',name:'Sandbox Test',badge:'MEDIUM+ risk',checks:['macOS sandbox-exec (built-in, no Docker)','OR Docker: --network none --read-only','Captures all network connection attempts','Container/zone destroyed after test'],term:`<span class="t-prompt">$</span> <span>sandbox-exec -f mac-sandbox.sb bash run.sh</span>\n<span class="t-dim">Network: blocked · Filesystem: /tmp only</span>\n<span class="t-ok">✓</span> <span>Install: completed normally</span>\n<span class="t-ok">✓</span> <span>0 network attempts</span>`},
-  {icon:'⚖️',name:'Risk Scoring',badge:'0–100 scale',checks:['Each finding adds weighted points','Critical: +40–50  High: +15–35','Score maps to 4 verdict tiers','AI adjusts for false positives'],term:`<span class="t-warn">+8</span>  <span>lodash HIGH CVE</span>\n<span class="t-ok">+0</span>  <span>eval() — FALSE POSITIVE (minified)</span>\n<span class="t-dim">─────────────────</span>\n<span class="t-yellow">Score: 8 / 100</span>\n<span class="t-ok">Verdict: SAFE TO USE</span>`},
-  {icon:'📄',name:'Report',badge:'Shareable',checks:['Saved to Security/scans/repo-date.md','Plain English — no security jargon','Single sentence verdict up front','Concrete action checklist at the end'],term:`<span class="t-ok">✓</span> <span>Security/scans/some-repo-2026-04-28.md</span>\n\n<span class="t-white">VERDICT: ✅ SAFE TO USE</span>\n<span class="t-dim">This repo appears safe. Update lodash</span>\n<span class="t-dim">before deploying to production.</span>`},
-  {icon:'🗑️',name:'Clean Up',badge:'Always',checks:['Deletes /tmp/repo-scan-* directory','Removes /tmp/security-scan-results/','Docker container auto-destroyed (--rm)','No repo code remains on your machine'],term:`<span class="t-prompt">$</span> <span>rm -rf /tmp/repo-scan-a8f3c</span>\n<span class="t-ok">✓</span> <span>Temp clone deleted</span>\n<span class="t-ok">✓</span> <span>Nothing left behind</span>`},
+  {icon:'🔍',name:'Surface Recon',badge:'No code needed',
+    checks:['Repo age, star count, size anomalies','Package.json install hook inspection','CI workflow file analysis (.github/)','Checks for committed .env / .pem files'],
+    detail:'Reads public GitHub metadata only. No code is downloaded yet — the goal is to catch repos that look brand-new, empty, or weaponized at the metadata level before they touch your machine.'},
+  {icon:'📦',name:'Isolated Clone',badge:'Never your cwd',
+    checks:['Clones to /tmp/repo-scan-XXXXXX only','Depth-50 by default','Branch and HEAD commit captured','Never touches your working directory'],
+    detail:'Clone target is always a fresh temp directory. Your working tree is never touched. Auto-deleted at the end of the scan whether it passes or fails.'},
+  {icon:'⚙️',name:'Static Analysis',badge:'Nothing runs',
+    checks:['Gitleaks: secrets in current code','TruffleHog: full git history scan','Semgrep: SAST with security rules','Trivy: CVE database + misconfigs'],
+    detail:'Read-only scanners look for live secrets, historical secrets, dangerous SAST rule violations, and known CVEs in declared dependencies. No code from the repo executes.'},
+  {icon:'🧠',name:'AI Review',badge:'All tiers',
+    checks:['Reads each flagged file at flagged line','±20 lines context around each finding','Judges: CONFIRMED / FALSE_POSITIVE','Checks for obfuscation, eval chains'],
+    detail:'Claude opens the files the static tools flagged, reads the surrounding context, and labels each finding as confirmed or a false positive (minified bundles, test fixtures, intentional eval, etc.).'},
+  {icon:'🔒',name:'Sandbox Test',badge:'MEDIUM+ risk',
+    checks:['macOS sandbox-exec (built-in, no Docker)','OR Docker: --network none --read-only','Captures all network connection attempts','Container/zone destroyed after test'],
+    detail:'For risky repos: the install step actually executes inside a sealed zone with no network and a read-only filesystem outside /tmp. Any blocked attempts are recorded.'},
+  {icon:'⚖️',name:'Risk Scoring',badge:'0–100 scale',
+    checks:['Each finding adds weighted points','Critical: +40–50  High: +15–35','Score maps to 4 verdict tiers','AI adjusts for false positives'],
+    detail:'Confirmed findings add weighted points. The total maps to CLEAN, CARE, QUARANTINE, or REJECT using the same thresholds shown in the Live Risk Calculator below.'},
+  {icon:'📄',name:'Report',badge:'Shareable',
+    checks:['Saved to Security/scans/repo-date.md','Plain English — no security jargon','Single sentence verdict up front','Concrete action checklist at the end'],
+    detail:'A short Markdown report is written alongside the JSON report. It leads with the verdict and ends with a checklist — safe to paste into Slack or a PR.'},
+  {icon:'🗑️',name:'Clean Up',badge:'Always',
+    checks:['Deletes /tmp/repo-scan-* directory','Removes /tmp/security-scan-results/','Docker container auto-destroyed (--rm)','No repo code remains on your machine'],
+    detail:'Cleanup runs on success and on failure. The temp clone is removed and any sandbox containers are destroyed. The scan log stays so you can re-read the verdict.'},
 ];
 
 let activeDetail=-1;
@@ -1203,7 +1255,7 @@ function openPipeDetail(i,manual=false){
   if(manual&&activeDetail===i){el.classList.remove('open');activeDetail=-1;return}
   document.querySelectorAll('.pipe-node')[i].classList.add('active');
   activeDetail=i;
-  el.innerHTML=`<div class="pd-header"><div class="pd-icon">${d.icon}</div><div class="pd-title">${d.name}</div><span class="pd-badge">${d.badge}</span></div><div class="pd-body"><div><div class="pd-section-title">What happens here</div><ul class="pd-checks">${d.checks.map(c=>`<li>${c}</li>`).join('')}</ul></div><div><div class="pd-section-title">Terminal output</div><div class="pd-terminal">${d.term}</div></div></div>`;
+  el.innerHTML=`<div class="pd-header"><div class="pd-icon">${d.icon}</div><div class="pd-title">${d.name}</div><span class="pd-badge">${d.badge}</span></div><div class="pd-body"><div><div class="pd-section-title">What happens here</div><ul class="pd-checks">${d.checks.map(c=>`<li>${c}</li>`).join('')}</ul></div><div><div class="pd-section-title">In plain English</div><p class="pd-detail-text">${d.detail}</p></div></div>`;
   el.classList.add('open');
   if(manual)el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -1240,33 +1292,12 @@ pipeObs.observe(document.getElementById('pipeline'));
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 
 // ── TIERS ─────────────────────────────────────────────────────────────────────
-const TIER_LINES={
-  0:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 0] AI analysis — no extra tools installed'],['t-ok','✓ Repo: 2 years old · 847 stars · 38KB'],['t-ok','✓ No postinstall hooks'],['t-ok','✓ No reverse shells'],['t-ok','✓ No crypto miner signatures'],['t-dim','──────────────────────────'],['t-ok','✅ SAFE TO USE (score 3/100)']],
-  1:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 1] git + curl + jq detected'],['t-ok','✓ Cloned: main @ c8a1b2f'],['t-warn','⚠ Found: postinstall script in package.json'],['t-warn','  → postinstall: "node scripts/setup.js"'],['t-ok','✓ setup.js: creates config file, no network'],['t-dim','──────────────────────────'],['t-yellow','⚠ USE WITH CARE (score 10/100)']],
-  2:[['t-prompt','$ /security-scan https://github.com/owner/repo'],['t-dim','[Tier 2] Full tools detected'],['t-ok','✓ trivy · gitleaks · trufflehog · semgrep'],['t-ok','✓ 0 secrets in current code'],['t-ok','✓ 0 secrets in history'],['t-warn','⚠ lodash@4.17.20: CVE-2021-23337 HIGH'],['t-ok','✓ 0 critical SAST findings'],['t-dim','──────────────────────────'],['t-yellow','⚠ USE WITH CARE (score 8/100)'],['t-dim','Update lodash to ≥4.17.21']],
-  3:[['t-prompt','$ /security-scan https://github.com/owner/repo --sandbox'],['t-dim','[Tier 3] Sandbox mode'],['t-dim','sandbox-exec -f mac-sandbox.sb'],['t-dim','  Network: BLOCKED · Writes: /tmp only'],['t-ok','✓ Install complete'],['t-ok','✓ 0 network connection attempts'],['t-ok','✓ 0 writes outside /tmp'],['t-dim','──────────────────────────'],['t-ok','✅ SAFE TO USE (score 8/100)'],['t-dim','Sandbox: normal behavior confirmed']]
-};
-let tierTimers=[];
 function showTier(n){
-  tierTimers.forEach(clearTimeout);tierTimers=[];
   document.querySelectorAll('.tier-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tier-pane').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tier-tab')[n].classList.add('active');
-  const pane=document.getElementById('tier-'+n);
-  pane.classList.add('active');
-  const term=document.getElementById('term-'+n);
-  term.innerHTML='';
-  TIER_LINES[n].forEach((line,i)=>{
-    const span=document.createElement('span');
-    span.className='t-line '+line[0];
-    span.textContent=line[1];
-    term.appendChild(span);
-    term.appendChild(document.createTextNode('\n'));
-    const t=setTimeout(()=>span.classList.add('show'),i*120+50);
-    tierTimers.push(t);
-  });
+  document.getElementById('tier-'+n).classList.add('active');
 }
-window.addEventListener('load',()=>setTimeout(()=>showTier(2),400));
 
 // ── RISK CALCULATOR ───────────────────────────────────────────────────────────
 let displayedScore=0;
@@ -1339,12 +1370,6 @@ const sbObs=new IntersectionObserver(es=>{
 },{threshold:.2});
 sbObs.observe(document.getElementById('sandbox'));
 
-// ── COPY ──────────────────────────────────────────────────────────────────────
-function copyToClipboard(text,el){
-  navigator.clipboard.writeText(text).catch(()=>{});
-  const btn=el.querySelector('.qs-copy-btn');
-  if(btn){const o=btn.textContent;btn.textContent='Copied!';setTimeout(()=>btn.textContent=o,1800)}
-}
 </script>
 </body>
 </html>

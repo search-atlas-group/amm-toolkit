@@ -106,6 +106,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             proc.wait()
 
             report_path = '/tmp/security-scan-results/security-report.json'
+            if not os.path.isfile(report_path):
+                legacy = '/tmp/security-scan-results/report.json'
+                if os.path.isfile(legacy):
+                    report_path = legacy
             report = None
             if os.path.isfile(report_path):
                 with open(report_path) as f:
