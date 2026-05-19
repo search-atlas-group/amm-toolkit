@@ -151,11 +151,13 @@ See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full deta
 
 ## Manual MCP Setup
 
-Just want SearchAtlas MCP connected (no toolkit, no slash commands)? One command — detects Claude Code, Claude Desktop, Cursor, and Windsurf, writes the right config for each, opens OAuth:
+Just want SearchAtlas MCP connected (no toolkit, no slash commands)? One command — detects Claude Code, Claude Desktop, Cursor, and Windsurf, writes the right config for each, opens OAuth, and pops the welcome page so you know it worked:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
 ```
+
+Two browser tabs open at the end: the welcome page loads in the background, the SearchAtlas authorization tab opens on top. Finish OAuth, switch tabs, and you're in.
 
 Or, if you only want Claude Code wired up manually:
 

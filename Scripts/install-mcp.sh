@@ -14,6 +14,7 @@ set -euo pipefail
 SERVER_NAME="searchatlas"
 ENDPOINT="https://mcp.searchatlas.com/mcp"
 OAUTH_URL="https://app.searchatlas.com/mcp/authorize?client=installer"
+WELCOME_URL="https://cdn.jsdelivr.net/gh/search-atlas-group/amm-toolkit@main/docs/welcome.html"
 HOME_DIR="${HOME}"
 OS="$(uname -s)"
 
@@ -100,12 +101,29 @@ install_windsurf() {
   if write_mcp_config "$p" "serverUrl"; then ok "Windsurf — added SearchAtlas"; fi
 }
 
-open_browser() {
+open_url() {
+  local url="$1"
   case "$OS" in
-    Darwin) open "$OAUTH_URL" >/dev/null 2>&1 ;;
-    Linux)  xdg-open "$OAUTH_URL" >/dev/null 2>&1 ;;
-    *)      warn "Open this URL: $OAUTH_URL" ;;
+    Darwin) open "$url" >/dev/null 2>&1 ;;
+    Linux)  xdg-open "$url" >/dev/null 2>&1 ;;
+    *)      return 1 ;;
   esac
+}
+
+# Open the welcome page first so it loads in a background tab, then open
+# OAuth in a second tab. The OAuth tab gets focus (most recently opened),
+# user finishes authorization, then naturally returns to the welcome tab
+# as the visual payoff. Works for Claude Code, Claude Desktop, Cursor,
+# and Windsurf installs — the welcome tab is the same.
+open_browser() {
+  if ! open_url "$WELCOME_URL"; then
+    warn "Open this URL when you're done: $WELCOME_URL"
+  fi
+  # Tiny gap so the welcome tab is created first and OAuth lands on top.
+  sleep 1
+  if ! open_url "$OAUTH_URL"; then
+    warn "Open this URL to authorize: $OAUTH_URL"
+  fi
 }
 
 main() {
@@ -129,9 +147,10 @@ main() {
     exit 1
   fi
 
-  echo "  $(c_bold 'Opening SearchAtlas login…')"
+  echo "  $(c_bold 'Opening SearchAtlas welcome + login…')"
   open_browser
-  ok "Browser opened — finish authorization in the SearchAtlas tab"
+  ok "Two browser tabs opened: welcome page + SearchAtlas authorization"
+  info "Finish OAuth in the front tab; the welcome page is waiting behind it"
   echo
   echo "  $(c_dim 'Re-run anytime with: curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash')"
   echo
