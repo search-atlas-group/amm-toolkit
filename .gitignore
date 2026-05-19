@@ -46,3 +46,4 @@ docs/.*
 !docs/MCP_SETUP.md
 !docs/TOOL_REFERENCE.md
 !docs/WORKFLOWS.md
+!docs/welcome.html
