@@ -151,7 +151,13 @@ See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full deta
 
 ## Manual MCP Setup
 
-If you prefer to add the MCP server manually:
+Just want SearchAtlas MCP connected (no toolkit, no slash commands)? One command — detects Claude Code, Claude Desktop, Cursor, and Windsurf, writes the right config for each, opens OAuth:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
+```
+
+Or, if you only want Claude Code wired up manually:
 
 ```bash
 claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
