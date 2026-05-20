@@ -179,28 +179,6 @@ main() {
 
   echo "  $(c_bold 'You are wired up.')"
   open_welcome
-  # Pre-warm the SearchAtlas browser session so the per-client OAuth
-  # "Authorize?" step that comes next is a silent one-click instead of
-  # a sign-in prompt. If they're already signed in, this is a no-op tab.
-  open_url "https://dashboard.searchatlas.com" || true
-
-  echo
-  echo "  $(c_bold 'Last step — authorize each client (one-time, ~5 seconds each):')"
-  echo
-  if [ "$HAS_CLAUDE_CODE" -eq 1 ]; then
-    info "$(c_bold 'Claude Code:') run '$(c_cyan 'claude')', then type $(c_cyan '/mcp'), highlight $(c_bold 'searchatlas'), select $(c_bold 'Authenticate'), and click $(c_bold 'Authorize') in the browser tab that opens."
-  fi
-  if [ "$HAS_CLAUDE_DESKTOP" -eq 1 ]; then
-    info "$(c_bold 'Claude Desktop:') quit and relaunch the app. On first use of a SearchAtlas tool it will prompt for $(c_bold 'Authorize') — one click."
-  fi
-  if [ "$HAS_CURSOR" -eq 1 ]; then
-    info "$(c_bold 'Cursor:') open Settings → MCP, find $(c_bold 'searchatlas'), click $(c_bold 'Connect / Authorize')."
-  fi
-  if [ "$HAS_WINDSURF" -eq 1 ]; then
-    info "$(c_bold 'Windsurf:') open Cascade → MCP, find $(c_bold 'searchatlas'), click $(c_bold 'Authorize')."
-  fi
-  echo
-  info "We opened $(c_cyan 'dashboard.searchatlas.com') in your browser so the Authorize step above is just one click."
   echo
   echo "  $(c_dim 'Re-run anytime with: curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash')"
   echo
