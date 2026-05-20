@@ -35,7 +35,8 @@ $services = @(
 
 foreach ($svc in $services) {
   $taskName = "SearchAtlasAMM-$($svc.Name)"
-  $runSh = "$ToolkitPath\tools\$($svc.Name)\run.sh"
+  # tools/ now lives under mission-control/ — parity with macOS setup.sh
+  $runSh = "$ToolkitPath\mission-control\tools\$($svc.Name)\run.sh"
 
   if (-not (Test-Path $runSh)) {
     Write-Host "  [!]  $runSh not found — skipping"
@@ -97,7 +98,8 @@ foreach ($svc in $services) {
 # their workspace folder. Equivalent to the macOS Desktop copy in setup.sh.
 # Idempotent: re-running the script just overwrites.
 $desktopBat = [Environment]::GetFolderPath("Desktop") + "\SearchAtlas Mission Control.bat"
-$sourceBat = "$ToolkitPath\Start Bridges.bat"
+# Start Bridges.bat now lives under mission-control/
+$sourceBat = "$ToolkitPath\mission-control\Start Bridges.bat"
 if (Test-Path $sourceBat) {
   Copy-Item -Path $sourceBat -Destination $desktopBat -Force -ErrorAction SilentlyContinue
   if (Test-Path $desktopBat) {

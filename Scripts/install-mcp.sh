@@ -188,18 +188,19 @@ install_toolkit_commands() {
   mkdir -p "$TOOLKIT_INSTALL_DIR" "$CLAUDE_COMMANDS_DIR"
 
   # Extract only the dirs we need. Strip the top-level "amm-toolkit-main/"
-  # so files land directly under TOOLKIT_INSTALL_DIR.
+  # so files land directly under TOOLKIT_INSTALL_DIR. tools/ now lives
+  # under mission-control/ — we extract that whole subtree.
   if ! tar -xzf "$tmpdir/toolkit.tar.gz" -C "$tmpdir" \
         amm-toolkit-main/commands amm-toolkit-main/workflows \
         amm-toolkit-main/integrations amm-toolkit-main/Scripts \
-        amm-toolkit-main/tools 2>/dev/null; then
+        amm-toolkit-main/mission-control 2>/dev/null; then
     warn "Could not extract toolkit dirs"
     rm -rf "$tmpdir"
     return 1
   fi
 
   # Refresh the install dir (cleans up stale files from previous installs).
-  for d in commands workflows integrations Scripts tools; do
+  for d in commands workflows integrations Scripts mission-control; do
     rm -rf "$TOOLKIT_INSTALL_DIR/$d"
     mv "$tmpdir/amm-toolkit-main/$d" "$TOOLKIT_INSTALL_DIR/" 2>/dev/null || true
   done
@@ -208,14 +209,16 @@ install_toolkit_commands() {
   # Make Scripts/*.sh executable in case any command shells out to them.
   chmod +x "$TOOLKIT_INSTALL_DIR/Scripts/"*.sh 2>/dev/null || true
   chmod +x "$TOOLKIT_INSTALL_DIR/integrations/"**/*.sh 2>/dev/null || true
-  chmod +x "$TOOLKIT_INSTALL_DIR/tools/"*/run.sh 2>/dev/null || true
+  chmod +x "$TOOLKIT_INSTALL_DIR/mission-control/tools/"*/run.sh 2>/dev/null || true
 
   # Patch each command .md so relative bash invocations and workflow
-  # references resolve to the toolkit install dir. Then drop into
-  # ~/.claude/commands/. Pattern set covers the actual relative paths
-  # used across all commands; safe-no-op for files that don't have them.
+  # references resolve to the toolkit install dir. Commands are subfoldered
+  # by tier (essentials/, workflows/, clients/, sharing/, advanced/) — we
+  # recursively find them all and flatten into ~/.claude/commands/ since
+  # Claude Code reads that directory flat. README.md catalog files are
+  # skipped (they're docs, not commands).
   local patched=0
-  for md in "$TOOLKIT_INSTALL_DIR/commands"/*.md; do
+  while IFS= read -r md; do
     [ -f "$md" ] || continue
     local name
     name="$(basename "$md")"
@@ -229,7 +232,7 @@ install_toolkit_commands() {
       -e "s|\`integrations/|\`${TOOLKIT_INSTALL_DIR}/integrations/|g" \
       "$md" > "$CLAUDE_COMMANDS_DIR/$name" 2>/dev/null
     patched=$((patched+1))
-  done
+  done < <(find "$TOOLKIT_INSTALL_DIR/commands" -name "*.md" -not -name "README.md" -type f)
 
   if [ "$patched" -gt 0 ]; then
     ok "Installed ${patched} slash commands to ~/.claude/commands/"
@@ -276,7 +279,7 @@ install_mission_control_bridges() {
     local keepalive="${rest##*:}"
     local label="com.searchatlas.amm-$name"
     local plist="$agents_dir/$label.plist"
-    local run_sh="$toolkit/tools/$name/run.sh"
+    local run_sh="$toolkit/mission-control/tools/$name/run.sh"
 
     if [ ! -f "$run_sh" ]; then
       continue
@@ -334,7 +337,10 @@ PLIST
   # script must actually CURL the health endpoint to know if the bridge is
   # really listening. If launchd boot fails, fall back to nohup so the user
   # at least gets a running bridge for the session.
-  local start_cmd="$toolkit/Start Bridges.command"
+  # Generate the restart helper inside mission-control/ to match the
+  # rest of the heavy assets that live there.
+  mkdir -p "$toolkit/mission-control"
+  local start_cmd="$toolkit/mission-control/Start Bridges.command"
   cat > "$start_cmd" <<'STARTCMD'
 #!/usr/bin/env bash
 # Double-click to restart the Mission Control bridges.
@@ -357,7 +363,7 @@ restart_one() {
     local name="$1" port="$2"
     local label="com.searchatlas.amm-$name"
     local plist="$HOME/Library/LaunchAgents/$label.plist"
-    local run_sh="$TOOLKIT/tools/$name/run.sh"
+    local run_sh="$TOOLKIT/mission-control/tools/$name/run.sh"
 
     # 1) Idempotency: if a bridge is already serving traffic on the port,
     # leave it alone. The user's restart click should be a no-op when the

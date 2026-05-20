@@ -6,6 +6,36 @@ Latest additions and updates to the Agentic Marketing Mastermind toolkit.
 
 <!-- AMM Guardian adds entries here automatically. Newest at top. -->
 
+## 2026-05-20 — Tiered repo restructure
+
+The repo now follows a tiered layout so newcomers don't immediately see scary server code. Surface = simple, deeper = advanced.
+
+### What moved
+
+- **`commands/` is now subfoldered by tier** — `essentials/`, `workflows/`, `clients/`, `sharing/`, `advanced/`. Each folder has the matching command specs. Claude Code still reads them flat from `~/.claude/commands/` (the installer flattens on copy), so `/scout`, `/run-seo`, etc. work unchanged.
+- **`tools/` moved to `mission-control/tools/`** — the supervisor, wizard bridges, security scanner, and guardian all live under one folder now instead of at the repo root.
+- **`setup.sh` moved to `mission-control/setup.sh`** — a tiny shim at the repo root forwards `bash setup.sh` there, so the URL in your install one-liner keeps working.
+- **`Start Bridges.command` and `Start Bridges.bat` moved to `mission-control/`** — the Desktop copies that setup creates aren't affected.
+
+### What stayed at root
+
+`commands/`, `workflows/`, `integrations/`, `Scripts/`, `docs/`, `guides/` — these are the friendlier surfaces. `Scripts/` in particular stays at root so the `install-mcp.sh` curl URL (`raw.githubusercontent.com/.../main/Scripts/install-mcp.sh`) doesn't 404 for anyone who saved it.
+
+### If you have an existing clone
+
+Your auto-update SessionStart hook will pull the new structure on your next Claude Code session. Then re-run setup once so the LaunchAgents (Mac) or scheduled tasks (Windows) point at the new `mission-control/tools/` paths:
+
+```bash
+bash setup.sh    # the shim at repo root forwards to mission-control/setup.sh
+```
+
+### New navigation surfaces
+
+- [`commands/README.md`](commands/README.md) — the slash-command catalog grouped by tier
+- [`mission-control/README.md`](mission-control/README.md) — orientation for the engine room
+
+---
+
 ## 2026-05-20 — Self-healing Mission Control bridges
 
 The three wizard bridges (command-center, website-build, website-rebuild) no longer have to be manually restarted when they crash or get killed by a browser refresh.

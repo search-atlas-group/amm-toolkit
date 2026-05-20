@@ -2,7 +2,7 @@
 
 Every command that ships with the toolkit, organized by purpose. They run in Claude Code (`/scout`, `/run-seo`, etc.). For Claude Desktop equivalents, see [CLAUDE_DESKTOP_PROMPTS.md](CLAUDE_DESKTOP_PROMPTS.md).
 
-The full spec for any command lives in [`commands/<name>.md`](../commands/) — open it to see phases, inputs, outputs, and the SA tools each step calls.
+The full spec for any command lives in [`commands/<tier>/<name>.md`](../commands/) — open it to see phases, inputs, outputs, and the SA tools each step calls.
 
 ---
 
@@ -10,9 +10,9 @@ The full spec for any command lives in [`commands/<name>.md`](../commands/) — 
 
 | Command | What it does |
 |---|---|
-| [`/help`](../commands/help.md) | List every available command |
-| [`/my-account`](../commands/my-account.md) | Overview of every business, OTTO project, brand vault, GBP location, campaign, content total, and quota in your SearchAtlas account |
-| [`/setup-integrations`](../commands/setup-integrations.md) | One-time wizard to wire up Slack / Discord / email / Circle webhooks into `.env` |
+| [`/help`](../commands/essentials/help.md) | List every available command |
+| [`/my-account`](../commands/essentials/my-account.md) | Overview of every business, OTTO project, brand vault, GBP location, campaign, content total, and quota in your SearchAtlas account |
+| [`/setup-integrations`](../commands/advanced/setup-integrations.md) | One-time wizard to wire up Slack / Discord / email / Circle webhooks into `.env` |
 
 ---
 
@@ -20,8 +20,8 @@ The full spec for any command lives in [`commands/<name>.md`](../commands/) — 
 
 | Command | What it does |
 |---|---|
-| [`/scout {domain}`](../commands/scout.md) | **Read-only** diagnostic across all 8 pillars → prioritized action plan + SA Report Builder report + self-contained local HTML at `clients/{slug}/scout/{date}/index.html` |
-| [`/business-report {domain}`](../commands/business-report.md) | Full deep-dive on a single business: OTTO, brand vault, content, Site Explorer, GBP, PPC, AI visibility |
+| [`/scout {domain}`](../commands/essentials/scout.md) | **Read-only** diagnostic across all 8 pillars → prioritized action plan + SA Report Builder report + self-contained local HTML at `clients/{slug}/scout/{date}/index.html` |
+| [`/business-report {domain}`](../commands/essentials/business-report.md) | Full deep-dive on a single business: OTTO, brand vault, content, Site Explorer, GBP, PPC, AI visibility |
 
 Use `/scout` first on any new domain — it tells you which other commands to run.
 
@@ -31,8 +31,8 @@ Use `/scout` first on any new domain — it tells you which other commands to ru
 
 | Command | What it does |
 |---|---|
-| [`/onboard-client`](../commands/onboard-client.md) | Guided new-client setup: brand vault, OTTO project, GBP, PPC, AI visibility — creates `clients/<slug>/CLAUDE.md` + `brand-profile.md` |
-| [`/sync-client`](../commands/sync-client.md) | Two-way sync between local `brand-profile.md` and the SearchAtlas brand vault. Pushes local edits, pulls SA changes, surfaces conflicts. |
+| [`/onboard-client`](../commands/clients/onboard-client.md) | Guided new-client setup: brand vault, OTTO project, GBP, PPC, AI visibility — creates `clients/<slug>/CLAUDE.md` + `brand-profile.md` |
+| [`/sync-client`](../commands/clients/sync-client.md) | Two-way sync between local `brand-profile.md` and the SearchAtlas brand vault. Pushes local edits, pulls SA changes, surfaces conflicts. |
 
 ---
 
@@ -42,18 +42,18 @@ Each maps to a `workflows/*.yaml` template — same steps the YAML defines, just
 
 | Command | What it does |
 |---|---|
-| [`/run-seo`](../commands/run-seo.md) | SEO onboarding or monthly maintenance — pillar scores, recommendations, schema deploys, indexing |
-| [`/run-gbp`](../commands/run-gbp.md) | Google Business Profile: optimization (first-time) or monthly (reviews, posts, performance) |
-| [`/run-ppc`](../commands/run-ppc.md) | PPC campaign build + launch — business, products, keywords, ads, validation, send to Google Ads |
-| [`/run-content`](../commands/run-content.md) | Topical map → 3 articles generated → graded → ready for publish |
-| [`/run-pr`](../commands/run-pr.md) | Press release write + distribute + cloud stack + digital PR outreach + backlink monitoring |
-| [`/run-visibility`](../commands/run-visibility.md) | AI/LLM visibility audit: share of voice, sentiment trend, citations, competitor rank |
+| [`/run-seo`](../commands/workflows/run-seo.md) | SEO onboarding or monthly maintenance — pillar scores, recommendations, schema deploys, indexing |
+| [`/run-gbp`](../commands/workflows/run-gbp.md) | Google Business Profile: optimization (first-time) or monthly (reviews, posts, performance) |
+| [`/run-ppc`](../commands/workflows/run-ppc.md) | PPC campaign build + launch — business, products, keywords, ads, validation, send to Google Ads |
+| [`/run-content`](../commands/workflows/run-content.md) | Topical map → 3 articles generated → graded → ready for publish |
+| [`/run-pr`](../commands/workflows/run-pr.md) | Press release write + distribute + cloud stack + digital PR outreach + backlink monitoring |
+| [`/run-visibility`](../commands/workflows/run-visibility.md) | AI/LLM visibility audit: share of voice, sentiment trend, citations, competitor rank |
 
 ---
 
 ## One-shot plays — `/summit-shot`
 
-[`/summit-shot {N}`](../commands/summit-shot.md) — Atomic single-play executor. 19 plays from the May Summit. Each is bounded (1 article, 1 PR, drafts not auto-deploys). Pair with `/scout` — scout says *what to run*, summit-shot *runs it*.
+[`/summit-shot {N}`](../commands/clients/summit-shot.md) — Atomic single-play executor. 19 plays from the May Summit. Each is bounded (1 article, 1 PR, drafts not auto-deploys). Pair with `/scout` — scout says *what to run*, summit-shot *runs it*.
 
 | # | Play | Use when |
 |---|---|---|
@@ -67,7 +67,7 @@ Each maps to a `workflows/*.yaml` template — same steps the YAML defines, just
 | 14 | Branded Google Ads (draft) | Strong organic, no paid presence yet |
 | 17–19 | Day-5 LLM deep dive | Brand monitored but share of voice < 30% |
 
-Full play list and rubric in [`commands/summit-shot.md`](../commands/summit-shot.md).
+Full play list and rubric in [`commands/clients/summit-shot.md`](../commands/clients/summit-shot.md).
 
 ---
 
@@ -77,8 +77,8 @@ Same workflows as the Mission Control web wizards, runnable from chat.
 
 | Command | What it does |
 |---|---|
-| [`/build-website`](../commands/build-website.md) | Greenfield site build — domain + a few fields → planned, designed, built, launched on Website Studio |
-| [`/rebuild-website`](../commands/rebuild-website.md) | Redesign an existing site — consumes `/scout` output, executes page-by-page with link-equity preservation |
+| [`/build-website`](../commands/advanced/build-website.md) | Greenfield site build — domain + a few fields → planned, designed, built, launched on Website Studio |
+| [`/rebuild-website`](../commands/advanced/rebuild-website.md) | Redesign an existing site — consumes `/scout` output, executes page-by-page with link-equity preservation |
 
 For the web UI versions, see [POWER-USER.md § Mission Control](../POWER-USER.md#mission-control--web-wizards).
 
@@ -90,10 +90,10 @@ Each command takes the most recent workflow output and sends it. Requires `/setu
 
 | Command | What it does |
 |---|---|
-| [`/send-slack`](../commands/send-slack.md) | Post to a Slack channel via incoming webhook. Supports multiple named channels via `SLACK_WEBHOOK_<NAME>` env vars. |
-| [`/send-discord`](../commands/send-discord.md) | Post to a Discord channel via webhook |
-| [`/send-email`](../commands/send-email.md) | Send via Resend (free: 100/day). Requires `RESEND_API_KEY` + `EMAIL_FROM`. |
-| [`/send-circle`](../commands/send-circle.md) | Post to a Circle community space via API v2 |
+| [`/send-slack`](../commands/sharing/send-slack.md) | Post to a Slack channel via incoming webhook. Supports multiple named channels via `SLACK_WEBHOOK_<NAME>` env vars. |
+| [`/send-discord`](../commands/sharing/send-discord.md) | Post to a Discord channel via webhook |
+| [`/send-email`](../commands/sharing/send-email.md) | Send via Resend (free: 100/day). Requires `RESEND_API_KEY` + `EMAIL_FROM`. |
+| [`/send-circle`](../commands/sharing/send-circle.md) | Post to a Circle community space via API v2 |
 
 ---
 
@@ -101,7 +101,7 @@ Each command takes the most recent workflow output and sends it. Requires `/setu
 
 | Command | What it does |
 |---|---|
-| [`/security-scan <github-url>`](../commands/security-scan.md) | 4-tier analysis (metadata, secrets, CVEs, SAST) + optional behavioral sandbox → plain-English verdict before you clone or run anything |
+| [`/security-scan <github-url>`](../commands/advanced/security-scan.md) | 4-tier analysis (metadata, secrets, CVEs, SAST) + optional behavioral sandbox → plain-English verdict before you clone or run anything |
 
 Walkthrough: [guides/security-scan-guide.md](../guides/security-scan-guide.md).
 

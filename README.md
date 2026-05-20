@@ -52,11 +52,11 @@ Pick whichever client you use. You only need one. Both end up with the same MCP 
 claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
 ```
 
-Then to make the slash commands work, drop them into Claude Code's commands folder:
+Then to make the slash commands work, drop them into Claude Code's commands folder. The commands are organized into subfolders by tier — Claude Code reads `~/.claude/commands/` flat, so we copy them all into one place:
 
 ```bash
 mkdir -p ~/.claude/commands
-cp commands/*.md ~/.claude/commands/
+find commands -name '*.md' -not -name 'README.md' -exec cp {} ~/.claude/commands/ \;
 ```
 
 First time you run a SearchAtlas tool in chat, a browser tab opens for OAuth. Sign in, approve, done.
@@ -125,7 +125,7 @@ git pull origin main
 If you're a Claude Code user, also refresh your installed commands:
 
 ```bash
-cp commands/*.md ~/.claude/commands/
+find commands -name '*.md' -not -name 'README.md' -exec cp {} ~/.claude/commands/ \;
 ```
 
 (Power users: see [POWER-USER.md](POWER-USER.md) — there's a SessionStart hook that does this automatically.)

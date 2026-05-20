@@ -15,7 +15,6 @@
 !/WHATS-NEW.md
 !/setup.sh
 !/.env.example
-!/Start*Bridges.*
 
 # ── Ship the project-level Claude Code settings (incl. SessionStart hooks) ──
 # settings.json is the shared config that propagates to every clone.
@@ -45,9 +44,16 @@
 !/Scripts/**
 Scripts/__pycache__/
 
-!/tools/
-!/tools/**
-tools/**/__pycache__/
+# ── mission-control/ — the Tier 3 surface (tools, setup.sh, Start Bridges) ──
+!/mission-control/
+!/mission-control/**
+mission-control/tools/**/__pycache__/
+
+# ── Re-block macOS Finder metadata after the whitelists ─────────────────────
+# Whitelists above (!/integrations/**, !/mission-control/**, etc.) re-include
+# every path inside those folders — including .DS_Store. Re-block it here.
+**/.DS_Store
+.DS_Store
 
 # ── docs/ — explicitly list allowed files, block everything else ─────────────
 

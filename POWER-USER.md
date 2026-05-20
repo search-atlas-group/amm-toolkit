@@ -37,26 +37,37 @@ The quickstart will:
 
 ```
 ~/YourWorkspace/
-├── amm-toolkit/                  ← this toolkit (do not edit)
-│   ├── commands/                 ← slash commands (/run-seo, /business-report, etc.)
-│   ├── workflows/                ← YAML workflow templates
-│   ├── integrations/             ← Slack, Discord, email, Circle scripts
-│   ├── tools/
-│   │   ├── supervisor/           ← always-on daemon (port 8764)
-│   │   ├── command-center/       ← onboard-client wizard (port 8865)
-│   │   ├── website-build/        ← website build wizard (port 8866)
-│   │   ├── website-rebuild/      ← website rebuild wizard (port 8867)
-│   │   ├── security/             ← repo security scanner
-│   │   └── guardian/             ← AMM guardian dashboard
-│   ├── guides/                   ← how-to guides
-│   ├── docs/                     ← MCP setup, tool reference, slash commands
-│   ├── Scripts/                  ← quickstart + setup scripts
-│   ├── CLAUDE.md                 ← toolkit context for Claude Code
-│   └── WHATS-NEW.md              ← changelog
-└── clients/                      ← one folder per client (created by /onboard-client)
+├── amm-toolkit/                       ← this toolkit (do not edit)
+│   ├── commands/                      ← slash commands (organized by tier)
+│   │   ├── essentials/                ← /help, /my-account, /scout, /business-report
+│   │   ├── workflows/                 ← /run-seo, /run-gbp, /run-ppc, /run-content, ...
+│   │   ├── clients/                   ← /onboard-client, /sync-client, /summit-shot
+│   │   ├── sharing/                   ← /send-slack, /send-discord, /send-email, /send-circle
+│   │   └── advanced/                  ← /build-website, /rebuild-website, /setup-integrations, /security-scan
+│   ├── docs/                          ← MCP setup, tool reference, slash commands, Desktop prompts
+│   ├── guides/                        ← how-to guides
+│   ├── integrations/                  ← Slack, Discord, email, Circle send scripts
+│   ├── workflows/                     ← YAML workflow templates
+│   ├── Scripts/                       ← install-mcp.sh, quickstart-*, preflight, security scanner
+│   ├── mission-control/               ← TIER 3 — wizards, supervisor, setup.sh, restart helpers
+│   │   ├── setup.sh                   ← the real installer (root setup.sh is a shim)
+│   │   ├── Start Bridges.command/.bat ← manual restart fallbacks
+│   │   └── tools/
+│   │       ├── supervisor/            ← always-on daemon (port 8764)
+│   │       ├── command-center/        ← onboard-client wizard (port 8865)
+│   │       ├── website-build/         ← website build wizard (port 8866)
+│   │       ├── website-rebuild/       ← website rebuild wizard (port 8867)
+│   │       ├── security/              ← repo security scanner
+│   │       └── guardian/              ← AMM guardian dashboard
+│   ├── setup.sh                       ← shim → mission-control/setup.sh
+│   ├── CLAUDE.md                      ← toolkit context for Claude Code
+│   ├── README.md                      ← Tier 1 entry point
+│   ├── POWER-USER.md                  ← this file
+│   └── WHATS-NEW.md                   ← changelog
+└── clients/                           ← one folder per client (created by /onboard-client)
     └── your-client/
-        ├── CLAUDE.md             ← per-client session context (IDs, brand voice)
-        └── brand-profile.md      ← brand data synced with SearchAtlas
+        ├── CLAUDE.md                  ← per-client session context (IDs, brand voice)
+        └── brand-profile.md           ← brand data synced with SearchAtlas
 ```
 
 ---
@@ -92,7 +103,7 @@ A fourth service — the **supervisor** on port 8764 — stays running always (~
 | Idle-shutdown bridges | `KeepAlive=false` | `RestartCount 0` |
 | Bridges run via | Direct `bash run.sh` | Git Bash invokes `run.sh` (requires Git for Windows) |
 
-For the supervisor architecture, see the [`tools/supervisor/server.py`](tools/supervisor/server.py) header comment.
+For the supervisor architecture, see the [`mission-control/tools/supervisor/server.py`](mission-control/tools/supervisor/server.py) header comment.
 
 ---
 
@@ -170,8 +181,8 @@ Three ways to scan:
 
 | Option | How | When |
 |---|---|---|
-| Browser quick check | Paste URL into `tools/security/` UI | Fast first look |
-| Full local scan | `python3 tools/security/server.py` then open UI | Thorough pre-clone |
+| Browser quick check | Paste URL into `mission-control/tools/security/` UI | Fast first look |
+| Full local scan | `python3 mission-control/tools/security/server.py` then open UI | Thorough pre-clone |
 | Claude Code | `/security-scan <url>` in chat | Deep AI review with full report |
 
 Walkthrough: [guides/security-scan-guide.md](guides/security-scan-guide.md).
@@ -241,7 +252,7 @@ tail -f /tmp/amm-website-build-audit.log
 ```powershell
 # Bridges launched via schtasks don't capture stdout by default. Run the
 # bridge manually to see live output:
-& "C:\Program Files\Git\bin\bash.exe" -c "PORT=8866 bash /c/Users/<you>/.../amm-toolkit/tools/website-build/run.sh"
+& "C:\Program Files\Git\bin\bash.exe" -c "PORT=8866 bash /c/Users/<you>/.../amm-toolkit/mission-control/tools/website-build/run.sh"
 ```
 Or check Task Scheduler → SearchAtlasAMM-website-build → History.
 </details>
