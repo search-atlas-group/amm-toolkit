@@ -151,13 +151,20 @@ See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full deta
 
 ## Manual MCP Setup
 
-Just want SearchAtlas MCP connected (no toolkit, no slash commands)? One command — detects Claude Code, Claude Desktop, Cursor, and Windsurf, writes the right config for each, opens OAuth, and pops the welcome page so you know it worked:
+Want SearchAtlas MCP + all the slash commands without cloning the repo? One command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
 ```
 
-Two browser tabs open at the end: the welcome page loads in the background, the SearchAtlas authorization tab opens on top. Finish OAuth, switch tabs, and you're in.
+What it does:
+- Detects Claude Code, Claude Desktop, Cursor, and Windsurf — writes the SearchAtlas MCP server config into each
+- Downloads the lightweight slash-command pack (~400 KB) into `~/.searchatlas/toolkit/` and installs all 19 commands into `~/.claude/commands/` (path-patched, ready to run)
+- Opens the welcome page
+
+You get `/my-account`, `/scout`, `/business-report`, `/onboard-client`, `/run-seo`, `/run-gbp`, `/run-ppc`, `/run-content`, `/run-pr`, `/run-visibility`, `/summit-shot`, `/send-slack`, `/send-discord`, `/send-email`, `/send-circle`, `/security-scan`, `/setup-integrations`, `/sync-client`, and `/help` ready to use the first time you launch Claude.
+
+The toolkit's `tools/` directory (security scanner UI, command-center web UI, ~37 MB) is *not* included — for that, run the full `quickstart-mac.sh` above instead.
 
 Or, if you only want Claude Code wired up manually:
 

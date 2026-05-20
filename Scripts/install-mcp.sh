@@ -31,6 +31,17 @@ ENDPOINT="https://mcp.searchatlas.com/mcp"
 WELCOME_RAW_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/docs/welcome.html"
 WELCOME_LOCAL_DIR="${HOME}/.searchatlas"
 WELCOME_LOCAL_FILE="${WELCOME_LOCAL_DIR}/welcome.html"
+
+# Toolkit slash-commands install location. We pull just the lightweight
+# dirs (~400KB, 53 files) — commands, workflows, integrations, Scripts.
+# We skip tools/ (37MB, mostly the security scanner UI + command-center
+# web app) to keep this a "lite" install — users who want the full
+# toolkit run the quickstart instead. Command files are patched so
+# their relative bash invocations resolve to this hidden install.
+TOOLKIT_TARBALL_URL="https://codeload.github.com/search-atlas-group/amm-toolkit/tar.gz/refs/heads/main"
+TOOLKIT_INSTALL_DIR="${HOME}/.searchatlas/toolkit"
+CLAUDE_COMMANDS_DIR="${HOME}/.claude/commands"
+
 HOME_DIR="${HOME}"
 OS="$(uname -s)"
 
@@ -156,6 +167,77 @@ open_welcome() {
   fi
 }
 
+# Download the lightweight toolkit slices (commands + their bash
+# dependencies) and install slash commands into ~/.claude/commands/.
+# Each command .md is sed-patched so relative paths like
+# "bash integrations/slack/send-message.sh" resolve to the absolute
+# install dir. Idempotent — re-running overwrites.
+install_toolkit_commands() {
+  if ! command -v curl >/dev/null 2>&1 || ! command -v tar >/dev/null 2>&1; then
+    info "Slash commands skipped (curl or tar unavailable)"
+    return 1
+  fi
+
+  local tmpdir
+  tmpdir="$(mktemp -d 2>/dev/null)" || { warn "Could not create temp dir for toolkit"; return 1; }
+
+  if ! curl -fsSL "$TOOLKIT_TARBALL_URL" -o "$tmpdir/toolkit.tar.gz" 2>/dev/null; then
+    warn "Could not download toolkit tarball"
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  mkdir -p "$TOOLKIT_INSTALL_DIR" "$CLAUDE_COMMANDS_DIR"
+
+  # Extract only the dirs we need. Strip the top-level "amm-toolkit-main/"
+  # so files land directly under TOOLKIT_INSTALL_DIR.
+  if ! tar -xzf "$tmpdir/toolkit.tar.gz" -C "$tmpdir" \
+        amm-toolkit-main/commands amm-toolkit-main/workflows \
+        amm-toolkit-main/integrations amm-toolkit-main/Scripts 2>/dev/null; then
+    warn "Could not extract toolkit dirs"
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  # Refresh the install dir (cleans up stale files from previous installs).
+  for d in commands workflows integrations Scripts; do
+    rm -rf "$TOOLKIT_INSTALL_DIR/$d"
+    mv "$tmpdir/amm-toolkit-main/$d" "$TOOLKIT_INSTALL_DIR/" 2>/dev/null || true
+  done
+  rm -rf "$tmpdir"
+
+  # Make Scripts/*.sh executable in case any command shells out to them.
+  chmod +x "$TOOLKIT_INSTALL_DIR/Scripts/"*.sh 2>/dev/null || true
+  chmod +x "$TOOLKIT_INSTALL_DIR/integrations/"**/*.sh 2>/dev/null || true
+
+  # Patch each command .md so relative bash invocations and workflow
+  # references resolve to the toolkit install dir. Then drop into
+  # ~/.claude/commands/. Pattern set covers the actual relative paths
+  # used across all commands; safe-no-op for files that don't have them.
+  local patched=0
+  for md in "$TOOLKIT_INSTALL_DIR/commands"/*.md; do
+    [ -f "$md" ] || continue
+    local name
+    name="$(basename "$md")"
+    sed \
+      -e "s|bash integrations/|bash ${TOOLKIT_INSTALL_DIR}/integrations/|g" \
+      -e "s|bash workflows/|bash ${TOOLKIT_INSTALL_DIR}/workflows/|g" \
+      -e "s|bash Scripts/|bash ${TOOLKIT_INSTALL_DIR}/Scripts/|g" \
+      -e "s|bash scripts/|bash ${TOOLKIT_INSTALL_DIR}/Scripts/|g" \
+      -e "s|\\\$AMM_ROOT|${TOOLKIT_INSTALL_DIR}|g" \
+      -e "s|\`workflows/|\`${TOOLKIT_INSTALL_DIR}/workflows/|g" \
+      -e "s|\`integrations/|\`${TOOLKIT_INSTALL_DIR}/integrations/|g" \
+      "$md" > "$CLAUDE_COMMANDS_DIR/$name" 2>/dev/null
+    patched=$((patched+1))
+  done
+
+  if [ "$patched" -gt 0 ]; then
+    ok "Installed ${patched} slash commands to ~/.claude/commands/"
+  else
+    warn "No slash commands were patched"
+  fi
+}
+
 main() {
   echo
   echo "  $(c_bold 'SearchAtlas MCP V2') $(c_dim '· one-shot installer')"
@@ -177,6 +259,15 @@ main() {
     exit 1
   fi
 
+  # Install AMM slash commands (only if Claude Code is present —
+  # ~/.claude/commands/ is a Claude Code thing).
+  if [ "$HAS_CLAUDE_CODE" -eq 1 ]; then
+    echo
+    echo "  $(c_bold 'Installing slash commands…')"
+    install_toolkit_commands || true
+  fi
+
+  echo
   echo "  $(c_bold 'You are wired up.')"
   open_welcome
   echo
