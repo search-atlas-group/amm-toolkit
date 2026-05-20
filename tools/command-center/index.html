@@ -510,7 +510,7 @@
         <span class="progress-bar"><span class="progress-fill" id="progressFill" style="width: 0%"></span></span>
         <span class="progress-num" id="progressNum">0%</span>
       </div>
-      <div><span class="conn-dot" id="connDot"></span><span id="connText">Checking…</span></div>
+      <div id="connWrap" title="Checking…"><span class="conn-dot" id="connDot"></span><span id="connText">Checking…</span></div>
     </div>
   </header>
 
@@ -987,16 +987,26 @@ Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Ow
 
   // ----- Connection check -----
   const checkConn = async () => {
+    const wrap = $("#connWrap");
     try {
       const res = await fetch("/api/health");
       const data = await res.json();
       const ok = data.claude_available && data.searchatlas_mcp_configured;
       $("#connDot").classList.toggle("bad", !ok);
-      $("#connText").textContent = ok ? "Claude + SA MCP ready"
-        : (data.claude_available ? "SA MCP not configured" : "Claude CLI not found");
+      if (ok) {
+        $("#connText").textContent = "Claude + SA MCP ready";
+        if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: configured\nToolkit: ${data.toolkit_root || '—'}`;
+      } else if (data.claude_available) {
+        $("#connText").textContent = "SA MCP not configured";
+        if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp`;
+      } else {
+        $("#connText").textContent = "Claude CLI not found";
+        if (wrap) wrap.title = "Claude CLI not found on PATH. Install from https://claude.com/code";
+      }
     } catch {
       $("#connDot").classList.add("bad");
       $("#connText").textContent = "Server offline";
+      if (wrap) wrap.title = "Cannot reach the bridge server.";
     }
   };
 

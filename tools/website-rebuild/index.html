@@ -921,7 +921,7 @@ textarea { resize: vertical; min-height: 60px; }
     <span class="brand-name">AMM Website Rebuild Wizard</span>
   </div>
   <div class="brand-right">
-    <span class="conn-status"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">Checking…</span></span>
+    <span class="conn-status" id="conn-wrap" title="Checking…"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">Checking…</span></span>
     <button class="reset-btn" onclick="resetWizard()">Start fresh</button>
   </div>
 </div>
@@ -3355,6 +3355,7 @@ function cancelStream() {
 async function checkConn() {
   const dot = document.getElementById('conn-dot');
   const txt = document.getElementById('conn-text');
+  const wrap = document.getElementById('conn-wrap');
   if (!dot || !txt) return;
   try {
     const res = await fetch('/api/health');
@@ -3362,16 +3363,20 @@ async function checkConn() {
     if (data.claude_available && data.searchatlas_mcp_configured) {
       dot.className = 'conn-dot good';
       txt.textContent = 'Claude + SA MCP ready';
+      if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: configured\nToolkit: ${data.toolkit_root || '—'}`;
     } else if (data.claude_available) {
       dot.className = 'conn-dot warn';
       txt.textContent = 'SA MCP not configured';
+      if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp`;
     } else {
       dot.className = 'conn-dot bad';
       txt.textContent = 'Claude CLI not found';
+      if (wrap) wrap.title = 'Claude CLI not found on PATH. Install from https://claude.com/code';
     }
   } catch (e) {
     dot.className = 'conn-dot bad';
     txt.textContent = 'Server offline';
+    if (wrap) wrap.title = 'Cannot reach the bridge server.';
   }
 }
 
