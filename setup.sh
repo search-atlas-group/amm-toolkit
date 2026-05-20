@@ -128,28 +128,87 @@ fi
 # ── 2e. Create Start Bridges.command for manual restart ──────────────────────
 
 START_CMD="$SCRIPT_DIR/Start Bridges.command"
-cat > "$START_CMD" <<'START_EOF'
+# Use an unquoted heredoc so $SCRIPT_DIR (the cloned-repo path) is interpolated
+# into the script at install time. Other shell variables are escaped with \$ so
+# they resolve at runtime when the user double-clicks. We can't trust
+# `launchctl load`'s exit code — it returns 0 when the plist registers, even
+# if the bridge process crashes during boot (e.g. claude CLI missing from
+# launchd's PATH). So the script must actually curl the health endpoint to
+# know if the bridge is really listening, and fall back to direct nohup
+# launch if launchd fails.
+cat > "$START_CMD" <<START_EOF
 #!/usr/bin/env bash
-# Double-click to restart the Mission Control bridges after a manual kill.
-# These bridges auto-start on login; this script is the fallback to restart
-# them within the same session.
+# Double-click to restart the Mission Control bridges.
+TOOLKIT="$SCRIPT_DIR"
+UID_NUM=\$(id -u)
+ANY_FAIL=0
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-if [[ "$(uname -s)" == "Darwin" ]]; then
-    for NAME in command-center website-build website-rebuild; do
-        PLIST="$HOME/Library/LaunchAgents/com.searchatlas.amm-$NAME.plist"
-        if [ -f "$PLIST" ]; then
-            launchctl unload "$PLIST" 2>/dev/null || true
-            launchctl load "$PLIST" 2>/dev/null && \
-                echo "  ✓  $NAME bridge restarted" || \
-                echo "  ✗  $NAME bridge failed to restart"
-        fi
-    done
-    echo ""
-    echo "Bridges restarted. Open welcome.html and click any wizard card."
+if [[ "\$(uname -s)" != "Darwin" ]]; then
+    echo "This restart helper is macOS-only."
     read -p "Press Enter to close..."
+    exit 0
 fi
+
+wait_for_port() {
+    local port="\$1"
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if curl -s -o /dev/null -m 1 "http://localhost:\$port/api/health" 2>/dev/null; then
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+restart_one() {
+    local name="\$1" port="\$2"
+    local label="com.searchatlas.amm-\$name"
+    local plist="\$HOME/Library/LaunchAgents/\$label.plist"
+    local run_sh="\$TOOLKIT/tools/\$name/run.sh"
+
+    launchctl bootout "gui/\$UID_NUM/\$label" 2>/dev/null || \\
+        launchctl unload "\$plist" 2>/dev/null || true
+    local pids
+    pids=\$(lsof -t -iTCP:\$port -sTCP:LISTEN 2>/dev/null)
+    if [ -n "\$pids" ]; then
+        echo "\$pids" | xargs kill -9 2>/dev/null || true
+    fi
+    sleep 0.3
+
+    if [ -f "\$plist" ]; then
+        launchctl bootstrap "gui/\$UID_NUM" "\$plist" 2>/dev/null || \\
+            launchctl load "\$plist" 2>/dev/null || true
+    fi
+    if wait_for_port "\$port"; then
+        echo "  ✓  \$name listening on port \$port"
+        return 0
+    fi
+
+    if [ -f "\$run_sh" ]; then
+        echo "  …  \$name launchd boot failed, falling back to direct launch"
+        ( NO_BROWSER=1 PORT=\$port nohup bash "\$run_sh" \\
+            > "/tmp/amm-\$name.log" 2> "/tmp/amm-\$name.err" < /dev/null & )
+        if wait_for_port "\$port"; then
+            echo "  ✓  \$name listening on port \$port (direct launch)"
+            return 0
+        fi
+    fi
+
+    echo "  ✗  \$name failed to start — check /tmp/amm-\$name.err"
+    return 1
+}
+
+restart_one command-center 8765 || ANY_FAIL=1
+restart_one website-build 8766 || ANY_FAIL=1
+restart_one website-rebuild 8767 || ANY_FAIL=1
+
+echo
+if [ \$ANY_FAIL -eq 0 ]; then
+    echo "All bridges running. Refresh welcome.html, then click any wizard card."
+else
+    echo "Some bridges failed to start. Inspect the .err files in /tmp/ for details."
+fi
+read -p "Press Enter to close..."
 START_EOF
 chmod +x "$START_CMD"
 
