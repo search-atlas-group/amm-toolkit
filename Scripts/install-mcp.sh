@@ -14,7 +14,13 @@ set -euo pipefail
 SERVER_NAME="searchatlas"
 ENDPOINT="https://mcp.searchatlas.com/mcp"
 OAUTH_URL="https://app.searchatlas.com/mcp/authorize?client=installer"
-WELCOME_URL="https://cdn.jsdelivr.net/gh/search-atlas-group/amm-toolkit@main/docs/welcome.html"
+# Served via htmlpreview.github.io (proxy that fetches the welcome HTML
+# from GitHub and serves it with Content-Type: text/html). jsdelivr and
+# raw.githubusercontent.com both serve raw .html as text/plain for
+# anti-abuse, which makes browsers display the source instead of
+# rendering the page. GitHub Pages would be cleaner but org admins
+# have it disabled on this account.
+WELCOME_URL="https://htmlpreview.github.io/?https://github.com/search-atlas-group/amm-toolkit/blob/main/docs/welcome.html"
 HOME_DIR="${HOME}"
 OS="$(uname -s)"
 
