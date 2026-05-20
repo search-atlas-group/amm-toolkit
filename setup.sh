@@ -48,6 +48,102 @@ fi
 
 echo ""
 
+# ── 2d. Install Mission Control bridges as LaunchAgents ──────────────────────
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
+    mkdir -p "$LAUNCH_AGENTS_DIR"
+
+    # Helper function to install one bridge as a LaunchAgent
+    install_bridge_agent() {
+        local NAME="$1"      # e.g. "command-center"
+        local PORT="$2"
+        local LABEL="com.searchatlas.amm-$NAME"
+        local PLIST="$LAUNCH_AGENTS_DIR/$LABEL.plist"
+        local RUN_SH="$SCRIPT_DIR/tools/$NAME/run.sh"
+
+        if [ ! -f "$RUN_SH" ]; then
+            echo "  ⚠  $RUN_SH not found — skipping $NAME LaunchAgent"
+            return
+        fi
+
+        # Unload first if it already exists
+        launchctl unload "$PLIST" 2>/dev/null || true
+
+        # Write the plist
+        cat > "$PLIST" <<PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$LABEL</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$RUN_SH</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NO_BROWSER</key>
+        <string>1</string>
+        <key>PORT</key>
+        <string>$PORT</string>
+        <key>PATH</key>
+        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/tmp/amm-$NAME.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/amm-$NAME.err</string>
+</dict>
+</plist>
+PLIST_EOF
+
+        launchctl load "$PLIST" 2>/dev/null && \
+            echo "  ✓  $NAME bridge running on port $PORT" || \
+            echo "  ⚠  $NAME LaunchAgent installed but failed to load"
+    }
+
+    echo "Installing Mission Control bridges..."
+    install_bridge_agent "command-center" "8765"
+    install_bridge_agent "website-build" "8766"
+    install_bridge_agent "website-rebuild" "8767"
+    echo ""
+fi
+
+# ── 2e. Create Start Bridges.command for manual restart ──────────────────────
+
+START_CMD="$SCRIPT_DIR/Start Bridges.command"
+cat > "$START_CMD" <<'START_EOF'
+#!/usr/bin/env bash
+# Double-click to restart the Mission Control bridges after a manual kill.
+# These bridges auto-start on login; this script is the fallback to restart
+# them within the same session.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    for NAME in command-center website-build website-rebuild; do
+        PLIST="$HOME/Library/LaunchAgents/com.searchatlas.amm-$NAME.plist"
+        if [ -f "$PLIST" ]; then
+            launchctl unload "$PLIST" 2>/dev/null || true
+            launchctl load "$PLIST" 2>/dev/null && \
+                echo "  ✓  $NAME bridge restarted" || \
+                echo "  ✗  $NAME bridge failed to restart"
+        fi
+    done
+    echo ""
+    echo "Bridges restarted. Open welcome.html and click any wizard card."
+    read -p "Press Enter to close..."
+fi
+START_EOF
+chmod +x "$START_CMD"
+
 
 
 # ── 5. Configure SearchAtlas MCP ─────────────────────────────────────────────

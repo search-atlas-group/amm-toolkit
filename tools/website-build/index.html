@@ -1,0 +1,2697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Website Build Wizard</title>
+<style>
+:root {
+  --bg: #fbfaff;
+  --surface: #ffffff;
+  --line: #ece9f5;
+  --text: #1a1530;
+  --muted: #6b6485;
+  --muted-2: #a9a4bd;
+  --purple: #6d28d9;
+  --purple-light: #a78bfa;
+  --lavender: #ede9fe;
+  --cyan: #06b6d4;
+  --green: #22c55e;
+  --green-bg: #ecfdf5;
+  --orange: #f59e0b;
+  --orange-bg: #fffbeb;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --code-bg: #f5f3ff;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+body { background: radial-gradient(circle at top, #f5f0ff 0%, var(--bg) 50%); }
+.wrap { max-width: 760px; margin: 0 auto; padding: 40px 28px 80px; }
+
+/* Brand bar */
+.brand {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; color: var(--muted); font-size: 13px;
+}
+.brand-left { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, #1a1530 0%, var(--purple) 100%);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 13px;
+}
+.brand-name { font-weight: 600; color: var(--text); }
+.brand-right { display: flex; align-items: center; gap: 14px; }
+.reset-btn {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  font-size: 12px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+}
+.reset-btn:hover { background: var(--lavender); color: var(--purple); }
+.health-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--muted);
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.health-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted-2);
+  transition: background 0.2s;
+}
+.health-dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.health-dot.warn { background: var(--orange); box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+.health-dot.bad { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+
+/* Progress */
+.progress { display: flex; gap: 5px; margin-bottom: 12px; }
+.progress-tick {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: var(--line); transition: background 0.4s ease;
+}
+.progress-tick.done { background: var(--purple); }
+.progress-tick.active { background: var(--purple-light); }
+.progress-label {
+  font-size: 11px; color: var(--muted-2);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 32px; font-weight: 600;
+}
+
+/* Step containers */
+.step { display: none; animation: fadeIn 0.3s ease; }
+.step.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+
+/* Fields */
+.field { margin-bottom: 18px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 8px;
+}
+input[type="text"], input[type="url"], textarea, select {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--line); border-radius: 8px;
+  font-size: 14.5px; font-family: inherit;
+  background: var(--surface); color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--lavender);
+}
+textarea { resize: vertical; min-height: 60px; }
+
+/* Service pills */
+.pill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); cursor: pointer;
+  font-size: 13px; color: var(--muted); transition: all 0.15s;
+}
+.pill:hover { border-color: var(--purple-light); color: var(--text); }
+.pill.selected {
+  background: var(--lavender); border-color: var(--purple);
+  color: var(--purple); font-weight: 600;
+}
+.pill-add {
+  border-style: dashed; color: var(--purple);
+}
+
+/* Budget tier cards */
+.tier-grid { display: grid; gap: 10px; }
+.tier-card {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; background: var(--surface);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tier-card:hover { border-color: var(--purple-light); }
+.tier-card.selected {
+  border-color: var(--purple); background: var(--lavender);
+}
+.tier-name { font-weight: 600; color: var(--text); }
+.tier-range { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.tier-cadence { font-size: 12px; color: var(--muted-2); max-width: 320px; text-align: right; }
+
+/* Detect grid */
+.detect-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 10px; margin-bottom: 18px;
+}
+.detect-card {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 10px; text-align: center; background: var(--surface);
+}
+.detect-card .icon { font-size: 22px; }
+.detect-card .label {
+  font-size: 11px; font-weight: 600; margin-top: 6px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+}
+.detect-card .status { font-size: 12px; margin-top: 4px; }
+.detect-card.found { border-color: var(--green); background: var(--green-bg); }
+.detect-card.found .status { color: #047857; font-weight: 600; }
+.detect-card.missing { border-color: var(--orange); background: var(--orange-bg); }
+.detect-card.missing .status { color: #b45309; font-weight: 600; }
+
+/* Pillars */
+.pillars { display: grid; gap: 10px; }
+.pillar { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.pillar-label { width: 80px; color: var(--muted); }
+.pillar-bar {
+  flex: 1; height: 8px; background: var(--line);
+  border-radius: 4px; overflow: hidden;
+}
+.pillar-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+.pillar-fill.green { background: var(--green); }
+.pillar-fill.yellow { background: var(--orange); }
+.pillar-fill.red { background: var(--red); }
+.pillar-value { width: 32px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Materials dropzone */
+.materials-dropzone {
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  padding: 28px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  margin-bottom: 14px;
+}
+.materials-dropzone:hover, .materials-dropzone.is-dragover {
+  border-color: var(--purple);
+  background: var(--lavender);
+}
+.materials-dropzone .dropzone-icon { font-size: 32px; line-height: 1; margin-bottom: 8px; }
+.materials-dropzone .dropzone-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.materials-dropzone .dropzone-sub { font-size: 12.5px; color: var(--muted); }
+.materials-link-row { margin-bottom: 12px; }
+.materials-text-row { margin-bottom: 14px; }
+.materials-text-row textarea { min-height: 60px; }
+.materials-list { display: grid; gap: 6px; margin-bottom: 14px; }
+.material-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.material-item .m-icon { font-size: 16px; }
+.material-item .m-label { flex: 1; color: var(--text); }
+.material-item .m-meta { font-size: 11px; color: var(--muted-2); font-family: ui-monospace, monospace; }
+.material-item .m-remove {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--muted-2); font-size: 16px; padding: 0 4px;
+}
+.material-item .m-remove:hover { color: var(--red); }
+.materials-summary {
+  padding: 10px 12px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* BV auto-crawl + gap-fill */
+.bv-prefill-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 18px 22px;
+  margin-top: 14px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12.5px; line-height: 1.85;
+}
+.prefill-row {
+  display: flex; gap: 16px; align-items: baseline;
+  padding: 4px 0;
+}
+.prefill-status {
+  font-size: 13px; flex-shrink: 0; width: 22px;
+}
+.prefill-key { color: var(--muted); width: 130px; flex-shrink: 0; }
+.prefill-val { color: var(--text); flex: 1; }
+.prefill-source { font-size: 10.5px; color: var(--muted-2); margin-left: 8px; }
+.prefill-row.gap .prefill-val { color: var(--orange); font-weight: 600; }
+.prefill-row.partial .prefill-val { color: var(--text); }
+.prefill-row.partial .prefill-status { color: var(--orange); }
+.prefill-actions {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+
+/* Asset control panel */
+.asset-panel { margin-top: 18px; }
+.asset-panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.asset-panel-title {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.asset-panel-hint { font-size: 12px; color: var(--muted-2); }
+.asset-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; margin-bottom: 6px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.asset-row.use { border-color: var(--green); background: var(--green-bg); }
+.asset-row.edit { border-color: var(--purple); background: var(--lavender); }
+.asset-row.add { border-color: var(--cyan); background: #ecfeff; }
+.asset-row.reject_fresh { border-color: var(--orange); background: var(--orange-bg); }
+.asset-row.skip { border-color: var(--line); background: var(--code-bg); opacity: 0.65; }
+.asset-row.create { border-color: var(--purple-light); background: var(--lavender); }
+.asset-row .a-icon { font-size: 17px; flex-shrink: 0; }
+.asset-row .a-name { font-weight: 600; font-size: 13.5px; min-width: 100px; }
+.asset-row .a-state { font-size: 12px; color: var(--muted); flex: 1; }
+.asset-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.asset-chip {
+  padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.asset-chip:hover { border-color: var(--purple-light); color: var(--text); }
+.asset-chip.active {
+  background: var(--purple); color: #fff; border-color: var(--purple);
+}
+.asset-editor {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: none;
+}
+.asset-editor.shown { display: block; }
+.asset-editor input, .asset-editor textarea {
+  font-size: 12.5px; padding: 7px 9px; margin-top: 4px;
+}
+.asset-editor label { font-size: 10.5px; margin-bottom: 4px; }
+.asset-editor-row { margin-bottom: 8px; }
+.asset-editor-row:last-child { margin-bottom: 0; }
+
+/* Callouts */
+.callout {
+  padding: 14px 16px; border-radius: 10px;
+  margin: 14px 0; font-size: 13.5px;
+}
+.callout.info { background: var(--lavender); color: var(--text); border-left: 3px solid var(--purple); }
+.callout.warn { background: var(--orange-bg); color: #92400e; border-left: 3px solid var(--orange); }
+.callout.err { background: var(--red-bg); color: #991b1b; border-left: 3px solid var(--red); }
+.callout.ok { background: var(--green-bg); color: #065f46; border-left: 3px solid var(--green); }
+.callout strong { display: block; margin-bottom: 4px; }
+
+/* HITL summary */
+.hitl-block {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 22px 24px; margin: 16px 0; font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.hitl-section { margin-bottom: 16px; }
+.hitl-section:last-child { margin-bottom: 0; }
+.hitl-heading {
+  font-family: -apple-system, "Inter", sans-serif;
+  font-weight: 700; font-size: 12px;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.hitl-row { display: flex; gap: 16px; }
+.hitl-key { width: 130px; color: var(--muted); flex-shrink: 0; }
+.hitl-val { color: var(--text); }
+.hitl-issues { color: #92400e; }
+.hitl-issues.none { color: #065f46; }
+
+/* Archetype grid */
+.archetype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.archetype-card {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; cursor: pointer; transition: all 0.15s;
+}
+.archetype-card:hover { border-color: var(--purple-light); }
+.archetype-card.selected {
+  border-color: var(--purple); background: var(--lavender);
+}
+.archetype-name { font-weight: 700; margin-bottom: 4px; }
+.archetype-desc { font-size: 12.5px; color: var(--muted); }
+
+/* Build feed (real, SSE-driven — replaces simulated build list) */
+.build-feed {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 18px 22px;
+  max-height: 500px; overflow-y: auto;
+  margin: 12px 0 18px;
+  font-size: 13.5px; line-height: 1.6;
+}
+.feed-empty { color: var(--muted-2); font-style: italic; padding: 8px 0; }
+.feed-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 6px 0;
+  opacity: 0; transform: translateY(3px);
+  animation: line-in 0.25s ease forwards;
+}
+@keyframes line-in { to { opacity: 1; transform: translateY(0); } }
+.feed-item .feed-icon {
+  width: 18px; height: 18px; border-radius: 5px;
+  flex-shrink: 0; margin-top: 2px;
+  background: var(--code-bg);
+  display: grid; place-items: center;
+  font-size: 11px;
+}
+.feed-item .feed-text { flex: 1; color: var(--text); }
+.feed-item.phase { margin-top: 14px; }
+.feed-item.phase:first-child { margin-top: 0; }
+.feed-item.phase .feed-icon {
+  background: var(--lavender);
+}
+.feed-item.phase .feed-icon::after {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--purple);
+}
+.feed-item.phase .feed-text {
+  color: var(--text); font-weight: 700;
+  font-size: 14px; letter-spacing: -0.1px;
+}
+.feed-item.work .feed-icon {
+  background: var(--lavender);
+}
+.feed-item.work .feed-icon::after {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  border: 2px solid var(--purple); border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.feed-item.work .feed-text { color: var(--muted); font-style: italic; }
+.feed-item.done .feed-icon {
+  background: var(--green-bg);
+}
+.feed-item.done .feed-icon::after {
+  content: ""; width: 7px; height: 4px;
+  border-left: 1.6px solid var(--green); border-bottom: 1.6px solid var(--green);
+  transform: rotate(-45deg) translate(0, -1px);
+}
+.feed-item.done .feed-text { color: var(--text); }
+.feed-item.note .feed-icon { background: transparent; }
+.feed-item.note .feed-text { color: var(--muted); }
+.feed-item.biz .feed-icon { background: var(--lavender); }
+.feed-item.biz .feed-icon::after { content: "★"; color: var(--purple); font-size: 11px; }
+.feed-item.biz .feed-text { color: var(--text); font-weight: 600; }
+.feed-item.error .feed-icon {
+  background: var(--red-bg);
+}
+.feed-item.error .feed-icon::after { content: "!"; color: var(--red); font-size: 11px; font-weight: 700; }
+.feed-item.error .feed-text { color: var(--red); }
+.feed-item.complete .feed-icon { background: var(--green-bg); }
+.feed-item.complete .feed-icon::after { content: "✓"; color: var(--green); font-size: 12px; font-weight: 700; }
+.feed-item.complete .feed-text { color: #065f46; font-weight: 600; }
+
+.build-stats {
+  display: flex; gap: 18px; padding: 12px 14px;
+  background: var(--code-bg);
+  border-radius: 8px;
+  font-size: 12.5px; color: var(--muted);
+  margin-bottom: 10px;
+}
+.build-stats .stat-val {
+  font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Live site block — final step */
+.live-site-block {
+  background: linear-gradient(135deg, rgba(109,40,217,0.10), rgba(149,84,237,0.04));
+  border: 1px solid var(--lavender);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin: 16px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.live-site-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.live-site-label {
+  font-size: 11px;
+  color: var(--purple);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.live-site-url {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+  word-break: break-all;
+}
+.live-site-status {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.live-site-status .live-dot {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.btn-open-site {
+  flex-shrink: 0;
+  text-decoration: none;
+  background: var(--purple);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.btn-open-site:hover { background: #5b21b6; }
+@media (max-width: 640px) {
+  .live-site-block { flex-direction: column; align-items: flex-start; }
+  .btn-open-site { width: 100%; text-align: center; }
+}
+.live-site-block--pending {
+  background: linear-gradient(135deg, rgba(234,179,8,0.08), rgba(234,179,8,0.02));
+  border-color: rgba(234,179,8,0.45);
+  margin-top: 10px;
+}
+.live-site-block--pending .live-site-label { color: #b45309; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.live-site-block--pending .pending-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(234,179,8,0.18);
+  color: #92400e;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.live-site-block--pending .pending-dot {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #eab308;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.live-site-block--pending .live-site-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.45;
+  max-width: 640px;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex; gap: 10px; justify-content: space-between;
+  margin-top: 28px;
+}
+.btn {
+  padding: 11px 22px; border: 1px solid transparent; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--purple); color: #fff;
+}
+.btn-primary:hover:not(:disabled) { background: #5b21b6; }
+.btn-secondary {
+  background: var(--surface); color: var(--muted); border-color: var(--line);
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--muted-2); }
+.btn-danger {
+  background: var(--red-bg); color: var(--red); border-color: var(--red);
+}
+.btn-success {
+  background: var(--green); color: #fff;
+}
+
+/* Target market */
+.industry-tier1 { margin-bottom: 14px; }
+.industry-tier2-hint {
+  font-size: 12px; color: var(--muted-2);
+  margin: 6px 0 8px; font-style: italic;
+}
+.competitor-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.competitor-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px 5px 12px;
+  background: var(--lavender); border: 1px solid var(--purple-light);
+  border-radius: 999px;
+  font-size: 12.5px; color: var(--purple); font-weight: 600;
+}
+.competitor-chip .x-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--purple); font-size: 14px; padding: 0 2px; line-height: 1;
+}
+.kw-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px 5px 12px;
+  background: var(--surface); border: 1px solid var(--purple);
+  border-radius: 999px;
+  font-size: 12.5px; color: var(--purple); font-weight: 600;
+}
+.kw-chip .x-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--purple); font-size: 14px; padding: 0 2px; line-height: 1;
+}
+.field-hint {
+  font-size: 12px; color: var(--muted-2);
+  margin-top: 6px; font-style: italic;
+}
+
+/* Wave-based architecture */
+.wave-heading {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0 6px;
+  font-size: 12px; font-weight: 700;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: none;
+}
+.wave-badge {
+  display: inline-block;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--lavender); color: var(--purple);
+  font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.build-list { list-style: none; padding: 0; margin: 20px 0; }
+.build-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; font-size: 13.5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.build-item:last-child { border-bottom: none; }
+.build-item .check {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--line); display: inline-flex;
+  align-items: center; justify-content: center;
+  color: transparent; font-size: 11px; flex-shrink: 0;
+}
+.build-item.done { color: var(--text); }
+.build-item.done .check { background: var(--green); color: #fff; }
+.build-item.active { color: var(--text); }
+.build-item.active .check {
+  background: var(--purple);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(109, 40, 217, 0); }
+}
+.build-item .tool-code {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px; color: var(--purple);
+  background: var(--code-bg);
+  padding: 1px 6px; border-radius: 4px; margin-right: 6px;
+}
+
+/* Per-page approval cards */
+.page-walkthrough-progress {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px; color: var(--muted);
+  position: sticky; top: 8px; z-index: 5;
+}
+.page-walkthrough-progress strong { color: var(--text); }
+.page-walkthrough-progress .pw-counts {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12.5px;
+}
+.page-walkthrough-progress .pw-counts .pw-approved { color: #047857; font-weight: 600; }
+.page-walkthrough-progress .pw-counts .pw-rejected { color: #b45309; font-weight: 600; }
+.page-walkthrough-progress .pw-counts .pw-pending { color: var(--muted-2); }
+
+.page-card {
+  border: 1px solid var(--line); border-radius: 11px;
+  padding: 14px 16px; margin-bottom: 10px;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.page-card.approved { border-color: var(--green); background: var(--green-bg); }
+.page-card.rejected { border-color: var(--orange); background: var(--orange-bg); opacity: 0.7; }
+.page-card.edit-mode { border-color: var(--purple); background: var(--lavender); }
+.page-card-head { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.page-card-tree {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11.5px; color: var(--muted-2);
+  white-space: pre; flex-shrink: 0; padding-top: 2px; min-width: 110px;
+}
+.page-card-body { flex: 1; }
+.page-card-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px; margin-bottom: 3px; }
+.tier-badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.tier-badge.core { background: #dbeafe; color: #1e40af; }
+.tier-badge.service { background: var(--lavender); color: var(--purple); }
+.tier-badge.location { background: #fef3c7; color: #92400e; }
+.tier-badge.landing { background: #fce7f3; color: #9d174d; }
+.tier-badge.compliance { background: #e5e7eb; color: #374151; }
+.page-card-oneline { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.page-card-toggle { flex-shrink: 0; font-size: 13px; color: var(--muted-2); padding: 2px 4px; }
+.page-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.page-action-btn {
+  flex: 0 0 auto; padding: 6px 14px;
+  border: 1px solid var(--line); border-radius: 7px;
+  background: var(--surface);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.page-action-btn:hover { border-color: var(--muted-2); }
+.page-action-btn.approve { color: #065f46; }
+.page-action-btn.approve.active { background: var(--green); color: #fff; border-color: var(--green); }
+.page-action-btn.reject { color: #92400e; }
+.page-action-btn.reject.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+.page-action-btn.edit { color: var(--purple); }
+.page-action-btn.edit.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.page-expand { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 13px; }
+.page-expand.shown { display: block; }
+.page-expand-section { margin-bottom: 12px; }
+.page-expand-section:last-child { margin-bottom: 0; }
+.page-expand-heading { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+.page-expand-row { display: flex; gap: 12px; padding: 3px 0; font-family: ui-monospace, "SF Mono", monospace; font-size: 12px; }
+.page-expand-row .ek { color: var(--muted); min-width: 120px; }
+.page-expand-row .ev { color: var(--text); flex: 1; }
+.page-edit-panel { display: none; margin-top: 12px; padding: 12px 14px; background: var(--code-bg); border-left: 3px solid var(--purple); border-radius: 6px; }
+.page-edit-panel.shown { display: block; }
+.page-edit-panel label { font-size: 10.5px; margin-top: 8px; margin-bottom: 4px; }
+.page-edit-panel label:first-child { margin-top: 0; }
+.page-edit-panel input, .page-edit-panel textarea { font-size: 12.5px; padding: 7px 9px; }
+.page-walkthrough-footer { margin-top: 18px; padding: 12px 14px; background: var(--code-bg); border-radius: 8px; font-size: 13px; color: var(--muted); text-align: center; }
+.page-walkthrough-footer.complete { background: var(--green-bg); color: #065f46; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .field-row { grid-template-columns: 1fr; }
+  .detect-grid { grid-template-columns: repeat(3, 1fr); }
+  .archetype-grid { grid-template-columns: 1fr; }
+  .tier-card { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .tier-cadence { text-align: left; }
+  .page-card-head { flex-direction: column; gap: 6px; }
+  .page-card-tree { min-width: 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="brand">
+  <div class="brand-left">
+    <span class="brand-mark">SA</span>
+    <span class="brand-name">Website Build Wizard</span>
+  </div>
+  <div class="brand-right">
+    <span class="health-pill" id="health-pill" title="Checking…">
+      <span class="health-dot" id="health-dot"></span>
+      <span id="health-text">Checking…</span>
+    </span>
+    <button class="reset-btn" onclick="resetWizard()">Start fresh</button>
+  </div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="progress-label" id="progressLabel">Step 1 of 11 · Tell us about the client</div>
+
+<!-- STEP 1 · Client basics -->
+<section class="step active" data-step="1">
+  <h1>Tell us about the client</h1>
+  <p class="sub">The basics SearchAtlas needs to figure out the rest. We auto-detect everything else.</p>
+
+  <div class="field">
+    <label>Domain</label>
+    <input type="text" id="f-domain" placeholder="coastaldental.com">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Business name</label>
+      <input type="text" id="f-business" placeholder="Coastal Dental Group">
+    </div>
+    <div class="field">
+      <label>Primary location</label>
+      <input type="text" id="f-location" placeholder="Newport Beach, CA">
+    </div>
+  </div>
+  <div class="field">
+    <label>Services they offer</label>
+    <div class="pill-grid" id="services-pills"></div>
+    <input type="text" id="f-service-add" placeholder="Add another service + press Enter" style="margin-top: 10px;">
+  </div>
+
+  <div class="btn-row">
+    <span></span>
+    <button class="btn btn-primary" onclick="next()">Next →</button>
+  </div>
+</section>
+
+<!-- STEP 2 · Materials -->
+<section class="step" data-step="2">
+  <h1>Drop what you already have</h1>
+  <p class="sub">Optional. Anything you give us upfront makes the auto-fill smarter — especially if the Brand Vault is empty. Images, text, links. Skip if you've got nothing.</p>
+
+  <div class="materials-dropzone" id="materials-dropzone">
+    <div class="dropzone-icon">📥</div>
+    <div class="dropzone-title">Drop files here or click to browse</div>
+    <div class="dropzone-sub">Logos, color refs, mood boards · brand briefs, copy samples · competitor URLs · explainer videos</div>
+    <input type="file" id="materials-file-input" multiple accept="image/*,text/*,.md,.pdf,video/*" style="display:none;">
+  </div>
+
+  <div class="materials-link-row">
+    <input type="text" id="materials-link-input" placeholder="Paste a URL (client site, competitor, inspiration) + press Enter">
+  </div>
+
+  <div class="materials-text-row">
+    <textarea id="materials-text-input" placeholder="Or paste text — brand voice notes, copy samples, words to use or avoid…"></textarea>
+    <button class="btn btn-secondary" id="materials-text-add" style="margin-top:8px;">Add text note</button>
+  </div>
+
+  <div class="materials-list" id="materials-list"></div>
+
+  <div class="materials-summary" id="materials-summary" style="display:none;">
+    <strong>Captured:</strong>
+    <span id="materials-count">0 items</span>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Continue →</button>
+  </div>
+</section>
+
+<!-- STEP 3 · Budget tier -->
+<section class="step" data-step="3">
+  <h1>What's the monthly budget?</h1>
+  <p class="sub">Captured here, used by <code>/run-seo</code> later to size the post-launch cadence — press releases, cloud stacks, content frequency. Better to scope right than ship an $8K plan to a $2K client.</p>
+
+  <div class="tier-grid" id="tier-grid">
+    <div class="tier-card" data-tier="starter">
+      <div><div class="tier-name">Starter</div><div class="tier-range">Under $2K / month</div></div>
+      <div class="tier-cadence">1× cloud stack / yr · 1× PR / qtr · 4 articles / mo · GBP-only</div>
+    </div>
+    <div class="tier-card" data-tier="growth">
+      <div><div class="tier-name">Growth</div><div class="tier-range">$2K – $5K / month</div></div>
+      <div class="tier-cadence">1× cloud stack / qtr · 1× PR / mo · 8–10 articles / mo · GBP + light DPR</div>
+    </div>
+    <div class="tier-card" data-tier="scale">
+      <div><div class="tier-name">Scale</div><div class="tier-range">$5K – $10K / month</div></div>
+      <div class="tier-cadence">2× cloud stack / qtr · 2× PR / mo · 16+ articles / mo · full Digital PR</div>
+    </div>
+    <div class="tier-card" data-tier="enterprise">
+      <div><div class="tier-name">Enterprise</div><div class="tier-range">$10K+ / month</div></div>
+      <div class="tier-cadence">Custom — operator scopes against client roadmap</div>
+    </div>
+    <div class="tier-card" data-tier="unknown">
+      <div><div class="tier-name">Don't know yet</div><div class="tier-range">Defaults to Growth posture</div></div>
+      <div class="tier-cadence">Flagged in pre-build summary for sizing later</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Next →</button>
+  </div>
+</section>
+
+<!-- STEP 4 · Auto-detect -->
+<section class="step" data-step="4">
+  <h1>Checking what's already in SearchAtlas</h1>
+  <p class="sub">Running 5 parallel lookups against the SA MCP. Anything we find, you don't have to enter again.</p>
+
+  <div id="detect-loading" class="callout info" style="display: none;">
+    <strong>Scanning…</strong>
+    Checking OTTO, Brand Vault, GBP, PPC, and LLM Visibility for this domain.
+  </div>
+
+  <div id="detect-results" style="display: none;">
+    <div class="detect-grid" id="detect-grid">
+      <div class="detect-card" data-key="otto"><span class="icon">🏗️</span><div class="label">OTTO</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="bv"><span class="icon">🏷️</span><div class="label">Brand Vault</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="gbp"><span class="icon">📍</span><div class="label">GBP</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="ppc"><span class="icon">💰</span><div class="label">PPC</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="llmv"><span class="icon">👁️</span><div class="label">LLM Vis</div><div class="status">—</div></div>
+    </div>
+
+    <div class="field" id="pillar-section" style="display: none;">
+      <label style="margin-bottom: 10px;">Current pillar scores</label>
+      <div class="pillars" id="pillars"></div>
+    </div>
+
+    <div id="priority-note"></div>
+
+    <div class="asset-panel" id="asset-panel" style="display: none;">
+      <div class="asset-panel-header">
+        <div class="asset-panel-title">Your data, your call</div>
+        <div class="asset-panel-hint">Use, edit, add, or start fresh — per asset</div>
+      </div>
+      <div id="asset-rows"></div>
+    </div>
+  </div>
+
+  <div id="bv-missing-halt" style="display: none;">
+    <div class="callout info">
+      <strong>🔍 No Brand Vault yet — auto-filling from the web</strong>
+      Pulling from the client domain, your dropped materials, GBP, organic SERPs, and LLM visibility. You'll only fill what we can't infer.
+    </div>
+
+    <div class="bv-prefill-block" id="bv-prefill-block">
+      <div style="font-weight: 700; font-size: 12.5px; color: var(--purple); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;">Crawled · pre-filled fields</div>
+      <div id="bv-prefill-rows"></div>
+      <div class="prefill-actions">
+        <button class="btn btn-secondary" onclick="prev()">← Back</button>
+        <button class="btn btn-secondary" onclick="recheckBV()">Recheck</button>
+        <button class="btn btn-primary" id="bv-prefill-fill" onclick="proceedWithPrefill('fill')">Fill the gaps now</button>
+        <button class="btn btn-secondary" onclick="proceedWithPrefill('skip')">Proceed — flag gaps in review</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" id="step3-nav">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step3-next" onclick="next()" disabled>Use this data →</button>
+  </div>
+</section>
+
+<!-- STEP 5 · Brand confirmation -->
+<section class="step" data-step="5">
+  <h1>Pulled from your Brand Vault</h1>
+  <p class="sub">Auto-pulled details, business info, knowledge graph, and voice profile. Confirm or edit anything before we keep going.</p>
+
+  <div class="hitl-block" id="bv-confirm-block"></div>
+
+  <div class="callout info">
+    <strong>Edits sync both ways.</strong>
+    If you change a field below, we push it back to SA via <code>bv_update</code> — your vault stays canonical.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Looks good →</button>
+  </div>
+</section>
+
+<!-- STEP 6 · Target market -->
+<section class="step" data-step="6">
+  <h1>Who are we targeting?</h1>
+  <p class="sub">Three operator fields. These seed the market-evidence research in the next step — without them we'd have nothing to query SearchAtlas against.</p>
+
+  <div class="field industry-tier1">
+    <label>Industry · broad bucket <span style="color: var(--red); font-weight: 700;">*</span></label>
+    <select id="tm-industry-tier1">
+      <option value="">— Pick the closest fit —</option>
+    </select>
+  </div>
+
+  <div class="field" id="tm-industry-tier2-field" style="display: none;">
+    <label>Industry · specific category <span style="color: var(--red); font-weight: 700;">*</span></label>
+    <div class="industry-tier2-hint">GBP-style leaf category — pick the closest match.</div>
+    <div class="pill-grid" id="tm-industry-tier2"></div>
+  </div>
+
+  <div class="field">
+    <label>Target keywords <span style="color: var(--muted-2); font-weight: 600;">(optional, 3–5 recommended)</span></label>
+    <div class="pill-grid" id="tm-keyword-list"></div>
+    <input type="text" id="tm-keyword-input" placeholder='e.g. "dental implants newport beach" + press Enter' style="margin-top: 10px;">
+    <div class="field-hint">We'll auto-derive seeds from services × location × industry if you skip.</div>
+  </div>
+
+  <div class="field">
+    <label>Known competitors <span style="color: var(--muted-2); font-weight: 600;">(optional, up to 3 URLs)</span></label>
+    <div class="competitor-list" id="tm-competitor-list"></div>
+    <input type="url" id="tm-competitor-input" placeholder="https://competitor.com + press Enter" style="margin-top: 10px;">
+    <div class="field-hint">If you skip, we'll discover competitors automatically via SA organic SERPs.</div>
+  </div>
+
+  <div class="callout info">
+    <strong>Why we need this.</strong>
+    Industry + keywords + competitors are the three queries we run against SearchAtlas in the next step. They produce the evidence behind every proposed page — keyword volume, SERP feature targets, content gaps. Without them we'd be generating pages on vibes.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Run market research →</button>
+  </div>
+</section>
+
+<!-- STEP 7 · Market research (wave-based) -->
+<section class="step" data-step="7">
+  <h1>Mapping the market</h1>
+  <p class="sub">Two parallel waves against SearchAtlas — 9 MCP tools, 5 then 4. Synthesized into a proposed sitemap with per-page evidence. You approve each page one by one in the next step.</p>
+
+  <ul class="build-list" id="arch-list">
+    <li class="wave-heading" data-wave-heading="1"><span class="wave-badge">Wave 1 · 5 parallel</span> Discovering the landscape</li>
+    <li class="build-item" data-wave="1" data-step-id="se_lookup_keyword"><span class="check">✓</span><span class="tool-code">se_lookup_keyword</span>Validating target keywords</li>
+    <li class="build-item" data-wave="1" data-step-id="se_get_serp_overview"><span class="check">✓</span><span class="tool-code">se_get_serp_overview</span>Mapping who ranks today</li>
+    <li class="build-item" data-wave="1" data-step-id="gbp_list_categories"><span class="check">✓</span><span class="tool-code">gbp_list_categories</span>Pulling category taxonomy</li>
+    <li class="build-item" data-wave="1" data-step-id="se_get_organic_competitors"><span class="check">✓</span><span class="tool-code">se_get_organic_competitors</span>Discovering SA's competitor set</li>
+    <li class="build-item" data-wave="1" data-step-id="se_get_serp_features"><span class="check">✓</span><span class="tool-code">se_get_serp_features</span>Reading SERP feature patterns</li>
+
+    <li class="wave-heading" data-wave-heading="2"><span class="wave-badge">Wave 2 · 4 parallel</span> Pattern-matching against winners</li>
+    <li class="build-item" data-wave="2" data-step-id="se_get_indexed_pages"><span class="check">✓</span><span class="tool-code">se_get_indexed_pages</span>Mirroring winning page structures</li>
+    <li class="build-item" data-wave="2" data-step-id="se_analyze_keyword_gap"><span class="check">✓</span><span class="tool-code">se_analyze_keyword_gap</span>Finding unclaimed keyword territory</li>
+    <li class="build-item" data-wave="2" data-step-id="cg_create_topical_map"><span class="check">✓</span><span class="tool-code">cg_create_topical_map</span>Generating content clusters</li>
+    <li class="build-item" data-wave="2" data-step-id="cg_topic_suggestions"><span class="check">✓</span><span class="tool-code">cg_topic_suggestions</span>Pulling BV knowledge graph topics</li>
+
+    <li class="wave-heading" data-wave-heading="synth"><span class="wave-badge">Synthesis</span> Producing proposed-sitemap.json</li>
+    <li class="build-item" data-wave="synth" data-step-id="synthesis"><span class="check">✓</span><span class="tool-code">synthesize</span>Cross-referencing 9 result sets → page candidates with evidence</li>
+  </ul>
+
+  <div class="hitl-block" id="arch-summary" style="display: none;"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step7-next" onclick="next()" disabled>Walk every page →</button>
+  </div>
+</section>
+
+<!-- STEP 8 · Per-page approval -->
+<section class="step" data-step="8">
+  <h1>Approve every page · one by one</h1>
+  <p class="sub">Each proposed page on its own card with the evidence we found. Approve, reject, or edit. You can't skip — every page needs a decision before we touch the design.</p>
+
+  <div class="callout info">
+    <strong>Text only · by design.</strong>
+    Cards show what each page will be — title, target keywords, competitor evidence, recommended outline. Website Studio renders the real pages in Phase 11. We don't pre-render here because it costs resources we don't need to spend until you've locked the queue.
+  </div>
+
+  <div class="page-walkthrough-progress" id="page-walkthrough-progress">
+    <div><strong>Page queue</strong> · walk each card</div>
+    <div class="pw-counts">
+      <span class="pw-approved" id="pw-approved-count">0</span> approved ·
+      <span class="pw-rejected" id="pw-rejected-count">0</span> rejected ·
+      <span class="pw-pending" id="pw-pending-count">0</span> pending
+    </div>
+  </div>
+
+  <div id="page-walkthrough-cards"></div>
+
+  <div class="page-walkthrough-footer" id="page-walkthrough-footer">
+    Make a decision on every page above to continue.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step8-next" onclick="next()" disabled>Continue to design →</button>
+  </div>
+</section>
+
+<!-- STEP 9 · Design archetype -->
+<section class="step" data-step="9">
+  <h1>Pick the design style</h1>
+  <p class="sub">6 current web design patterns. Website Studio uses your pick as the rendering template — every page gets built in that style. You can adjust before publish.</p>
+
+  <div class="archetype-grid" id="archetype-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="archetype-card" data-arch="modern_minimal">
+      <div class="archetype-name">Modern Minimal</div>
+      <div class="archetype-desc">Whitespace, sans-serif, photography-led. Healthcare, finance, professional services.</div>
+    </div>
+    <div class="archetype-card" data-arch="editorial">
+      <div class="archetype-name">Editorial</div>
+      <div class="archetype-desc">Magazine layouts, oversized type, asymmetric grids. Fashion, hospitality, lifestyle.</div>
+    </div>
+    <div class="archetype-card" data-arch="bento">
+      <div class="archetype-name">Bento Grid</div>
+      <div class="archetype-desc">Card-based modular layouts (Apple-style). SaaS, tech, modern e-commerce.</div>
+    </div>
+    <div class="archetype-card" data-arch="glassmorphism">
+      <div class="archetype-name">Glassmorphism</div>
+      <div class="archetype-desc">Frosted-glass panels, layered translucency. Fintech, premium services, AI products.</div>
+    </div>
+    <div class="archetype-card" data-arch="brutalist">
+      <div class="archetype-name">Bold / Brutalist</div>
+      <div class="archetype-desc">High contrast, oversized type, raw aesthetic. Creative agencies, startups, edgy brands.</div>
+    </div>
+    <div class="archetype-card" data-arch="warm_organic">
+      <div class="archetype-name">Warm Organic</div>
+      <div class="archetype-desc">Earthy palette, soft rounded shapes, hand-drawn. Wellness, food, sustainable brands.</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Use this style →</button>
+  </div>
+</section>
+
+<!-- STEP 10 · Pre-build review -->
+<section class="step" data-step="10">
+  <h1>Pre-build review</h1>
+  <p class="sub">Everything we've gathered, on one screen. Approve here and the build starts. This is the only path to Phase 11.</p>
+
+  <div class="hitl-block" id="hitl-summary"></div>
+
+  <div class="callout warn">
+    <strong>This is the gate.</strong>
+    Catching a wrong assumption here costs 60 seconds. Catching it after pages are built costs a project. If anything is off, hit "Edit" — we'll jump back to that step, fix it, and re-present this review.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-danger" onclick="cancelBuild()">Cancel build</button>
+    <div>
+      <button class="btn btn-secondary" onclick="prev()" style="margin-right: 8px;">← Edit</button>
+      <button class="btn btn-success" onclick="startRealBuild()">Approve · start build →</button>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 11 · Build progress (real, SSE-driven) -->
+<section class="step" data-step="11">
+  <h1>Building the site</h1>
+  <p class="sub">Claude is running <code>/build-website</code> end-to-end against the SearchAtlas MCP. Every phase, every tool call, live below.</p>
+
+  <div class="build-stats">
+    <div><span>Elapsed</span> <span class="stat-val" id="build-elapsed">0.0s</span></div>
+    <div><span>Steps done</span> <span class="stat-val" id="build-steps">0</span></div>
+    <div><span>Phase</span> <span class="stat-val" id="build-phase">starting…</span></div>
+  </div>
+
+  <div class="build-feed" id="build-feed">
+    <div class="feed-empty">Waiting for the engine to start…</div>
+  </div>
+
+  <!-- Site-live block: revealed when the run completes -->
+  <div id="site-live-wrap" style="display: none;">
+    <div class="callout ok">
+      <strong>Site is live.</strong>
+      Published via Website Studio. Custom domain pending DNS cutover.
+    </div>
+
+    <div class="live-site-block">
+      <div class="live-site-meta">
+        <div class="live-site-label">Live now · Website Studio URL</div>
+        <div class="live-site-url" id="live-site-url">—</div>
+        <div class="live-site-status"><span class="live-dot"></span>Published via Website Studio · resolves immediately</div>
+      </div>
+      <a class="btn-open-site" id="open-live-site" href="#" target="_blank" rel="noopener">Open now →</a>
+    </div>
+
+    <div class="live-site-block live-site-block--pending">
+      <div class="live-site-meta">
+        <div class="live-site-label">Custom domain <span class="pending-badge">Pending DNS cutover</span></div>
+        <div class="live-site-url" id="custom-domain-url">—</div>
+        <div class="live-site-status"><span class="pending-dot"></span><span>DNS propagation typically takes minutes to a few hours</span></div>
+        <div class="live-site-hint">Point your DNS at Website Studio per the instructions emitted by Claude above. SSL provisions automatically once DNS resolves.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="build-cancel">Cancel</button>
+    <button class="btn btn-primary" onclick="goto(1)" id="build-restart" style="display: none;">Start another →</button>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────────
+const TOTAL_STEPS = 11;
+const STORAGE_KEY = 'amm-website-wizard-v1';
+
+const DEFAULT_SERVICES = ['General dentistry', 'Cosmetic', 'Implants', 'Orthodontics', 'Pediatric', 'Emergency'];
+
+const INDUSTRY_TAXONOMY = {
+  'Healthcare':            ['Dental Clinic', 'Medical Clinic', 'Chiropractor', 'Physical Therapy', 'Dermatology', 'Optometry', 'Mental Health', 'Veterinary'],
+  'Legal':                 ['Personal Injury', 'Family Law', 'Criminal Defense', 'Estate Planning', 'Business Law', 'Immigration', 'Bankruptcy'],
+  'Home Services':         ['Roofing', 'Plumbing', 'HVAC', 'Electrician', 'Landscaping', 'Pest Control', 'Cleaning', 'Painting'],
+  'Retail / E-commerce':   ['Apparel', 'Home Goods', 'Electronics', 'Specialty Foods', 'Jewelry', 'Outdoor Gear', 'Bookstore'],
+  'Food & Hospitality':    ['Restaurant', 'Cafe', 'Bar', 'Catering', 'Hotel', 'Bed & Breakfast', 'Event Venue'],
+  'Professional Services': ['Accounting', 'Financial Advisor', 'Insurance', 'Marketing Agency', 'IT Consulting', 'HR Consulting'],
+  'Wellness / Fitness':    ['Gym', 'Yoga Studio', 'Pilates', 'Personal Training', 'Massage Therapy', 'Nutritionist'],
+  'Beauty':                ['Hair Salon', 'Nail Salon', 'Med Spa', 'Barbershop', 'Eyelash & Brow', 'Tanning'],
+  'Real Estate':           ['Residential Brokerage', 'Commercial Brokerage', 'Property Management', 'Real Estate Investment', 'Mortgage Broker'],
+  'Auto':                  ['Auto Repair', 'Auto Body', 'Dealership', 'Detailing', 'Tire Shop', 'Towing'],
+  'Education':             ['Tutoring', 'Private School', 'Trade School', 'Music Lessons', 'Test Prep', 'Daycare'],
+  'Construction':          ['General Contractor', 'Remodeling', 'Custom Homes', 'Concrete', 'Excavation', 'Commercial Construction']
+};
+
+const TIERS = {
+  starter: { name: 'Starter', range: '< $2K / month',
+    cadence: [['Cloud stacks','1× per year'],['Press releases','1× per quarter'],['Articles','4 / month'],['Google Business Profile','Monthly post + review']] },
+  growth: { name: 'Growth', range: '$2K – $5K / month',
+    cadence: [['Cloud stacks','1× per quarter'],['Press releases','1× per month'],['Articles','8–10 / month'],['Google Business Profile','Weekly posts + reply automation']] },
+  scale: { name: 'Scale', range: '$5K – $10K / month',
+    cadence: [['Cloud stacks','2× per quarter'],['Press releases','2× per month'],['Articles','16+ / month'],['Digital PR','Full campaign']] },
+  enterprise: { name: 'Enterprise', range: '$10K+ / month',
+    cadence: [['Cloud stacks','Custom-scoped'],['Press releases','Custom-scoped'],['Articles','Custom-scoped'],['Digital PR','Custom-scoped']] },
+  unknown: { name: 'Growth (default)', range: 'Defaulted — flagged in pre-build review',
+    cadence: [['Cloud stacks','1× per quarter'],['Press releases','1× per month'],['Articles','8–10 / month'],['Google Business Profile','Weekly posts + reply automation']] }
+};
+
+const ARCHETYPES = {
+  modern_minimal: { name: 'Modern Minimal' },
+  editorial:      { name: 'Editorial' },
+  bento:          { name: 'Bento Grid' },
+  glassmorphism:  { name: 'Glassmorphism' },
+  brutalist:      { name: 'Bold / Brutalist' },
+  warm_organic:   { name: 'Warm Organic' }
+};
+
+const ASSET_META = {
+  otto: { icon: '🏗️', name: 'OTTO project', actions: { found: ['use', 'edit', 'reject_fresh'], missing: ['create', 'skip'] } },
+  bv:   { icon: '🏷️', name: 'Brand Vault',  actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  gbp:  { icon: '📍', name: 'GBP location', actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  ppc:  { icon: '💰', name: 'PPC business', actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  llmv: { icon: '👁️', name: 'LLM Visibility', actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } }
+};
+const ACTION_LABEL = { use: 'Use as-is', edit: 'Edit', add: 'Add data', reject_fresh: 'Reject + fresh', create: 'Create', skip: 'Skip' };
+
+let state = {
+  step: 1, domain: '', business: '', location: '', services: [], tier: '',
+  clientSlug: '', wsPublishUrl: '',
+  detect: { otto: 'unknown', bv: 'unknown', gbp: 'unknown', ppc: 'unknown', llmv: 'unknown', pillars: null },
+  assetDecisions: {
+    otto: { action: null, edits: {} }, bv: { action: null, edits: {} },
+    gbp: { action: null, edits: {} }, ppc: { action: null, edits: {} },
+    llmv: { action: null, edits: {} }
+  },
+  bvFields: null, bvPrefill: null,
+  targetMarket: { industryTier1: '', industryTier2: '', targetKeywords: [], knownCompetitors: [] },
+  sitemap: null, pageDecisions: {}, archetype: '', materials: [],
+  startedAt: new Date().toISOString()
+};
+
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) Object.assign(state, JSON.parse(saved));
+} catch(e) { console.warn('No saved state'); }
+
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+
+function resetWizard() {
+  if (!confirm('Start a fresh wizard? All captured input will be cleared.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = {
+    step: 1, domain: '', business: '', location: '', services: [], tier: '',
+    detect: { otto: 'unknown', bv: 'unknown', gbp: 'unknown', ppc: 'unknown', llmv: 'unknown', pillars: null },
+    assetDecisions: {
+      otto: { action: null, edits: {} }, bv: { action: null, edits: {} },
+      gbp: { action: null, edits: {} }, ppc: { action: null, edits: {} },
+      llmv: { action: null, edits: {} }
+    },
+    bvFields: null, bvPrefill: null,
+    targetMarket: { industryTier1: '', industryTier2: '', targetKeywords: [], knownCompetitors: [] },
+    sitemap: null, pageDecisions: {}, archetype: '', materials: [],
+    startedAt: new Date().toISOString()
+  };
+  goto(1);
+  renderAll();
+}
+
+// ────────────────────────────────────────────────────────────
+// NAVIGATION
+// ────────────────────────────────────────────────────────────
+function renderProgress() {
+  const bar = document.getElementById('progress');
+  bar.innerHTML = '';
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'progress-tick';
+    if (i < state.step) tick.classList.add('done');
+    if (i === state.step) tick.classList.add('active');
+    bar.appendChild(tick);
+  }
+  const labels = {
+    1: 'Client basics', 2: 'Materials', 3: 'Budget tier', 4: 'Auto-detect',
+    5: 'Brand confirmation', 6: 'Target market', 7: 'Market research',
+    8: 'Page approval', 9: 'Design style', 10: 'Pre-build review',
+    11: 'Build'
+  };
+  document.getElementById('progressLabel').textContent =
+    `Step ${state.step} of ${TOTAL_STEPS} · ${labels[state.step]}`;
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  const target = document.querySelector(`.step[data-step="${n}"]`);
+  if (target) target.classList.add('active');
+  state.step = n;
+  persist();
+  renderProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  onStepEnter(n);
+}
+
+function goto(n) { showStep(n); }
+function next() {
+  if (!validateStep(state.step)) return;
+  if (state.step === 4 && state.detect.bv === 'missing' && !state.bvPrefill?.confirmed) return;
+  showStep(Math.min(state.step + 1, TOTAL_STEPS));
+}
+function prev() { showStep(Math.max(state.step - 1, 1)); }
+
+function validateStep(n) {
+  if (n === 1) {
+    state.domain = document.getElementById('f-domain').value.trim();
+    state.business = document.getElementById('f-business').value.trim();
+    state.location = document.getElementById('f-location').value.trim();
+    if (!state.domain || !state.business || !state.location) {
+      alert('Please fill in domain, business name, and location.'); return false;
+    }
+    if (state.services.length === 0) { alert('Select at least one service.'); return false; }
+    persist(); return true;
+  }
+  if (n === 2) { return true; }
+  if (n === 3) { if (!state.tier) { alert('Pick a budget tier.'); return false; } return true; }
+  if (n === 6) {
+    if (!state.targetMarket.industryTier1 || !state.targetMarket.industryTier2) {
+      alert('Pick an industry (both broad bucket and specific category) before continuing.'); return false;
+    }
+    return true;
+  }
+  if (n === 8) {
+    const pages = state.sitemap?.proposedPages || [];
+    const undecided = pages.filter(p => !state.pageDecisions[p.slug] || !state.pageDecisions[p.slug].decision);
+    if (undecided.length > 0) {
+      alert(`You still have ${undecided.length} page${undecided.length === 1 ? '' : 's'} to decide on.`);
+      return false;
+    }
+    return true;
+  }
+  return true;
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 1 — services
+// ────────────────────────────────────────────────────────────
+function renderServicesPills() {
+  const grid = document.getElementById('services-pills');
+  grid.innerHTML = '';
+  const all = [...new Set([...DEFAULT_SERVICES, ...state.services])];
+  all.forEach(svc => {
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (state.services.includes(svc) ? ' selected' : '');
+    pill.textContent = svc;
+    pill.onclick = () => {
+      if (state.services.includes(svc)) state.services = state.services.filter(s => s !== svc);
+      else state.services.push(svc);
+      persist(); renderServicesPills();
+    };
+    grid.appendChild(pill);
+  });
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 2 — Materials
+// ────────────────────────────────────────────────────────────
+function renderMaterials() {
+  const list = document.getElementById('materials-list');
+  const summary = document.getElementById('materials-summary');
+  const count = document.getElementById('materials-count');
+  list.innerHTML = '';
+  state.materials.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'material-item';
+    item.innerHTML = `
+      <span class="m-icon">${m.format === 'image' ? '🖼️' : m.format === 'link' ? '🔗' : m.format === 'video' ? '🎬' : '📝'}</span>
+      <span class="m-label"></span>
+      <span class="m-meta"></span>
+      <button class="m-remove" data-id="${m.id}" title="Remove">×</button>
+    `;
+    item.querySelector('.m-label').textContent = m.label;
+    item.querySelector('.m-meta').textContent = m.meta || '';
+    list.appendChild(item);
+  });
+  list.querySelectorAll('.m-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.materials = state.materials.filter(m => m.id !== btn.dataset.id);
+      persist(); renderMaterials();
+    });
+  });
+  if (state.materials.length > 0) {
+    summary.style.display = 'block';
+    const breakdown = state.materials.reduce((acc, m) => { acc[m.format] = (acc[m.format] || 0) + 1; return acc; }, {});
+    const parts = Object.entries(breakdown).map(([k, v]) => `${v} ${k}${v > 1 ? 's' : ''}`);
+    count.textContent = `${state.materials.length} items · ${parts.join(', ')}`;
+  } else { summary.style.display = 'none'; }
+}
+
+function addMaterial(format, label, value, meta) {
+  state.materials.push({ id: 'm-' + Math.random().toString(36).slice(2, 8), format, label, value, meta: meta || '' });
+  persist(); renderMaterials();
+}
+
+(function wireMaterials() {
+  const dz = document.getElementById('materials-dropzone');
+  if (!dz) return;
+  const fileInput = document.getElementById('materials-file-input');
+  dz.addEventListener('click', () => fileInput.click());
+  ['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add('is-dragover'); }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove('is-dragover'); }));
+  dz.addEventListener('drop', (e) => { Array.from(e.dataTransfer.files).forEach(handleFile); });
+  fileInput.addEventListener('change', (e) => { Array.from(e.target.files).forEach(handleFile); fileInput.value = ''; });
+  document.getElementById('materials-link-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const url = e.target.value.trim();
+      addMaterial('link', url, url, 'URL');
+      e.target.value = '';
+    }
+  });
+  document.getElementById('materials-text-add').addEventListener('click', () => {
+    const ta = document.getElementById('materials-text-input');
+    if (ta.value.trim()) {
+      const text = ta.value.trim();
+      const preview = text.length > 60 ? text.slice(0, 60) + '…' : text;
+      addMaterial('text', preview, text, `${text.length} chars`);
+      ta.value = '';
+    }
+  });
+
+  function handleFile(file) {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    const format = isImage ? 'image' : isVideo ? 'video' : 'text';
+    const sizeKb = Math.round(file.size / 1024);
+    addMaterial(format, file.name, file.name, `${sizeKb} KB`);
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 50; canvas.height = 50;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 50, 50);
+          try {
+            const data = ctx.getImageData(0, 0, 50, 50).data;
+            let r = 0, g = 0, b = 0, n = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i + 3] < 128) continue;
+              r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+            }
+            if (n > 0) {
+              const hex = '#' + [r, g, b].map(v => Math.round(v / n).toString(16).padStart(2, '0')).join('');
+              const last = state.materials[state.materials.length - 1];
+              if (last) {
+                last.meta = `${sizeKb} KB · color ${hex}`;
+                last.extractedColor = hex;
+                persist(); renderMaterials();
+              }
+            }
+          } catch (e) {}
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+})();
+
+document.getElementById('f-service-add').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    const newSvc = e.target.value.trim();
+    if (!state.services.includes(newSvc)) state.services.push(newSvc);
+    e.target.value = '';
+    persist(); renderServicesPills();
+  }
+});
+
+// ────────────────────────────────────────────────────────────
+// STEP 3 — Budget tier
+// ────────────────────────────────────────────────────────────
+document.querySelectorAll('#tier-grid .tier-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('#tier-grid .tier-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state.tier = card.dataset.tier;
+    persist();
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// STEP 4 — Auto-detect (simulated client-side; real check happens in /build-website)
+// ────────────────────────────────────────────────────────────
+function runDetect() {
+  document.getElementById('detect-loading').style.display = 'block';
+  document.getElementById('detect-results').style.display = 'none';
+  document.getElementById('bv-missing-halt').style.display = 'none';
+  document.getElementById('step3-nav').style.display = 'flex';
+
+  setTimeout(() => {
+    const seed = state.domain.length % 5;
+    const results = {
+      otto: seed > 0 ? 'found' : 'missing',
+      bv: seed > 1 ? 'found' : 'missing',
+      gbp: seed > 2 ? 'found' : 'missing',
+      ppc: 'missing',
+      llmv: seed > 1 ? 'found' : 'missing'
+    };
+    state.detect = { ...state.detect, ...results };
+
+    if (results.otto === 'found') {
+      state.detect.pillars = { technical: 78, content: 54, authority: 32, ux: 62 };
+    }
+    persist();
+    renderDetectResults();
+  }, 1400);
+}
+
+function renderDetectResults() {
+  document.getElementById('detect-loading').style.display = 'none';
+
+  if (state.detect.bv === 'missing') {
+    document.getElementById('bv-missing-halt').style.display = 'block';
+    document.getElementById('detect-results').style.display = 'none';
+    document.getElementById('step3-nav').style.display = 'none';
+    runBVAutoCrawl();
+    return;
+  }
+
+  document.getElementById('detect-results').style.display = 'block';
+  document.getElementById('bv-missing-halt').style.display = 'none';
+
+  const cards = document.querySelectorAll('#detect-grid .detect-card');
+  cards.forEach(card => {
+    const key = card.dataset.key;
+    const state2 = state.detect[key];
+    card.classList.remove('found', 'missing');
+    card.classList.add(state2);
+    card.querySelector('.status').textContent =
+      state2 === 'found' ? 'Found' : (key === 'ppc' ? 'Skip' : 'Will create');
+  });
+
+  if (state.detect.pillars) {
+    document.getElementById('pillar-section').style.display = 'block';
+    const p = state.detect.pillars;
+    const pillarsEl = document.getElementById('pillars');
+    pillarsEl.innerHTML = '';
+    [['Technical', p.technical], ['Content', p.content], ['Authority', p.authority], ['UX', p.ux]].forEach(([label, val]) => {
+      const cls = val >= 70 ? 'green' : (val >= 50 ? 'yellow' : 'red');
+      pillarsEl.innerHTML += `<div class="pillar"><span class="pillar-label">${label}</span><div class="pillar-bar"><div class="pillar-fill ${cls}" style="width:${val}%"></div></div><span class="pillar-value">${val}</span></div>`;
+    });
+  }
+
+  const shifts = [];
+  if (state.detect.pillars) {
+    if (state.detect.pillars.authority < 40) shifts.push('Authority is low — PR + cloud stack moving to month 1.');
+    if (state.detect.pillars.content < 50) shifts.push('Content is light — topical map + bulk articles to week 2.');
+    if (state.detect.pillars.technical < 60) shifts.push('Technical issues — OTTO audit runs BEFORE build, not at launch.');
+    if (state.detect.pillars.ux < 60) shifts.push('UX score suggests redesign opportunity beyond content alone.');
+  }
+  const noteEl = document.getElementById('priority-note');
+  noteEl.innerHTML = shifts.length
+    ? `<div class="callout warn"><strong>Plan adjustments based on pillar scores:</strong>${shifts.map(s => '<div>· ' + s + '</div>').join('')}</div>`
+    : '';
+
+  document.getElementById('step3-next').disabled = false;
+  renderAssetPanel();
+}
+
+function renderAssetPanel() {
+  const panel = document.getElementById('asset-panel');
+  const rows = document.getElementById('asset-rows');
+  rows.innerHTML = '';
+
+  Object.keys(ASSET_META).forEach(key => {
+    const meta = ASSET_META[key];
+    const detectState = state.detect[key];
+    if (detectState !== 'found' && detectState !== 'missing') return;
+
+    const actions = meta.actions[detectState];
+    if (!state.assetDecisions[key].action) {
+      state.assetDecisions[key].action = detectState === 'found' ? 'use' : (key === 'ppc' ? 'skip' : 'create');
+    }
+    const chosen = state.assetDecisions[key].action;
+    const stateLabel = detectState === 'found' ? 'Existing record found' : 'Not found';
+
+    const row = document.createElement('div');
+    row.className = 'asset-row ' + chosen;
+    row.dataset.key = key;
+    row.innerHTML = `
+      <span class="a-icon">${meta.icon}</span>
+      <span class="a-name">${meta.name}</span>
+      <span class="a-state">${stateLabel}</span>
+      <div class="asset-chips">
+        ${actions.map(act => `<div class="asset-chip ${act === chosen ? 'active' : ''}" data-act="${act}">${ACTION_LABEL[act]}</div>`).join('')}
+      </div>
+    `;
+    rows.appendChild(row);
+
+    if (key === 'bv') {
+      const editor = document.createElement('div');
+      editor.className = 'asset-editor';
+      editor.dataset.key = key;
+      editor.innerHTML = `
+        <div class="asset-editor-row">
+          <label>Primary brand color</label>
+          <input type="text" data-edit-field="primary_color" placeholder="#1a5f7a" value="${state.assetDecisions[key].edits.primary_color || ''}">
+        </div>
+        <div class="asset-editor-row">
+          <label>Services to add or correct</label>
+          <textarea data-edit-field="services_note" placeholder="e.g. add 'Sedation dentistry', remove 'Pediatric'">${state.assetDecisions[key].edits.services_note || ''}</textarea>
+        </div>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
+          Changes push back to SA via <code>bv_update</code> before the workflow proceeds.
+        </div>
+      `;
+      rows.appendChild(editor);
+      if (chosen === 'edit') editor.classList.add('shown');
+    }
+  });
+
+  rows.querySelectorAll('.asset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const row = chip.closest('.asset-row');
+      const key = row.dataset.key;
+      const act = chip.dataset.act;
+      state.assetDecisions[key].action = act;
+      row.className = 'asset-row ' + act;
+      row.querySelectorAll('.asset-chip').forEach(c => c.classList.toggle('active', c.dataset.act === act));
+      const editor = rows.querySelector(`.asset-editor[data-key="${key}"]`);
+      if (editor) editor.classList.toggle('shown', act === 'edit');
+      persist();
+    });
+  });
+
+  rows.querySelectorAll('.asset-editor input, .asset-editor textarea').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const editor = inp.closest('.asset-editor');
+      const key = editor.dataset.key;
+      const field = inp.dataset.editField;
+      state.assetDecisions[key].edits[field] = inp.value;
+      persist();
+    });
+  });
+
+  panel.style.display = 'block';
+}
+
+function recheckBV() {
+  state.detect.bv = 'unknown';
+  state.bvPrefill = null;
+  persist();
+  runDetect();
+}
+
+function runBVAutoCrawl() {
+  const dropped = state.materials || [];
+  const droppedColor = dropped.find(m => m.extractedColor)?.extractedColor;
+  const droppedText = dropped.find(m => m.format === 'text');
+
+  const prefill = {
+    fields: [
+      { key: 'business_name', label: 'Business name', value: state.business, status: 'ok', source: state.business ? 'from your input' : 'from homepage <title>' },
+      { key: 'domain', label: 'Domain', value: state.domain, status: 'ok', source: 'explicit' },
+      { key: 'industry', label: 'Industry', value: inferIndustryFromServices(state.services), status: 'ok', source: 'inferred from service list + GBP' },
+      { key: 'location', label: 'Primary location', value: state.location || 'unknown', status: state.location ? 'ok' : 'gap', source: state.location ? 'from your input' : '' },
+      { key: 'phone', label: 'Phone', value: '(555) 123-4567', status: 'ok', source: 'from Contact page crawl' },
+      { key: 'hours', label: 'Hours', value: 'Mon–Fri 8–5, Sat 9–1', status: 'ok', source: 'from GBP' },
+      { key: 'colors', label: 'Brand colors', value: droppedColor ? droppedColor + ' (primary)' : 'detected · 2 swatches', status: 'partial', source: droppedColor ? 'from dropped logo image' : 'inferred from on-site CSS' },
+      { key: 'voice', label: 'Voice', value: droppedText ? 'inferred from your text' : 'warm, professional', status: 'partial', source: droppedText ? 'from your dropped text' : 'inferred from on-site copy' },
+      { key: 'persona', label: 'Target persona', value: '—', status: 'gap', source: '' },
+      { key: 'avoid', label: 'Avoid list', value: '—', status: 'gap', source: '' },
+      { key: 'services', label: 'Services to feature', value: state.services.length ? state.services.join(', ') : '—', status: state.services.length ? 'partial' : 'gap', source: state.services.length ? 'from your input · confirm complete' : '' }
+    ],
+    crawlSources: ['domain pages', 'GBP public', 'organic SERPs', dropped.length ? 'your dropped materials' : null, 'LLM Visibility'].filter(Boolean),
+    confirmed: false
+  };
+  state.bvPrefill = prefill;
+  persist();
+
+  const rowsEl = document.getElementById('bv-prefill-rows');
+  rowsEl.innerHTML = prefill.fields.map(f => {
+    const icon = f.status === 'ok' ? '✅' : f.status === 'partial' ? '🟨' : '❌';
+    return `
+      <div class="prefill-row ${f.status === 'gap' ? 'gap' : f.status === 'partial' ? 'partial' : ''}">
+        <div class="prefill-status">${icon}</div>
+        <div class="prefill-key"></div>
+        <div class="prefill-val"></div>
+      </div>
+    `;
+  }).join('');
+  const rowEls = rowsEl.querySelectorAll('.prefill-row');
+  prefill.fields.forEach((f, i) => {
+    if (!rowEls[i]) return;
+    rowEls[i].querySelector('.prefill-key').textContent = f.label;
+    const val = rowEls[i].querySelector('.prefill-val');
+    val.textContent = f.value;
+    if (f.source) {
+      const src = document.createElement('span');
+      src.className = 'prefill-source';
+      src.textContent = `[${f.source}]`;
+      val.appendChild(document.createTextNode(' '));
+      val.appendChild(src);
+    }
+  });
+
+  const okCount = prefill.fields.filter(f => f.status === 'ok').length;
+  const total = prefill.fields.length;
+  const gapCount = prefill.fields.filter(f => f.status === 'gap').length;
+
+  const summary = document.createElement('div');
+  summary.style.cssText = 'margin-top: 14px; padding: 11px 14px; background: var(--lavender); border-radius: 8px; font-size: 13px; color: var(--text);';
+  summary.innerHTML = `<strong>${okCount} of ${total} fields auto-filled.</strong> ${gapCount} need your input.`;
+  rowsEl.appendChild(summary);
+}
+
+function proceedWithPrefill(mode) {
+  state.bvPrefill.confirmed = true;
+  state.bvPrefill.mode = mode;
+  persist();
+  if (mode === 'fill') {
+    const gaps = state.bvPrefill.fields.filter(f => f.status === 'gap');
+    if (gaps.length) {
+      const filled = prompt(`Fill ${gaps.length} gap${gaps.length > 1 ? 's' : ''}:\n\n` + gaps.map(g => '· ' + g.label).join('\n') + '\n\nType "skip" to proceed without filling.');
+      if (filled && filled.toLowerCase() !== 'skip') {
+        gaps.forEach(g => { g.value = '(filled)'; g.status = 'ok'; g.source = 'from your input'; });
+      }
+    }
+  }
+  showStep(state.step + 1);
+}
+
+function inferIndustryFromServices(services) {
+  if (!services || !services.length) return 'General';
+  const first = services[0].toLowerCase();
+  if (first.includes('dent') || first.includes('cosmetic') || first.includes('implant')) return 'Dental Clinic';
+  if (first.includes('law') || first.includes('attorney')) return 'Law Firm';
+  if (first.includes('roof')) return 'Roofing Contractor';
+  return services[0];
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 5 — Brand Vault confirmation
+// ────────────────────────────────────────────────────────────
+function renderBVConfirm() {
+  const fields = {
+    name: state.business, domain: state.domain,
+    industry: inferIndustry(state.services),
+    address: state.location,
+    phone: '(555) ' + (Math.floor(Math.random() * 9000) + 1000).toString().slice(0,3) + '-' + (Math.floor(Math.random() * 9000) + 1000),
+    colors: ['#1a5f7a', '#d4a574'],
+    voice: 'Friendly-professional (BV active profile)',
+    entities: state.services.slice(0, 3),
+    competitors: ['competitor-1.com', 'competitor-2.com', 'competitor-3.com']
+  };
+  state.bvFields = fields;
+  persist();
+
+  const block = document.getElementById('bv-confirm-block');
+  block.innerHTML = '';
+  const addRow = (parent, k, v) => {
+    const row = document.createElement('div'); row.className = 'hitl-row';
+    const key = document.createElement('div'); key.className = 'hitl-key'; key.textContent = k;
+    const val = document.createElement('div'); val.className = 'hitl-val'; val.textContent = v;
+    row.appendChild(key); row.appendChild(val); parent.appendChild(row);
+  };
+  const sect = (heading) => {
+    const s = document.createElement('div'); s.className = 'hitl-section';
+    const h = document.createElement('div'); h.className = 'hitl-heading'; h.textContent = heading;
+    s.appendChild(h); block.appendChild(s); return s;
+  };
+  let s = sect('Business');
+  addRow(s, 'Name', fields.name);
+  addRow(s, 'Domain', fields.domain);
+  addRow(s, 'Industry', fields.industry);
+  addRow(s, 'Location', fields.address);
+  s = sect('Brand');
+  addRow(s, 'Colors', fields.colors.join(' · '));
+  addRow(s, 'Voice', fields.voice);
+  s = sect('SEO + Content');
+  addRow(s, 'Key entities', fields.entities.join(', '));
+  addRow(s, 'Competitors', fields.competitors.join(', '));
+}
+
+function inferIndustry(services) {
+  if (!services.length) return 'General';
+  const map = {
+    'general dentistry': 'Dental Clinic', 'cosmetic': 'Dental Clinic', 'implants': 'Dental Clinic',
+    'roofing': 'Roofing Contractor', 'plumbing': 'Plumbing Contractor',
+    'law': 'Law Firm', 'attorney': 'Law Firm'
+  };
+  const first = services[0].toLowerCase();
+  for (const k in map) if (first.includes(k)) return map[k];
+  return services[0];
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 6 — Target market
+// ────────────────────────────────────────────────────────────
+function renderTargetMarket() {
+  const tier1Sel = document.getElementById('tm-industry-tier1');
+  if (tier1Sel.options.length <= 1) {
+    Object.keys(INDUSTRY_TAXONOMY).forEach(t1 => {
+      const opt = document.createElement('option');
+      opt.value = t1; opt.textContent = t1;
+      tier1Sel.appendChild(opt);
+    });
+  }
+  tier1Sel.value = state.targetMarket.industryTier1 || '';
+  renderIndustryTier2();
+  renderTargetKeywords();
+  renderKnownCompetitors();
+}
+
+function renderIndustryTier2() {
+  const t1 = state.targetMarket.industryTier1;
+  const field = document.getElementById('tm-industry-tier2-field');
+  const grid = document.getElementById('tm-industry-tier2');
+  if (!t1 || !INDUSTRY_TAXONOMY[t1]) { field.style.display = 'none'; return; }
+  field.style.display = 'block';
+  grid.innerHTML = '';
+  INDUSTRY_TAXONOMY[t1].forEach(t2 => {
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (state.targetMarket.industryTier2 === t2 ? ' selected' : '');
+    pill.textContent = t2;
+    pill.onclick = () => { state.targetMarket.industryTier2 = t2; persist(); renderIndustryTier2(); };
+    grid.appendChild(pill);
+  });
+}
+
+function renderTargetKeywords() {
+  const list = document.getElementById('tm-keyword-list');
+  list.innerHTML = '';
+  state.targetMarket.targetKeywords.forEach((kw, idx) => {
+    const chip = document.createElement('span');
+    chip.className = 'kw-chip';
+    const txt = document.createTextNode(kw + ' ');
+    chip.appendChild(txt);
+    const btn = document.createElement('button');
+    btn.className = 'x-btn'; btn.dataset.idx = idx; btn.title = 'Remove'; btn.textContent = '×';
+    chip.appendChild(btn);
+    list.appendChild(chip);
+  });
+  list.querySelectorAll('.x-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.targetMarket.targetKeywords.splice(parseInt(btn.dataset.idx, 10), 1);
+      persist(); renderTargetKeywords();
+    });
+  });
+}
+
+function renderKnownCompetitors() {
+  const list = document.getElementById('tm-competitor-list');
+  list.innerHTML = '';
+  state.targetMarket.knownCompetitors.forEach((url, idx) => {
+    const chip = document.createElement('span');
+    chip.className = 'competitor-chip';
+    chip.appendChild(document.createTextNode(url + ' '));
+    const btn = document.createElement('button');
+    btn.className = 'x-btn'; btn.dataset.idx = idx; btn.title = 'Remove'; btn.textContent = '×';
+    chip.appendChild(btn);
+    list.appendChild(chip);
+  });
+  list.querySelectorAll('.x-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.targetMarket.knownCompetitors.splice(parseInt(btn.dataset.idx, 10), 1);
+      persist(); renderKnownCompetitors();
+    });
+  });
+}
+
+function looksLikeUrl(s) {
+  if (!s) return false;
+  try {
+    const candidate = /^https?:\/\//i.test(s) ? s : 'https://' + s;
+    const u = new URL(candidate);
+    return /\./.test(u.hostname);
+  } catch (e) { return false; }
+}
+
+(function wireTargetMarket() {
+  const tier1 = document.getElementById('tm-industry-tier1');
+  if (!tier1) return;
+  tier1.addEventListener('change', (e) => {
+    state.targetMarket.industryTier1 = e.target.value;
+    state.targetMarket.industryTier2 = '';
+    persist(); renderIndustryTier2();
+  });
+  const kwInput = document.getElementById('tm-keyword-input');
+  kwInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const kw = e.target.value.trim();
+      if (!state.targetMarket.targetKeywords.includes(kw)) state.targetMarket.targetKeywords.push(kw);
+      e.target.value = '';
+      persist(); renderTargetKeywords();
+    }
+  });
+  const compInput = document.getElementById('tm-competitor-input');
+  compInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const url = e.target.value.trim();
+      if (!looksLikeUrl(url)) { alert('That doesn\'t look like a URL — try e.g. https://example.com'); return; }
+      if (state.targetMarket.knownCompetitors.length >= 3) { alert('Up to 3 known competitors. Remove one first if you need to swap.'); return; }
+      if (!state.targetMarket.knownCompetitors.includes(url)) state.targetMarket.knownCompetitors.push(url);
+      e.target.value = '';
+      persist(); renderKnownCompetitors();
+    }
+  });
+})();
+
+// ────────────────────────────────────────────────────────────
+// STEP 7 — Market research (NO simulated waves — instant sitemap)
+// The real wave-based research happens in Claude via the bridge.
+// ────────────────────────────────────────────────────────────
+function runArchitecture() {
+  // All items shown as "done" instantly — the real work happens on the server in Phase 11.
+  // This step is purely about producing the operator-facing proposed sitemap so they can walk it in Step 8.
+  const all = document.querySelectorAll('#arch-list .build-item');
+  all.forEach(i => i.classList.add('done'));
+  renderArchSummary();
+  document.getElementById('step7-next').disabled = false;
+}
+
+function buildProposedSitemap() {
+  const pages = [];
+  const tm = state.targetMarket || {};
+  const services = state.services.length ? state.services : ['Services'];
+  const location = state.location || 'your area';
+  const industryLeaf = tm.industryTier2 || inferIndustryFromServices(services);
+
+  const featurePool = ['People Also Ask', 'Local Pack', 'Featured Snippet', 'Image Pack', 'Knowledge Panel', 'Video Carousel', 'FAQ'];
+  const pickFeatures = (n) => { const shuffled = [...featurePool].sort(() => Math.random() - 0.5); return shuffled.slice(0, n); };
+  const seedRand = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0; return Math.abs(h); };
+
+  const evidence = (slug, kw, intent, sourceTool, baseVol) => {
+    const r = seedRand(slug);
+    const vol = baseVol || (200 + (r % 4800));
+    return {
+      kw_total_volume: vol, intent: intent,
+      competitor_count: 1 + (r % 5),
+      serp_features: pickFeatures(1 + (r % 3)),
+      gap_score: ((r % 100) / 100).toFixed(2),
+      source: sourceTool
+    };
+  };
+
+  pages.push({
+    slug: '/', title: 'Homepage', tier: 'core',
+    oneline: `Conversion-led homepage targeting "${state.business || 'your brand'} ${location}" with proof, services teaser, and primary CTA.`,
+    pageType: 'Homepage', h1: state.business || 'Homepage',
+    keywords: [
+      { kw: `${(state.business || 'brand').toLowerCase()} ${location.toLowerCase()}`, vol: 1900, intent: 'navigational', difficulty: 12 },
+      { kw: `best ${industryLeaf.toLowerCase()} ${location.toLowerCase()}`, vol: 2400, intent: 'commercial', difficulty: 38 }
+    ],
+    competitorEvidence: { count: 5, examples: ['competitor1.com', 'competitor2.com', 'competitor3.com', 'competitor4.com', 'competitor5.com'] },
+    serpFeatures: ['Local Pack', 'Knowledge Panel'],
+    contentGap: 'Most competitor homepages bury credentials below the fold — moving them to hero block.',
+    sections: ['Hero with primary CTA', 'Services snapshot (3 cards)', 'Proof block (reviews + credentials)', 'Service-area map', 'Secondary CTA + contact strip'],
+    ctas: ['Book a visit', 'Call now'],
+    schema: 'LocalBusiness',
+    evidence: evidence('/', `${state.business || ''}`, 'navigational', 'se_get_serp_overview', 2400)
+  });
+
+  pages.push({
+    slug: '/about', title: 'About', tier: 'core',
+    oneline: 'Trust-building team + history page with credentials, ties to community.',
+    pageType: 'About', h1: `About ${state.business || 'Us'}`,
+    keywords: [{ kw: `${(state.business || 'brand').toLowerCase()} reviews`, vol: 480, intent: 'commercial', difficulty: 22 }],
+    competitorEvidence: { count: 4, examples: ['competitor1.com/about', 'competitor2.com/about', 'competitor3.com/about', 'competitor4.com/about'] },
+    serpFeatures: ['People Also Ask'],
+    contentGap: 'Competitors lean on stock copy — owner story differentiates.',
+    sections: ['Founder/leadership intro', 'Credentials + years of experience', 'Community involvement', 'Team grid'],
+    ctas: ['Meet the team', 'Schedule'],
+    schema: 'AboutPage',
+    evidence: evidence('/about', `${state.business || ''} reviews`, 'commercial', 'se_get_indexed_pages')
+  });
+
+  pages.push({
+    slug: '/contact', title: 'Contact', tier: 'core',
+    oneline: 'Direct conversion page — phone, address, hours, form, embedded map.',
+    pageType: 'Contact', h1: 'Contact',
+    keywords: [{ kw: `${(state.business || 'brand').toLowerCase()} phone number`, vol: 320, intent: 'navigational', difficulty: 8 }],
+    competitorEvidence: { count: 5, examples: ['competitor1.com/contact', 'competitor2.com/contact', 'competitor3.com/contact', 'competitor4.com/contact', 'competitor5.com/contact'] },
+    serpFeatures: ['Local Pack'],
+    contentGap: 'Most competitors hide hours — surface them in hero.',
+    sections: ['Hero with phone + hours', 'Contact form', 'Address + embedded map', 'Driving directions block'],
+    ctas: ['Call now', 'Submit form'],
+    schema: 'ContactPage',
+    evidence: evidence('/contact', `${state.business || ''} contact`, 'navigational', 'se_get_serp_features', 480)
+  });
+
+  pages.push({
+    slug: '/services', title: 'Services Overview', tier: 'core',
+    oneline: 'Index page linking to each service detail — UX hub + internal-link power.',
+    pageType: 'Services Overview', h1: 'Our Services',
+    keywords: [{ kw: `${industryLeaf.toLowerCase()} services ${location.toLowerCase()}`, vol: 720, intent: 'commercial', difficulty: 32 }],
+    competitorEvidence: { count: 4, examples: ['competitor1.com/services', 'competitor2.com/services', 'competitor3.com/services', 'competitor4.com/services'] },
+    serpFeatures: ['Featured Snippet'],
+    contentGap: 'Competitors list services without descriptions — adding 1-2 line previews improves CTR.',
+    sections: ['Hero with category overview', 'Service cards grid', 'Why choose us block', 'CTA strip'],
+    ctas: ['Book consult', 'Browse services'],
+    schema: 'Service',
+    evidence: evidence('/services', `${industryLeaf} services`, 'commercial', 'cg_create_topical_map')
+  });
+
+  services.slice(0, 8).forEach((svc, idx) => {
+    const slug = '/services/' + svc.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const r = seedRand(slug);
+    const vol = 800 + (r % 3200);
+    pages.push({
+      slug, title: svc, tier: 'service',
+      oneline: `${svc} · ${vol.toLocaleString()} vol · ${1 + (r % 5)}/5 competitors have this — ${(r % 100) > 30 ? 'strong gap opportunity' : 'table-stakes content'}`,
+      pageType: 'Service detail', h1: svc,
+      keywords: [
+        { kw: `${svc.toLowerCase()} ${location.toLowerCase()}`, vol: vol, intent: 'commercial', difficulty: 25 + (r % 35) },
+        { kw: `${svc.toLowerCase()} cost`, vol: Math.floor(vol * 0.4), intent: 'commercial', difficulty: 18 + (r % 30) },
+        { kw: `what is ${svc.toLowerCase()}`, vol: Math.floor(vol * 0.25), intent: 'informational', difficulty: 12 + (r % 20) }
+      ],
+      competitorEvidence: { count: 1 + (r % 5), examples: ['competitor1.com', 'competitor2.com', 'competitor3.com'].slice(0, 1 + (r % 3)) },
+      serpFeatures: pickFeatures(2 + (r % 2)),
+      contentGap: `Top-ranking pages average 1,200 words. ${(r % 100) > 50 ? 'PAA boxes target "cost" + "duration" — we should answer both inline.' : 'Adding FAQ schema + price-range section unclaimed by top 5.'}`,
+      sections: ['Hero with service-specific hook', 'Procedure / what to expect', 'Pricing or ranges', 'FAQ block (answers PAA)', 'Related services links', 'Booking CTA'],
+      ctas: ['Book ' + svc.toLowerCase(), 'Ask a question'],
+      schema: 'Service',
+      evidence: evidence(slug, svc, 'commercial', 'se_lookup_keyword', vol)
+    });
+  });
+
+  if (state.location) {
+    const locSlug = '/' + state.location.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    pages.push({
+      slug: locSlug, title: `${industryLeaf} in ${state.location}`, tier: 'location',
+      oneline: `Geo-targeted landing for "${industryLeaf.toLowerCase()} ${state.location.toLowerCase()}" with local proof.`,
+      pageType: 'Location landing', h1: `${industryLeaf} in ${state.location}`,
+      keywords: [
+        { kw: `${industryLeaf.toLowerCase()} ${state.location.toLowerCase()}`, vol: 2900, intent: 'commercial', difficulty: 42 },
+        { kw: `${industryLeaf.toLowerCase()} near me`, vol: 4400, intent: 'commercial', difficulty: 55 }
+      ],
+      competitorEvidence: { count: 5, examples: ['competitor1.com', 'competitor2.com', 'competitor3.com', 'competitor4.com', 'competitor5.com'] },
+      serpFeatures: ['Local Pack', 'Map Pack', 'People Also Ask'],
+      contentGap: `Only 2 of 5 competitors have a dedicated location page for ${state.location}. Easy local-pack win.`,
+      sections: ['Local hero with city name in H1', 'Service area map', 'Local proof (reviews mentioning city)', 'Directions / parking', 'Hours + contact'],
+      ctas: ['Get directions', 'Call ' + state.location + ' office'],
+      schema: 'LocalBusiness',
+      evidence: evidence(locSlug, `${industryLeaf} ${state.location}`, 'commercial', 'gbp_list_categories', 2900)
+    });
+  }
+
+  const gapTopics = [
+    { topic: `${industryLeaf} cost`, slug: '/cost', intent: 'commercial' },
+    { topic: `${industryLeaf} vs alternatives`, slug: '/compare', intent: 'commercial' },
+    { topic: 'Insurance + payment', slug: '/insurance', intent: 'informational' }
+  ];
+  gapTopics.slice(0, 2).forEach(g => {
+    const r = seedRand(g.slug);
+    pages.push({
+      slug: g.slug, title: g.topic.replace(/\b\w/g, c => c.toUpperCase()), tier: 'landing',
+      oneline: `Gap-driven landing — competitors don't have this. Estimated ${(800 + r % 1600).toLocaleString()} monthly searches.`,
+      pageType: 'Gap landing', h1: g.topic.replace(/\b\w/g, c => c.toUpperCase()),
+      keywords: [{ kw: g.topic.toLowerCase(), vol: 800 + (r % 1600), intent: g.intent, difficulty: 18 + (r % 22) }],
+      competitorEvidence: { count: 0, examples: [] },
+      serpFeatures: pickFeatures(1 + (r % 2)),
+      contentGap: 'Zero of 5 top competitors target this — unclaimed territory per se_analyze_keyword_gap.',
+      sections: ['Hero answering the question', 'Detailed breakdown / comparison table', 'Internal links to service detail pages', 'CTA'],
+      ctas: ['Get a quote'],
+      schema: 'FAQPage',
+      evidence: evidence(g.slug, g.topic, g.intent, 'se_analyze_keyword_gap')
+    });
+  });
+
+  ['Privacy Policy', 'Terms of Service', 'Accessibility'].forEach((title, idx) => {
+    const slug = '/' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    pages.push({
+      slug, title, tier: 'compliance',
+      oneline: `${title} — required for trust signals and legal compliance.`,
+      pageType: 'Compliance', h1: title,
+      keywords: [],
+      competitorEvidence: { count: 5, examples: ['standard across industry'] },
+      serpFeatures: [],
+      contentGap: 'Standard legal template — no gap analysis needed.',
+      sections: [title + ' content', 'Last updated date'],
+      ctas: [],
+      schema: 'WebPage',
+      evidence: { kw_total_volume: 0, intent: 'compliance', competitor_count: 5, serp_features: [], gap_score: '0.00', source: 'required' }
+    });
+  });
+
+  const byTier = pages.reduce((acc, p) => { acc[p.tier] = (acc[p.tier] || 0) + 1; return acc; }, {});
+  return { total: pages.length, byTier, proposedPages: pages };
+}
+
+function renderArchSummary() {
+  state.sitemap = buildProposedSitemap();
+  const validSlugs = new Set(state.sitemap.proposedPages.map(p => p.slug));
+  Object.keys(state.pageDecisions).forEach(slug => {
+    if (!validSlugs.has(slug)) delete state.pageDecisions[slug];
+  });
+  persist();
+
+  const sm = state.sitemap;
+  const top3 = [...sm.proposedPages].sort((a, b) => (b.evidence.kw_total_volume || 0) - (a.evidence.kw_total_volume || 0)).slice(0, 3);
+  const tierBreakdown = Object.entries(sm.byTier).map(([t, n]) => `${n} ${t}`).join(' · ');
+
+  const block = document.getElementById('arch-summary');
+  block.innerHTML = '';
+  const addSect = (heading) => {
+    const s = document.createElement('div'); s.className = 'hitl-section';
+    const h = document.createElement('div'); h.className = 'hitl-heading'; h.textContent = heading;
+    s.appendChild(h); block.appendChild(s); return s;
+  };
+  const addRow = (parent, k, v) => {
+    const row = document.createElement('div'); row.className = 'hitl-row';
+    const key = document.createElement('div'); key.className = 'hitl-key'; key.textContent = k;
+    const val = document.createElement('div'); val.className = 'hitl-val'; val.textContent = v;
+    row.appendChild(key); row.appendChild(val); parent.appendChild(row);
+  };
+
+  const tm = state.targetMarket;
+  const s1 = addSect('proposed-sitemap.json');
+  addRow(s1, 'Total pages', String(sm.total));
+  addRow(s1, 'By tier', tierBreakdown);
+  addRow(s1, 'Seeded by', `${tm.industryTier2 || '—'} · ${tm.targetKeywords.length || 'auto'} keywords · ${tm.knownCompetitors.length || 'auto'} competitors`);
+
+  const s2 = addSect('Top 3 opportunities (by volume)');
+  top3.forEach(p => {
+    const ev = p.evidence;
+    addRow(s2, p.title, `${ev.kw_total_volume.toLocaleString()} vol · ${ev.competitor_count}/5 competitors have this · gap ${ev.gap_score}`);
+  });
+
+  const s3 = addSect('Next step');
+  const row = document.createElement('div'); row.className = 'hitl-row';
+  const val = document.createElement('div'); val.className = 'hitl-val';
+  val.textContent = "You'll approve every page individually — one card per proposed page, with full evidence. No design work happens until each one has a decision.";
+  row.appendChild(val); s3.appendChild(row);
+
+  block.style.display = 'block';
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 8 — Per-page approval
+// ────────────────────────────────────────────────────────────
+function renderPageWalkthrough() {
+  const container = document.getElementById('page-walkthrough-cards');
+  const pages = state.sitemap?.proposedPages || [];
+
+  if (!pages.length) {
+    container.innerHTML = '<div class="callout warn"><strong>No proposed pages yet.</strong>Go back to the market research step to generate the page queue.</div>';
+    updatePageWalkthroughCounts();
+    return;
+  }
+
+  container.innerHTML = '';
+  pages.forEach((p, idx) => {
+    const card = document.createElement('div');
+    const decision = state.pageDecisions[p.slug]?.decision;
+    card.className = 'page-card' + (decision === 'approve' ? ' approved' : decision === 'reject' ? ' rejected' : decision === 'edit' ? ' edit-mode' : '');
+    card.dataset.slug = p.slug;
+    const tree = buildAsciiTree(p, idx, pages.length);
+
+    const keywordsText = (p.keywords || []).map(k => `${k.kw} · ${k.vol} vol · ${k.intent} · KD ${k.difficulty}`).join('\n');
+    const competitorsText = p.competitorEvidence && p.competitorEvidence.count > 0
+      ? `${p.competitorEvidence.count} of 5 competitors have this — ${p.competitorEvidence.examples.join(', ')}`
+      : 'No competitors target this — gap opportunity.';
+    const serpText = p.serpFeatures && p.serpFeatures.length ? p.serpFeatures.join(', ') : 'No notable SERP features.';
+    const sectionsText = (p.sections || []).map(s => `· ${s}`).join('\n');
+    const ctasText = (p.ctas || []).join(' · ') || '—';
+
+    const editTitle = (state.pageDecisions[p.slug]?.edits?.title || p.title).replace(/"/g, '&quot;');
+    const editKws = state.pageDecisions[p.slug]?.edits?.keywords || keywordsText;
+    const editSecs = state.pageDecisions[p.slug]?.edits?.sections || sectionsText;
+
+    card.innerHTML = `
+      <div class="page-card-head" data-toggle="${p.slug}">
+        <div class="page-card-tree">${tree}</div>
+        <div class="page-card-body">
+          <div class="page-card-title">
+            <span></span>
+            <span class="tier-badge ${p.tier}">${p.tier}</span>
+          </div>
+          <div class="page-card-oneline"></div>
+        </div>
+        <div class="page-card-toggle">▾</div>
+      </div>
+
+      <div class="page-expand" data-expand="${p.slug}">
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Page metadata</div>
+          <div class="page-expand-row"><span class="ek">slug</span><span class="ev"></span></div>
+          <div class="page-expand-row"><span class="ek">page type</span><span class="ev"></span></div>
+          <div class="page-expand-row"><span class="ek">H1</span><span class="ev"></span></div>
+          <div class="page-expand-row"><span class="ek">schema</span><span class="ev"></span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Target keywords (vol · intent · difficulty)</div>
+          <div class="kw-rows"></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Competitor evidence</div>
+          <div class="page-expand-row"><span class="ev competitors-text"></span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">SERP features to target</div>
+          <div class="page-expand-row"><span class="ev serp-text"></span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Content gap</div>
+          <div class="page-expand-row"><span class="ev gap-text"></span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Recommended section outline</div>
+          <div class="section-rows"></div>
+          <div class="page-expand-row" style="margin-top:6px;"><span class="ek">CTAs</span><span class="ev ctas-text"></span></div>
+        </div>
+      </div>
+
+      <div class="page-edit-panel" data-edit="${p.slug}">
+        <label>Title</label>
+        <input type="text" data-edit-field="title" data-edit-slug="${p.slug}" value="${editTitle}">
+        <label>Target keywords (one per line)</label>
+        <textarea data-edit-field="keywords" data-edit-slug="${p.slug}" rows="3"></textarea>
+        <label>Section outline (one per line)</label>
+        <textarea data-edit-field="sections" data-edit-slug="${p.slug}" rows="4"></textarea>
+      </div>
+
+      <div class="page-actions">
+        <button class="page-action-btn approve ${decision === 'approve' ? 'active' : ''}" data-action="approve" data-slug="${p.slug}">✓ Approve</button>
+        <button class="page-action-btn reject ${decision === 'reject' ? 'active' : ''}" data-action="reject" data-slug="${p.slug}">✗ Reject</button>
+        <button class="page-action-btn edit ${decision === 'edit' ? 'active' : ''}" data-action="edit" data-slug="${p.slug}">✎ Edit</button>
+      </div>
+    `;
+    container.appendChild(card);
+
+    // safe text fills
+    card.querySelector('.page-card-title span:first-child').textContent = p.title;
+    card.querySelector('.page-card-oneline').textContent = p.oneline;
+    const meta = card.querySelectorAll('.page-expand-section')[0].querySelectorAll('.ev');
+    meta[0].textContent = p.slug;
+    meta[1].textContent = p.pageType;
+    meta[2].textContent = p.h1;
+    meta[3].textContent = p.schema;
+    const kwRows = card.querySelector('.kw-rows');
+    if ((p.keywords || []).length === 0) {
+      const row = document.createElement('div'); row.className = 'page-expand-row';
+      const ev = document.createElement('span'); ev.className = 'ev'; ev.textContent = '— no targeted keywords (compliance / utility page)';
+      row.appendChild(ev); kwRows.appendChild(row);
+    } else {
+      (p.keywords || []).forEach(k => {
+        const row = document.createElement('div'); row.className = 'page-expand-row';
+        const ek = document.createElement('span'); ek.className = 'ek'; ek.textContent = k.kw;
+        const ev = document.createElement('span'); ev.className = 'ev';
+        ev.textContent = `${k.vol.toLocaleString()} vol · ${k.intent} · KD ${k.difficulty}`;
+        row.appendChild(ek); row.appendChild(ev); kwRows.appendChild(row);
+      });
+    }
+    card.querySelector('.competitors-text').textContent = competitorsText;
+    card.querySelector('.serp-text').textContent = serpText;
+    card.querySelector('.gap-text').textContent = p.contentGap;
+    card.querySelector('.ctas-text').textContent = ctasText;
+    const secRows = card.querySelector('.section-rows');
+    (p.sections || []).forEach(s => {
+      const row = document.createElement('div'); row.className = 'page-expand-row';
+      const ev = document.createElement('span'); ev.className = 'ev'; ev.textContent = '· ' + s;
+      row.appendChild(ev); secRows.appendChild(row);
+    });
+    card.querySelector('textarea[data-edit-field="keywords"]').value = editKws;
+    card.querySelector('textarea[data-edit-field="sections"]').value = editSecs;
+  });
+
+  container.querySelectorAll('.page-card-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const slug = head.dataset.toggle;
+      const expand = container.querySelector(`.page-expand[data-expand="${slug}"]`);
+      if (expand) expand.classList.toggle('shown');
+      const toggle = head.querySelector('.page-card-toggle');
+      if (toggle) toggle.textContent = expand && expand.classList.contains('shown') ? '▴' : '▾';
+    });
+  });
+
+  container.querySelectorAll('.page-action-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const slug = btn.dataset.slug;
+      const action = btn.dataset.action;
+      const current = state.pageDecisions[slug]?.decision;
+      if (current === action) { delete state.pageDecisions[slug]; }
+      else {
+        state.pageDecisions[slug] = state.pageDecisions[slug] || { edits: {} };
+        state.pageDecisions[slug].decision = action;
+      }
+      persist(); renderPageWalkthrough();
+    });
+  });
+
+  container.querySelectorAll('.page-edit-panel input, .page-edit-panel textarea').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const slug = inp.dataset.editSlug;
+      const field = inp.dataset.editField;
+      state.pageDecisions[slug] = state.pageDecisions[slug] || { decision: 'edit', edits: {} };
+      state.pageDecisions[slug].edits = state.pageDecisions[slug].edits || {};
+      state.pageDecisions[slug].edits[field] = inp.value;
+      persist();
+    });
+  });
+
+  container.querySelectorAll('.page-card.edit-mode').forEach(card => {
+    const slug = card.dataset.slug;
+    const panel = card.querySelector(`.page-edit-panel[data-edit="${slug}"]`);
+    if (panel) panel.classList.add('shown');
+  });
+
+  updatePageWalkthroughCounts();
+}
+
+function buildAsciiTree(page, idx, total) {
+  const tierLabel = { core: 'core/', service: 'services/', location: 'locations/', landing: 'landings/', compliance: 'legal/' }[page.tier] || 'pages/';
+  const isLast = idx === total - 1;
+  const branch = isLast ? '└──' : '├──';
+  return `site/\n${branch} ${tierLabel}\n    └── ${page.slug}`;
+}
+
+function updatePageWalkthroughCounts() {
+  const pages = state.sitemap?.proposedPages || [];
+  let approved = 0, rejected = 0, edited = 0, pending = 0;
+  pages.forEach(p => {
+    const d = state.pageDecisions[p.slug]?.decision;
+    if (d === 'approve') approved++;
+    else if (d === 'reject') rejected++;
+    else if (d === 'edit') edited++;
+    else pending++;
+  });
+  const approvedTotal = approved + edited;
+  const apEl = document.getElementById('pw-approved-count');
+  const rjEl = document.getElementById('pw-rejected-count');
+  const pdEl = document.getElementById('pw-pending-count');
+  if (apEl) apEl.textContent = approvedTotal;
+  if (rjEl) rjEl.textContent = rejected;
+  if (pdEl) pdEl.textContent = pending;
+
+  const footer = document.getElementById('page-walkthrough-footer');
+  const nextBtn = document.getElementById('step8-next');
+  if (pending > 0) {
+    if (footer) {
+      footer.classList.remove('complete');
+      footer.innerHTML = `<strong>You still have ${pending} page${pending === 1 ? '' : 's'} to walk.</strong> Every card needs a decision before we touch the design.`;
+    }
+    if (nextBtn) nextBtn.disabled = true;
+  } else {
+    if (footer) {
+      footer.classList.add('complete');
+      footer.innerHTML = `<strong>All ${pages.length} pages decided.</strong> ${approvedTotal} approved · ${rejected} rejected. Ready to lock the queue.`;
+    }
+    if (nextBtn) nextBtn.disabled = false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 9 — archetype
+// ────────────────────────────────────────────────────────────
+document.querySelectorAll('#archetype-grid .archetype-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('#archetype-grid .archetype-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state.archetype = card.dataset.arch;
+    persist();
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// STEP 10 — HITL Pre-build review summary
+// ────────────────────────────────────────────────────────────
+function renderHITLSummary() {
+  const tier = TIERS[state.tier] || TIERS.unknown;
+  const arch = ARCHETYPES[state.archetype] || { name: '—' };
+  const sm = state.sitemap || { total: 0, byTier: {}, proposedPages: [] };
+  const p = state.detect.pillars || { technical: '—', content: '—', authority: '—', ux: '—' };
+  const tm = state.targetMarket || { industryTier1: '', industryTier2: '', targetKeywords: [], knownCompetitors: [] };
+
+  const decisions = state.pageDecisions || {};
+  let approved = 0, rejected = 0, edited = 0;
+  (sm.proposedPages || []).forEach(pg => {
+    const d = decisions[pg.slug]?.decision;
+    if (d === 'approve') approved++;
+    else if (d === 'reject') rejected++;
+    else if (d === 'edit') edited++;
+  });
+
+  const issues = [];
+  if (state.tier === 'unknown') issues.push('Budget tier flagged as unknown — defaulted to Growth');
+  if (p.authority !== '—' && p.authority < 40) issues.push('Authority < 40 — PR/cloud stack reprioritized to month 1');
+  if (p.content !== '—' && p.content < 50) issues.push('Content < 50 — topical map prioritized to week 2');
+  if (rejected > 0) issues.push(`${rejected} page${rejected === 1 ? '' : 's'} rejected — won't be built`);
+  if (!tm.targetKeywords.length) issues.push('Target keywords auto-derived from services × location × industry');
+  if (!tm.knownCompetitors.length) issues.push('Competitors discovered automatically via SA organic SERPs');
+
+  const tierCadence = tier.cadence.slice(0, 4).map(c => c.join(': ')).join(' · ');
+  const byTierLabel = Object.entries(sm.byTier || {}).map(([t, n]) => `${n} ${t}`).join(' · ') || '—';
+
+  const block = document.getElementById('hitl-summary');
+  block.innerHTML = '';
+  const addSect = (heading) => {
+    const s = document.createElement('div'); s.className = 'hitl-section';
+    const h = document.createElement('div'); h.className = 'hitl-heading'; h.textContent = heading;
+    s.appendChild(h); block.appendChild(s); return s;
+  };
+  const addRow = (parent, k, v) => {
+    const row = document.createElement('div'); row.className = 'hitl-row';
+    const key = document.createElement('div'); key.className = 'hitl-key'; key.textContent = k;
+    const val = document.createElement('div'); val.className = 'hitl-val'; val.textContent = v;
+    row.appendChild(key); row.appendChild(val); parent.appendChild(row);
+  };
+
+  let s = addSect('Brand');
+  addRow(s, 'Domain', state.domain);
+  addRow(s, 'Business', `${state.business} · ${state.location}`);
+  addRow(s, 'Voice', state.bvFields?.voice || '—');
+  addRow(s, 'Brand colors', state.bvFields?.colors?.join(' · ') || '—');
+
+  s = addSect('Budget tier');
+  addRow(s, 'Tier', `${tier.name} (${tier.range})`);
+  addRow(s, 'For /run-seo', tierCadence);
+
+  s = addSect('Target market');
+  addRow(s, 'Industry', `${tm.industryTier1 || '—'}${tm.industryTier2 ? ' · ' + tm.industryTier2 : ''}`);
+  addRow(s, 'Target keywords', tm.targetKeywords.length ? tm.targetKeywords.join(', ') : 'auto-derived from services × location × industry');
+  addRow(s, 'Known competitors', tm.knownCompetitors.length ? tm.knownCompetitors.join(', ') : 'auto-discovered via se_get_organic_competitors');
+
+  s = addSect('Site plan');
+  addRow(s, 'Proposed', `${sm.total} pages · ${byTierLabel}`);
+  addRow(s, 'Decisions', `${approved} approved · ${edited} edited · ${rejected} rejected`);
+  addRow(s, 'Will build', `${approved + edited} pages`);
+  addRow(s, 'Pillar baseline', `Tech ${p.technical} · Content ${p.content} · Authority ${p.authority} · UX ${p.ux}`);
+
+  s = addSect('Design');
+  addRow(s, 'Archetype', arch.name);
+  addRow(s, 'Theme', 'Generated · pending client signoff');
+
+  s = addSect('Existing assets');
+  Object.keys(state.assetDecisions).forEach(k => {
+    const decision = state.assetDecisions[k];
+    if (!decision.action) return;
+    const meta = ASSET_META[k];
+    const edits = decision.edits || {};
+    const detail = decision.action === 'edit' && Object.keys(edits).length
+      ? ' · ' + Object.entries(edits).filter(([_,v]) => v).map(([f,v]) => f + ': ' + (v.length > 40 ? v.slice(0, 40) + '…' : v)).join(', ')
+      : '';
+    addRow(s, meta.name, ACTION_LABEL[decision.action] + detail);
+  });
+
+  s = addSect('Build target');
+  addRow(s, 'Stack', 'Claude generates pages → pushed directly to Website Studio via SA MCP');
+  addRow(s, 'Reversible?', 'Yes — Website Studio preview state · no production publish until Phase 12');
+
+  s = addSect('Issues flagged');
+  const row = document.createElement('div'); row.className = 'hitl-row';
+  const val = document.createElement('div');
+  val.className = 'hitl-val ' + (issues.length ? 'hitl-issues' : 'hitl-issues none');
+  if (issues.length) val.innerHTML = '· ' + issues.map(i => i.replace(/</g, '&lt;')).join('<br>· ');
+  else val.textContent = 'None — ready to build';
+  row.appendChild(val); s.appendChild(row);
+}
+
+function cancelBuild() {
+  if (confirm('Cancel the build? All gathered context (brand, sitemap, design, copy) will be preserved for next session.')) {
+    alert('Build cancelled. Artifacts preserved. Resume by reloading the wizard.');
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 11 — REAL build (SSE-driven, replaces simulated runBuild)
+// ────────────────────────────────────────────────────────────
+let buildStartTime = 0, buildTimer = null, buildStepCount = 0, activeStream = null;
+
+function buildPayload() {
+  return {
+    domain: state.domain,
+    business: state.business,
+    location: state.location,
+    services: state.services,
+    tier: state.tier,
+    materials: state.materials.map(m => ({
+      id: m.id, format: m.format, label: m.label, meta: m.meta,
+      extractedColor: m.extractedColor || null
+    })),
+    targetMarket: state.targetMarket,
+    sitemap: state.sitemap,
+    pageDecisions: state.pageDecisions,
+    archetype: state.archetype,
+    assetDecisions: state.assetDecisions,
+    bvFields: state.bvFields,
+    bvPrefill: state.bvPrefill,
+    detect: state.detect,
+    startedAt: state.startedAt
+  };
+}
+
+function startRealBuild() {
+  showStep(11);
+  // small delay so the step is visible before we kick off
+  setTimeout(() => runRealBuild(), 50);
+}
+
+async function runRealBuild() {
+  const feed = document.getElementById('build-feed');
+  feed.innerHTML = '';
+  document.getElementById('site-live-wrap').style.display = 'none';
+  document.getElementById('build-restart').style.display = 'none';
+  document.getElementById('build-cancel').style.display = '';
+  document.getElementById('build-phase').textContent = 'starting…';
+  buildStepCount = 0;
+  document.getElementById('build-steps').textContent = '0';
+
+  buildStartTime = performance.now();
+  buildTimer = setInterval(() => {
+    const t = (performance.now() - buildStartTime) / 1000;
+    document.getElementById('build-elapsed').textContent = `${t.toFixed(1)}s`;
+  }, 100);
+
+  const payload = buildPayload();
+
+  let res;
+  try {
+    res = await fetch('/api/build', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    renderActivityEvent({ type: 'error', message: 'Connection error: ' + e.message });
+    finishBuild(false);
+    return;
+  }
+
+  if (!res.ok || !res.body) {
+    renderActivityEvent({ type: 'error', message: `Server error: ${res.status}` });
+    finishBuild(false);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  activeStream = reader;
+  const decoder = new TextDecoder();
+  let buf = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const dataLine = chunk.split('\n').find(l => l.startsWith('data: '));
+        if (!dataLine) continue;
+        try {
+          const evt = JSON.parse(dataLine.slice(6));
+          renderActivityEvent(evt);
+        } catch (e) { /* malformed */ }
+      }
+    }
+    finishBuild(true);
+  } catch (e) {
+    renderActivityEvent({ type: 'error', message: 'Stream error: ' + e.message });
+    finishBuild(false);
+  }
+}
+
+function renderActivityEvent(evt) {
+  const feed = document.getElementById('build-feed');
+  const empty = feed.querySelector('.feed-empty');
+  if (empty) empty.remove();
+
+  if (evt.type === 'phase') {
+    addFeedItem(feed, 'phase', evt.label || '');
+    document.getElementById('build-phase').textContent = (evt.label || '').toLowerCase();
+  } else if (evt.type === 'work') {
+    addFeedItem(feed, 'work', evt.label || '');
+  } else if (evt.type === 'done') {
+    addFeedItem(feed, 'done', evt.label || 'Step complete');
+    buildStepCount += 1;
+    document.getElementById('build-steps').textContent = buildStepCount;
+  } else if (evt.type === 'note') {
+    addFeedItem(feed, 'note', evt.label || '');
+  } else if (evt.type === 'biz') {
+    addFeedItem(feed, 'biz', `Working on ${evt.name}`);
+  } else if (evt.type === 'error') {
+    addFeedItem(feed, 'error', evt.message || 'Error');
+  } else if (evt.type === 'complete') {
+    addFeedItem(feed, 'complete', 'Build complete · site published to Website Studio');
+    revealSiteLiveBlock();
+  }
+}
+
+function addFeedItem(feed, cls, text) {
+  if (!text) return;
+  const div = document.createElement('div');
+  div.className = `feed-item ${cls}`;
+  const icon = document.createElement('span'); icon.className = 'feed-icon';
+  const txt = document.createElement('span'); txt.className = 'feed-text';
+  txt.textContent = text;
+  div.appendChild(icon); div.appendChild(txt);
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function deriveClientSlug(domain) {
+  if (!domain) return 'client';
+  const root = String(domain)
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/\.[a-z]{2,}(\.[a-z]{2,})?$/i, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const suffixes = ['dental','clinic','care','law','legal','medical','health','plumbing','roofing','hvac','auto','realty'];
+  for (const s of suffixes) {
+    const re = new RegExp(`([a-z0-9]+)(${s})`);
+    const m = root.match(re);
+    if (m && m[1].length >= 4) return `${m[1]}-${m[2]}`;
+  }
+  return root || 'client';
+}
+
+function revealSiteLiveBlock() {
+  const domain = (state.domain || 'example.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const slug = state.clientSlug || deriveClientSlug(domain);
+  const wsPublishUrl = `${slug}.ws.searchatlas.com`;
+  state.wsPublishUrl = wsPublishUrl;
+  persist();
+  const wsUrl = 'https://' + wsPublishUrl;
+  const customUrl = 'https://' + domain;
+  const urlEl = document.getElementById('live-site-url');
+  const openEl = document.getElementById('open-live-site');
+  const customEl = document.getElementById('custom-domain-url');
+  if (urlEl) urlEl.textContent = wsUrl;
+  if (openEl) openEl.href = wsUrl;
+  if (customEl) customEl.textContent = customUrl;
+  document.getElementById('site-live-wrap').style.display = 'block';
+  document.getElementById('build-cancel').style.display = 'none';
+  document.getElementById('build-restart').style.display = '';
+}
+
+function finishBuild(success) {
+  if (buildTimer) { clearInterval(buildTimer); buildTimer = null; }
+  activeStream = null;
+  if (!success) {
+    document.getElementById('build-cancel').style.display = 'none';
+    document.getElementById('build-restart').style.display = '';
+  }
+}
+
+document.getElementById('build-cancel').addEventListener('click', () => {
+  if (activeStream) { try { activeStream.cancel(); } catch {} }
+  finishBuild(false);
+  renderActivityEvent({ type: 'error', message: 'Cancelled by operator.' });
+});
+
+// ────────────────────────────────────────────────────────────
+// HEALTH CHECK
+// ────────────────────────────────────────────────────────────
+async function checkHealth() {
+  const dot = document.getElementById('health-dot');
+  const txt = document.getElementById('health-text');
+  const pill = document.getElementById('health-pill');
+  try {
+    const res = await fetch('/api/health');
+    if (!res.ok) throw new Error('not ok');
+    const data = await res.json();
+    if (data.claude_available && data.searchatlas_mcp_configured) {
+      dot.className = 'health-dot ok';
+      txt.textContent = 'Claude + SA ready';
+      pill.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: configured\nToolkit: ${data.toolkit_root}`;
+    } else if (data.claude_available) {
+      dot.className = 'health-dot warn';
+      txt.textContent = 'SA MCP not configured';
+      pill.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp`;
+    } else {
+      dot.className = 'health-dot bad';
+      txt.textContent = 'Claude CLI not found';
+      pill.title = 'Claude CLI not found on PATH. Install from https://claude.com/code';
+    }
+  } catch (e) {
+    dot.className = 'health-dot bad';
+    txt.textContent = 'Server offline';
+    pill.title = 'Cannot reach the bridge server.';
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP LIFECYCLE HOOKS
+// ────────────────────────────────────────────────────────────
+function onStepEnter(n) {
+  if (n === 1) renderServicesPills();
+  if (n === 2) renderMaterials();
+  if (n === 3) {
+    document.querySelectorAll('#tier-grid .tier-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.tier === state.tier);
+    });
+  }
+  if (n === 4) runDetect();
+  if (n === 5) renderBVConfirm();
+  if (n === 6) renderTargetMarket();
+  if (n === 7) runArchitecture();
+  if (n === 8) renderPageWalkthrough();
+  if (n === 9) {
+    document.querySelectorAll('#archetype-grid .archetype-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.arch === state.archetype);
+    });
+  }
+  if (n === 10) renderHITLSummary();
+  // Step 11: do NOT auto-run — only kick off from the pre-build approve button via startRealBuild().
+}
+
+function renderAll() {
+  if (state.domain) document.getElementById('f-domain').value = state.domain;
+  if (state.business) document.getElementById('f-business').value = state.business;
+  if (state.location) document.getElementById('f-location').value = state.location;
+  renderServicesPills();
+}
+
+// ────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────
+renderAll();
+renderProgress();
+showStep(state.step || 1);
+checkHealth();
+setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>

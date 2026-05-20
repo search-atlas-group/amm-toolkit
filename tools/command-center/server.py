@@ -605,6 +605,21 @@ async def preview_prompt(request: Request):
     return {"prompt": build_prompt(payload)}
 
 
+@app.post("/api/shutdown")
+async def shutdown(request: Request):
+    """Graceful shutdown — called by welcome.html on tab close or Stop button.
+    Returns 200, then exits the process after a short delay so the response flushes."""
+    import os
+    import signal
+
+    async def _exit_soon():
+        await asyncio.sleep(0.2)  # let response flush
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    asyncio.create_task(_exit_soon())
+    return {"ok": True, "message": "shutting down"}
+
+
 # ── Entrypoint ───────────────────────────────────────────────────────────────
 
 

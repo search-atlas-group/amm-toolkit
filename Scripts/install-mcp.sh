@@ -32,12 +32,10 @@ WELCOME_RAW_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolki
 WELCOME_LOCAL_DIR="${HOME}/.searchatlas"
 WELCOME_LOCAL_FILE="${WELCOME_LOCAL_DIR}/welcome.html"
 
-# Toolkit slash-commands install location. We pull just the lightweight
-# dirs (~400KB, 53 files) — commands, workflows, integrations, Scripts.
-# We skip tools/ (37MB, mostly the security scanner UI + command-center
-# web app) to keep this a "lite" install — users who want the full
-# toolkit run the quickstart instead. Command files are patched so
-# their relative bash invocations resolve to this hidden install.
+# Toolkit install location. We pull commands, workflows, integrations,
+# Scripts, AND tools (Mission Control bridges: command-center, website-build,
+# website-rebuild). Command files are patched so their relative bash
+# invocations resolve to this hidden install.
 TOOLKIT_TARBALL_URL="https://codeload.github.com/search-atlas-group/amm-toolkit/tar.gz/refs/heads/main"
 TOOLKIT_INSTALL_DIR="${HOME}/.searchatlas/toolkit"
 CLAUDE_COMMANDS_DIR="${HOME}/.claude/commands"
@@ -193,14 +191,15 @@ install_toolkit_commands() {
   # so files land directly under TOOLKIT_INSTALL_DIR.
   if ! tar -xzf "$tmpdir/toolkit.tar.gz" -C "$tmpdir" \
         amm-toolkit-main/commands amm-toolkit-main/workflows \
-        amm-toolkit-main/integrations amm-toolkit-main/Scripts 2>/dev/null; then
+        amm-toolkit-main/integrations amm-toolkit-main/Scripts \
+        amm-toolkit-main/tools 2>/dev/null; then
     warn "Could not extract toolkit dirs"
     rm -rf "$tmpdir"
     return 1
   fi
 
   # Refresh the install dir (cleans up stale files from previous installs).
-  for d in commands workflows integrations Scripts; do
+  for d in commands workflows integrations Scripts tools; do
     rm -rf "$TOOLKIT_INSTALL_DIR/$d"
     mv "$tmpdir/amm-toolkit-main/$d" "$TOOLKIT_INSTALL_DIR/" 2>/dev/null || true
   done
@@ -209,6 +208,7 @@ install_toolkit_commands() {
   # Make Scripts/*.sh executable in case any command shells out to them.
   chmod +x "$TOOLKIT_INSTALL_DIR/Scripts/"*.sh 2>/dev/null || true
   chmod +x "$TOOLKIT_INSTALL_DIR/integrations/"**/*.sh 2>/dev/null || true
+  chmod +x "$TOOLKIT_INSTALL_DIR/tools/"*/run.sh 2>/dev/null || true
 
   # Patch each command .md so relative bash invocations and workflow
   # references resolve to the toolkit install dir. Then drop into
@@ -238,6 +238,96 @@ install_toolkit_commands() {
   fi
 }
 
+# Install LaunchAgents for the 3 Mission Control bridges so they auto-start
+# on login. RunAtLoad=true so they boot immediately; KeepAlive=false so a
+# manual kill stays killed until next login (or Start Bridges.command).
+install_mission_control_bridges() {
+  if [[ "$OS" != "Darwin" ]]; then
+    info "Mission Control bridges skipped (LaunchAgents are macOS-only)"
+    return 1
+  fi
+
+  local toolkit="$TOOLKIT_INSTALL_DIR"
+  local agents_dir="$HOME_DIR/Library/LaunchAgents"
+  mkdir -p "$agents_dir"
+
+  local installed=0
+  for entry in "command-center:8765" "website-build:8766" "website-rebuild:8767"; do
+    local name="${entry%%:*}"
+    local port="${entry##*:}"
+    local label="com.searchatlas.amm-$name"
+    local plist="$agents_dir/$label.plist"
+    local run_sh="$toolkit/tools/$name/run.sh"
+
+    if [ ! -f "$run_sh" ]; then
+      continue
+    fi
+
+    launchctl unload "$plist" 2>/dev/null || true
+
+    cat > "$plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$label</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$run_sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NO_BROWSER</key>
+        <string>1</string>
+        <key>PORT</key>
+        <string>$port</string>
+        <key>PATH</key>
+        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/tmp/amm-$name.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/amm-$name.err</string>
+</dict>
+</plist>
+PLIST
+
+    if launchctl load "$plist" 2>/dev/null; then
+      installed=$((installed+1))
+    fi
+  done
+
+  if [ "$installed" -gt 0 ]; then
+    ok "Mission Control bridges running (Onboard:8765, Build:8766, Rebuild:8767)"
+  fi
+
+  # Drop the manual-restart helper
+  local start_cmd="$toolkit/Start Bridges.command"
+  cat > "$start_cmd" <<'STARTCMD'
+#!/usr/bin/env bash
+# Double-click to restart the Mission Control bridges.
+for NAME in command-center website-build website-rebuild; do
+    PLIST="$HOME/Library/LaunchAgents/com.searchatlas.amm-$NAME.plist"
+    if [ -f "$PLIST" ]; then
+        launchctl unload "$PLIST" 2>/dev/null || true
+        launchctl load "$PLIST" 2>/dev/null && \
+            echo "  ✓  $NAME bridge restarted" || \
+            echo "  ✗  $NAME bridge failed to restart"
+    fi
+done
+echo
+echo "Bridges restarted. Open welcome.html and click any wizard card."
+read -p "Press Enter to close..."
+STARTCMD
+  chmod +x "$start_cmd"
+}
+
 main() {
   echo
   echo "  $(c_bold 'SearchAtlas MCP V2') $(c_dim '· one-shot installer')"
@@ -265,6 +355,9 @@ main() {
     echo
     echo "  $(c_bold 'Installing slash commands…')"
     install_toolkit_commands || true
+    echo
+    echo "  $(c_bold 'Installing Mission Control bridges…')"
+    install_mission_control_bridges || true
   fi
 
   echo

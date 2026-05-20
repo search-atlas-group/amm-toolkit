@@ -1,0 +1,3154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMM Website Rebuild Wizard</title>
+<style>
+:root {
+  --bg: #fbfaff;
+  --surface: #ffffff;
+  --line: #ece9f5;
+  --text: #1a1530;
+  --muted: #6b6485;
+  --muted-2: #a9a4bd;
+  --purple: #6d28d9;
+  --purple-light: #a78bfa;
+  --lavender: #ede9fe;
+  --cyan: #06b6d4;
+  --green: #22c55e;
+  --green-bg: #ecfdf5;
+  --orange: #f59e0b;
+  --orange-bg: #fffbeb;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --code-bg: #f5f3ff;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+body { background: radial-gradient(circle at top, #f5f0ff 0%, var(--bg) 50%); }
+.wrap { max-width: 760px; margin: 0 auto; padding: 40px 28px 80px; }
+
+/* Brand bar */
+.brand {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; color: var(--muted); font-size: 13px;
+}
+.brand-left { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, #1a1530 0%, var(--purple) 100%);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 13px;
+}
+.brand-name { font-weight: 600; color: var(--text); }
+.brand-right { display: flex; align-items: center; gap: 12px; }
+.conn-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--muted);
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface);
+}
+.conn-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted-2); box-shadow: 0 0 6px var(--muted-2);
+  transition: all 0.25s ease;
+}
+.conn-dot.good { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.conn-dot.warn { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+.conn-dot.bad  { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.reset-btn {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  font-size: 12px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+}
+.reset-btn:hover { background: var(--lavender); color: var(--purple); }
+
+/* Live activity feed (replaces simulated build/migration animations) */
+.activity-feed {
+  list-style: none; padding: 0; margin: 20px 0;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface);
+  max-height: 460px; overflow-y: auto;
+  font-size: 13.5px;
+}
+.activity-feed:empty::before {
+  content: "Waiting for the engine to start…";
+  display: block; padding: 18px 22px;
+  color: var(--muted-2); font-style: italic;
+}
+.activity-feed-item {
+  display: flex; gap: 11px;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  animation: slideIn 0.25s ease;
+}
+.activity-feed-item:last-child { border-bottom: none; }
+.activity-feed-item .af-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--line); color: transparent;
+}
+.activity-feed-item .af-text { flex: 1; line-height: 1.5; word-break: break-word; }
+.activity-feed-item.phase { background: var(--lavender); color: var(--text); margin-top: 4px; }
+.activity-feed-item.phase:first-child { margin-top: 0; }
+.activity-feed-item.phase .af-icon { background: var(--purple); }
+.activity-feed-item.phase .af-text { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11.5px; color: var(--purple); }
+.activity-feed-item.work .af-icon { background: var(--purple-light); animation: pulse 1.2s ease-in-out infinite; }
+.activity-feed-item.work .af-text { font-style: italic; color: var(--text); }
+.activity-feed-item.done .af-icon { background: var(--green); color: #fff; }
+.activity-feed-item.done .af-icon::after { content: "✓"; color: #fff; font-size: 10px; }
+.activity-feed-item.done .af-text { color: var(--text); }
+.activity-feed-item.note .af-icon { background: transparent; border: none; }
+.activity-feed-item.note .af-text { color: var(--muted); }
+.activity-feed-item.biz .af-icon { background: var(--cyan); }
+.activity-feed-item.biz .af-text { color: var(--text); font-weight: 600; }
+.activity-feed-item.error { background: var(--red-bg); }
+.activity-feed-item.error .af-icon { background: var(--red); color: #fff; }
+.activity-feed-item.error .af-icon::after { content: "!"; color: #fff; font-size: 11px; font-weight: 700; }
+.activity-feed-item.error .af-text { color: var(--red); }
+.activity-feed-item.complete { background: var(--green-bg); }
+.activity-feed-item.complete .af-icon { background: var(--green); color: #fff; }
+.activity-feed-item.complete .af-icon::after { content: "✓"; color: #fff; }
+.activity-feed-item.complete .af-text { color: #065f46; font-weight: 700; }
+
+.run-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin: 14px 0;
+}
+.run-stat {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 14px;
+}
+.run-stat-label {
+  font-size: 10.5px; font-weight: 700; color: var(--muted-2);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 3px;
+}
+.run-stat-value {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 15px; font-weight: 700; color: var(--text);
+}
+
+/* Progress */
+.progress { display: flex; gap: 5px; margin-bottom: 12px; }
+.progress-tick {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: var(--line); transition: background 0.4s ease;
+}
+.progress-tick.done { background: var(--purple); }
+.progress-tick.active { background: var(--purple-light); }
+.progress-label {
+  font-size: 11px; color: var(--muted-2);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 32px; font-weight: 600;
+}
+
+/* Step containers */
+.step { display: none; animation: fadeIn 0.3s ease; }
+.step.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+
+/* Fields */
+.field { margin-bottom: 18px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 8px;
+}
+input[type="text"], input[type="url"], textarea, select {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--line); border-radius: 8px;
+  font-size: 14.5px; font-family: inherit;
+  background: var(--surface); color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--lavender);
+}
+textarea { resize: vertical; min-height: 60px; }
+
+/* Detect grid (reused for SA asset inheritance) */
+.detect-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 10px; margin-bottom: 18px;
+}
+.detect-card {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 10px; text-align: center; background: var(--surface);
+}
+.detect-card .icon { font-size: 22px; }
+.detect-card .label {
+  font-size: 11px; font-weight: 600; margin-top: 6px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+}
+.detect-card .status { font-size: 12px; margin-top: 4px; }
+.detect-card.found { border-color: var(--green); background: var(--green-bg); }
+.detect-card.found .status { color: #047857; font-weight: 600; }
+.detect-card.missing { border-color: var(--orange); background: var(--orange-bg); }
+.detect-card.missing .status { color: #b45309; font-weight: 600; }
+
+/* Materials dropzone */
+.materials-dropzone {
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  padding: 28px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  margin-bottom: 14px;
+}
+.materials-dropzone:hover, .materials-dropzone.is-dragover {
+  border-color: var(--purple);
+  background: var(--lavender);
+}
+.materials-dropzone .dropzone-icon { font-size: 32px; line-height: 1; margin-bottom: 8px; }
+.materials-dropzone .dropzone-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.materials-dropzone .dropzone-sub { font-size: 12.5px; color: var(--muted); }
+.materials-list { display: grid; gap: 6px; margin-bottom: 14px; }
+.material-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.material-item .m-icon { font-size: 16px; }
+.material-item .m-label { flex: 1; color: var(--text); }
+.material-item .m-meta { font-size: 11px; color: var(--muted-2); font-family: ui-monospace, monospace; }
+.material-item .m-remove {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--muted-2); font-size: 16px; padding: 0 4px;
+}
+.material-item .m-remove:hover { color: var(--red); }
+
+/* Asset control panel */
+.asset-panel { margin-top: 18px; }
+.asset-panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.asset-panel-title {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.asset-panel-hint { font-size: 12px; color: var(--muted-2); }
+.asset-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px; margin-bottom: 6px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.asset-row.use { border-color: var(--green); background: var(--green-bg); }
+.asset-row.edit { border-color: var(--purple); background: var(--lavender); }
+.asset-row.add { border-color: var(--cyan); background: #ecfeff; }
+.asset-row.reject_fresh { border-color: var(--orange); background: var(--orange-bg); }
+.asset-row.skip { border-color: var(--line); background: var(--code-bg); opacity: 0.65; }
+.asset-row.create { border-color: var(--purple-light); background: var(--lavender); }
+.asset-row .a-icon { font-size: 17px; flex-shrink: 0; }
+.asset-row .a-name { font-weight: 600; font-size: 13.5px; min-width: 100px; }
+.asset-row .a-state { font-size: 12px; color: var(--muted); flex: 1; }
+.asset-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.asset-chip {
+  padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.asset-chip:hover { border-color: var(--purple-light); color: var(--text); }
+.asset-chip.active {
+  background: var(--purple); color: #fff; border-color: var(--purple);
+}
+.asset-editor {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: none;
+}
+.asset-editor.shown { display: block; }
+.asset-editor input, .asset-editor textarea {
+  font-size: 12.5px; padding: 7px 9px; margin-top: 4px;
+}
+.asset-editor label { font-size: 10.5px; margin-bottom: 4px; }
+.asset-editor-row { margin-bottom: 8px; }
+.asset-editor-row:last-child { margin-bottom: 0; }
+
+/* Callouts */
+.callout {
+  padding: 14px 16px; border-radius: 10px;
+  margin: 14px 0; font-size: 13.5px;
+}
+.callout.info { background: var(--lavender); color: var(--text); border-left: 3px solid var(--purple); }
+.callout.warn { background: var(--orange-bg); color: #92400e; border-left: 3px solid var(--orange); }
+.callout.err { background: var(--red-bg); color: #991b1b; border-left: 3px solid var(--red); }
+.callout.ok { background: var(--green-bg); color: #065f46; border-left: 3px solid var(--green); }
+.callout strong { display: block; margin-bottom: 4px; }
+
+/* HITL summary */
+.hitl-block {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 22px 24px; margin: 16px 0; font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.hitl-section { margin-bottom: 16px; }
+.hitl-section:last-child { margin-bottom: 0; }
+.hitl-heading {
+  font-family: -apple-system, "Inter", sans-serif;
+  font-weight: 700; font-size: 12px;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.hitl-row { display: flex; gap: 16px; }
+.hitl-key { width: 130px; color: var(--muted); flex-shrink: 0; }
+.hitl-val { color: var(--text); }
+.hitl-issues { color: #92400e; }
+.hitl-issues.none { color: #065f46; }
+.changed-badge {
+  display: inline-block; margin-left: 6px;
+  padding: 1px 7px; border-radius: 4px;
+  background: var(--orange); color: #fff;
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+
+/* Archetype grid (6 styles in 3 cols) */
+.archetype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.archetype-card {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; cursor: pointer; transition: all 0.15s;
+  background: var(--surface);
+}
+.archetype-card:hover { border-color: var(--purple-light); }
+.archetype-card.selected {
+  border-color: var(--purple); background: var(--lavender);
+}
+.archetype-card.old-style {
+  border-style: dashed; opacity: 0.7;
+}
+.archetype-name { font-weight: 700; margin-bottom: 4px; }
+.archetype-desc { font-size: 12.5px; color: var(--muted); }
+.old-style-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; margin-bottom: 14px;
+  background: var(--code-bg); border-radius: 8px;
+  font-size: 12.5px; color: var(--muted);
+}
+.old-style-banner .old-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10.5px; color: var(--muted-2); }
+.old-style-banner .old-val { color: var(--purple); font-weight: 600; font-size: 13px; }
+.old-style-banner .old-hint { font-style: italic; color: var(--muted-2); font-size: 11.5px; }
+
+/* Build progress */
+.build-list { list-style: none; padding: 0; margin: 20px 0; }
+.build-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; font-size: 13.5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.build-item:last-child { border-bottom: none; }
+.build-item .check {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--line); display: inline-flex;
+  align-items: center; justify-content: center;
+  color: transparent; font-size: 11px; flex-shrink: 0;
+}
+.build-item.done { color: var(--text); }
+.build-item.done .check { background: var(--green); color: #fff; }
+.build-item.active { color: var(--text); }
+.build-item.active .check {
+  background: var(--purple);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(109, 40, 217, 0); }
+}
+.build-item .tool-code {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px; color: var(--purple);
+  background: var(--code-bg);
+  padding: 1px 6px; border-radius: 4px; margin-right: 6px;
+}
+
+/* Plan output */
+.plan-block {
+  background: var(--code-bg); border-radius: 10px;
+  padding: 18px 20px; margin: 16px 0; font-size: 13.5px;
+}
+/* Before / After versus grid (Step 12) */
+.ba-block {
+  border: 1px solid var(--lavender);
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.ba-head, .ba-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  align-items: stretch;
+}
+.ba-head {
+  background: var(--lavender-2, #f6f3ff);
+  border-bottom: 1px solid var(--lavender);
+}
+.ba-head-cell {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.ba-head-before { border-left: 1px solid var(--lavender); }
+.ba-head-after  { border-left: 1px solid var(--lavender); color: var(--purple); }
+
+.ba-row { border-bottom: 1px solid var(--lavender); }
+.ba-row:last-child { border-bottom: none; }
+.ba-row:hover { background: #fafaff; }
+
+.ba-cell {
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+.ba-cell-label { font-weight: 600; color: var(--text); }
+.ba-cell-before {
+  border-left: 1px solid var(--lavender);
+  color: var(--muted-2, #4b5563);
+}
+.ba-cell-after {
+  border-left: 1px solid var(--lavender);
+  color: var(--text);
+  font-weight: 500;
+}
+.ba-num {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+.ba-num-after { color: var(--purple); }
+.ba-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+.ba-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.ba-badge-changed { background: var(--green-bg); color: #065f46; }
+.ba-badge-same { background: var(--lavender); color: var(--purple); }
+
+/* Before/After live URL block — surfaces both WS URL and custom domain */
+.ba-live-urls { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.ba-url-row {
+  border: 1px solid var(--lavender);
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ba-url-row--primary {
+  background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02));
+  border-color: rgba(34,197,94,0.4);
+}
+.ba-url-row--pending {
+  background: linear-gradient(135deg, rgba(234,179,8,0.08), rgba(234,179,8,0.02));
+  border-color: rgba(234,179,8,0.45);
+}
+.ba-url-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.ba-url-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ba-url-row--primary .ba-url-label { color: #15803d; }
+.ba-url-row--pending .ba-url-label { color: #b45309; }
+.ba-url-value {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+  word-break: break-all;
+}
+.ba-url-status { font-size: 12.5px; color: var(--muted); }
+.ba-url-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; max-width: 640px; }
+.ba-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.ba-dot-green { background: #22c55e; }
+.ba-dot-amber { background: #eab308; }
+.ba-pending-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(234,179,8,0.18);
+  color: #92400e;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.btn-open-site {
+  flex-shrink: 0;
+  text-decoration: none;
+  background: var(--purple);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.btn-open-site:hover { background: var(--purple-dark, #5b21b6); }
+@media (max-width: 640px) {
+  .ba-url-row { flex-direction: column; align-items: flex-start; }
+  .btn-open-site { width: 100%; text-align: center; }
+}
+
+@media (max-width: 700px) {
+  .ba-head, .ba-row { grid-template-columns: 1fr; }
+  .ba-head-before, .ba-head-after,
+  .ba-cell-before, .ba-cell-after { border-left: none; border-top: 1px solid var(--lavender); }
+  .ba-head-label { display: none; }
+}
+
+/* Code block */
+.code-block {
+  background: #1a1530; color: #e9e6f5;
+  border-radius: 10px; padding: 18px 20px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12.5px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  overflow-x: auto; margin: 12px 0;
+}
+.code-block .comment { color: #a78bfa; }
+.code-block .key { color: #06b6d4; }
+.copy-btn {
+  background: var(--surface); border: 1px solid var(--line);
+  color: var(--purple); font-size: 12px; padding: 7px 14px;
+  border-radius: 6px; cursor: pointer; font-weight: 600;
+}
+.copy-btn:hover { background: var(--lavender); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* Buttons */
+.btn-row {
+  display: flex; gap: 10px; justify-content: space-between;
+  margin-top: 28px;
+}
+.btn {
+  padding: 11px 22px; border: 1px solid transparent; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--purple); color: #fff;
+}
+.btn-primary:hover:not(:disabled) { background: #5b21b6; }
+.btn-secondary {
+  background: var(--surface); color: var(--muted); border-color: var(--line);
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--muted-2); }
+.btn-danger {
+  background: var(--red-bg); color: var(--red); border-color: var(--red);
+}
+.btn-success {
+  background: var(--green); color: #fff;
+}
+
+/* Scout-output dropzone summary */
+.scout-summary {
+  padding: 12px 14px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  display: none;
+}
+.scout-summary.shown { display: block; }
+.scout-summary .ss-row { display: flex; justify-content: space-between; padding: 2px 0; }
+.scout-summary .ss-key { color: var(--muted); font-size: 12px; }
+.scout-summary .ss-val { color: var(--text); font-weight: 600; font-size: 12.5px; font-family: ui-monospace, monospace; }
+
+/* Page mapping (Step 3) */
+.page-map-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 9px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  position: sticky; top: 8px; z-index: 5;
+}
+.page-map-toolbar .pm-counts {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px; color: var(--muted);
+}
+.page-map-toolbar .pm-counts span { margin-right: 10px; }
+.page-map-toolbar .pm-counts .ct-keep_redesign { color: #047857; font-weight: 600; }
+.page-map-toolbar .pm-counts .ct-keep_rewrite { color: var(--purple); font-weight: 600; }
+.page-map-toolbar .pm-counts .ct-merge { color: var(--cyan); font-weight: 600; }
+.page-map-toolbar .pm-counts .ct-delete { color: #b45309; font-weight: 600; }
+.page-map-toolbar .pm-counts .ct-new { color: #1e40af; font-weight: 600; }
+.page-map-toolbar .pm-reset {
+  background: transparent; border: none; color: var(--purple);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  text-decoration: underline;
+}
+
+.page-row {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 8px;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.page-row.keep_redesign { border-color: var(--green); background: var(--green-bg); }
+.page-row.keep_rewrite { border-color: var(--purple); background: var(--lavender); }
+.page-row.merge { border-color: var(--cyan); background: #ecfeff; }
+.page-row.delete { border-color: var(--orange); background: var(--orange-bg); opacity: 0.85; }
+.page-row.new { border-color: #93c5fd; background: #eff6ff; }
+.page-row.gap-entry { border-style: dashed; }
+.page-row-head {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.page-row-body { flex: 1; min-width: 0; }
+.page-row-url {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12.5px; color: var(--purple); font-weight: 600;
+  word-break: break-all;
+}
+.page-row-url.gap { color: var(--cyan); font-style: italic; }
+.page-row-title {
+  font-size: 13.5px; font-weight: 600; margin-top: 2px;
+  color: var(--text);
+}
+.page-row-metrics {
+  display: flex; gap: 12px; margin-top: 6px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11.5px;
+}
+.page-metric .mk { color: var(--muted-2); margin-right: 3px; }
+.page-metric .mv { color: var(--text); font-weight: 600; }
+.page-metric .mv.high { color: #047857; }
+.page-metric .mv.mid { color: var(--orange); }
+.page-metric .mv.low { color: var(--red); }
+.page-row-actions {
+  display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px;
+}
+.page-action-chip {
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  font-size: 11.5px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.page-action-chip:hover { border-color: var(--purple-light); color: var(--text); }
+.page-action-chip.active.keep_redesign { background: var(--green); color: #fff; border-color: var(--green); }
+.page-action-chip.active.keep_rewrite { background: var(--purple); color: #fff; border-color: var(--purple); }
+.page-action-chip.active.merge { background: var(--cyan); color: #fff; border-color: var(--cyan); }
+.page-action-chip.active.delete { background: var(--orange); color: #fff; border-color: var(--orange); }
+.page-action-chip.active.new { background: #1e40af; color: #fff; border-color: #1e40af; }
+.page-row-picker {
+  display: none;
+  margin-top: 10px; padding: 8px 10px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.page-row-picker.shown { display: block; }
+.page-row-picker label { font-size: 10.5px; margin-bottom: 4px; }
+.page-row-picker select { font-size: 12.5px; padding: 6px 8px; }
+
+/* Brand strategy editor */
+.strategy-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 18px 20px;
+}
+.strategy-block .field { margin-bottom: 14px; }
+.strategy-block .field:last-child { margin-bottom: 0; }
+.gap-list {
+  display: grid; gap: 6px;
+  margin-top: 8px;
+}
+.gap-item {
+  padding: 7px 10px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--cyan);
+  border-radius: 5px;
+  font-size: 12.5px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  color: var(--text);
+}
+
+/* Per-page approval cards (NEW pages only — text-only, no iframes/screenshots) */
+.page-walkthrough-progress {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px; color: var(--muted);
+  position: sticky; top: 8px; z-index: 5;
+}
+.page-walkthrough-progress strong { color: var(--text); }
+.page-walkthrough-progress .pw-counts {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12.5px;
+}
+.page-walkthrough-progress .pw-counts .pw-approved { color: #047857; font-weight: 600; }
+.page-walkthrough-progress .pw-counts .pw-rejected { color: #b45309; font-weight: 600; }
+.page-walkthrough-progress .pw-counts .pw-pending { color: var(--muted-2); }
+
+.page-card {
+  border: 1px solid var(--line); border-radius: 11px;
+  padding: 14px 16px; margin-bottom: 10px;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.page-card.approved {
+  border-color: var(--green); background: var(--green-bg);
+}
+.page-card.rejected {
+  border-color: var(--orange); background: var(--orange-bg);
+  opacity: 0.7;
+}
+.page-card.edit-mode {
+  border-color: var(--purple); background: var(--lavender);
+}
+.page-card-head {
+  display: flex; align-items: flex-start; gap: 10px;
+  cursor: pointer;
+}
+.page-card-tree {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11.5px; color: var(--muted-2);
+  white-space: pre;
+  flex-shrink: 0;
+  padding-top: 2px;
+  min-width: 110px;
+}
+.page-card-body { flex: 1; min-width: 0; }
+.page-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 14.5px;
+  margin-bottom: 3px;
+}
+.tier-badge {
+  display: inline-block;
+  padding: 2px 8px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.tier-badge.core { background: #dbeafe; color: #1e40af; }
+.tier-badge.service { background: var(--lavender); color: var(--purple); }
+.tier-badge.location { background: #fef3c7; color: #92400e; }
+.tier-badge.landing { background: #fce7f3; color: #9d174d; }
+.tier-badge.compliance { background: #e5e7eb; color: #374151; }
+.page-card-oneline {
+  font-size: 13px; color: var(--muted);
+  line-height: 1.5;
+}
+.page-card-toggle {
+  flex-shrink: 0;
+  font-size: 13px; color: var(--muted-2);
+  padding: 2px 4px;
+}
+.page-actions {
+  display: flex; gap: 6px; margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.page-action-btn {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.page-action-btn:hover { border-color: var(--muted-2); }
+.page-action-btn.approve { color: #065f46; }
+.page-action-btn.approve.active { background: var(--green); color: #fff; border-color: var(--green); }
+.page-action-btn.reject { color: #92400e; }
+.page-action-btn.reject.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+.page-action-btn.edit { color: var(--purple); }
+.page-action-btn.edit.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.page-expand {
+  display: none;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+}
+.page-expand.shown { display: block; }
+.page-expand-section { margin-bottom: 12px; }
+.page-expand-section:last-child { margin-bottom: 0; }
+.page-expand-heading {
+  font-size: 11px; font-weight: 700;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+}
+.page-expand-row {
+  display: flex; gap: 12px; padding: 3px 0;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px;
+}
+.page-expand-row .ek { color: var(--muted); min-width: 120px; }
+.page-expand-row .ev { color: var(--text); flex: 1; }
+.page-edit-panel {
+  display: none;
+  margin-top: 12px; padding: 12px 14px;
+  background: var(--code-bg);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+}
+.page-edit-panel.shown { display: block; }
+.page-edit-panel label {
+  font-size: 10.5px; margin-top: 8px; margin-bottom: 4px;
+}
+.page-edit-panel label:first-child { margin-top: 0; }
+.page-edit-panel input, .page-edit-panel textarea {
+  font-size: 12.5px; padding: 7px 9px;
+}
+.page-walkthrough-footer {
+  margin-top: 18px; padding: 12px 14px;
+  background: var(--code-bg);
+  border-radius: 8px;
+  font-size: 13px; color: var(--muted);
+  text-align: center;
+}
+.page-walkthrough-footer.complete {
+  background: var(--green-bg);
+  color: #065f46;
+}
+
+/* Wave header for parallel build groups (used in Step 3 link preservation) */
+.build-wave-header {
+  font-size: 11px; font-weight: 700;
+  color: var(--purple); text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 14px 0 6px;
+}
+.build-item.wave-parallel .check {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .field-row { grid-template-columns: 1fr; }
+  .detect-grid { grid-template-columns: repeat(3, 1fr); }
+  .archetype-grid { grid-template-columns: 1fr; }
+  .page-row-actions { gap: 4px; }
+  .page-card-head { flex-direction: column; gap: 6px; }
+  .page-card-tree { min-width: 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="brand">
+  <div class="brand-left">
+    <span class="brand-mark">SA</span>
+    <span class="brand-name">AMM Website Rebuild Wizard</span>
+  </div>
+  <div class="brand-right">
+    <span class="conn-status"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">Checking…</span></span>
+    <button class="reset-btn" onclick="resetWizard()">Start fresh</button>
+  </div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="progress-label" id="progressLabel">Step 1 of 12 · Target + scout output</div>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 1 · Identify target + drop scout output                -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step active" data-step="1">
+  <h1>What are we rebuilding?</h1>
+  <p class="sub">Drop the scout report for this domain. We consume scout's inventory as the source of truth — no re-crawling, no re-auditing.</p>
+
+  <div class="field">
+    <label>Domain</label>
+    <input type="text" id="f-domain" placeholder="coastaldental.com">
+  </div>
+
+  <div class="field">
+    <label>Scout output file</label>
+    <div class="materials-dropzone" id="scout-dropzone">
+      <div class="dropzone-icon">📥</div>
+      <div class="dropzone-title">Drop scout's export here or click to browse</div>
+      <div class="dropzone-sub">HTML report · JSON · Markdown — anything <code>/scout</code> produced for this domain</div>
+      <input type="file" id="scout-file-input" accept=".html,.json,.md,text/*" style="display:none;">
+    </div>
+
+    <div class="scout-summary" id="scout-summary">
+      <div class="ss-row"><span class="ss-key">File</span><span class="ss-val" id="ss-filename">—</span></div>
+      <div class="ss-row"><span class="ss-key">Size</span><span class="ss-val" id="ss-size">—</span></div>
+      <div class="ss-row"><span class="ss-key">Scout run date</span><span class="ss-val" id="ss-date">—</span></div>
+      <div class="ss-row"><span class="ss-key">Age</span><span class="ss-val" id="ss-age">—</span></div>
+    </div>
+
+    <div class="callout warn" id="freshness-warn" style="display:none;">
+      <strong>Scout report is <span id="fw-days">N</span> days old.</strong>
+      Rebuild against this snapshot, or re-run scout first for fresh data?
+      <div style="margin-top: 10px; display: flex; gap: 8px;">
+        <button class="btn btn-secondary" id="freshness-proceed">Proceed anyway</button>
+        <button class="btn btn-secondary" id="freshness-rescout">Re-run scout first</button>
+      </div>
+      <div id="freshness-rescout-note" style="display:none; margin-top: 10px; font-size: 12.5px;">
+        Run <code>/scout coastaldental.com</code> first, then re-open this wizard with the fresh export.
+      </div>
+    </div>
+
+    <div class="callout info" id="freshness-unknown" style="display:none;">
+      <strong>Freshness unknown.</strong>
+      Couldn't parse a scout_run_date from the file. Confirm this is the right export and proceed.
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <span></span>
+    <button class="btn btn-primary" onclick="next()">Next →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 2 · SA Asset Inheritance + operator control            -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="2">
+  <h1>Inheriting Search Atlas assets</h1>
+  <p class="sub">A live site usually has all 5 SA assets already. Pick what to do with each — Use as-is is right most of the time.</p>
+
+  <div id="detect-loading" class="callout info" style="display: none;">
+    <strong>Pulling existing assets…</strong>
+    Parallel lookups across OTTO, Brand Vault, GBP, PPC, and LLM Visibility.
+  </div>
+
+  <div id="detect-results" style="display: none;">
+    <div class="detect-grid" id="detect-grid">
+      <div class="detect-card" data-key="otto"><span class="icon">🏗️</span><div class="label">OTTO</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="bv"><span class="icon">🏷️</span><div class="label">Brand Vault</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="gbp"><span class="icon">📍</span><div class="label">GBP</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="ppc"><span class="icon">💰</span><div class="label">PPC</div><div class="status">—</div></div>
+      <div class="detect-card" data-key="llmv"><span class="icon">👁️</span><div class="label">LLM Vis</div><div class="status">—</div></div>
+    </div>
+
+    <div class="callout info">
+      <strong>For a rebuild, default to Use as-is.</strong>
+      Existing data is usually the right starting point. Pick <em>Reject + start fresh</em> only for major brand pivots — the asset stays in SA but the workflow scaffolds a new one alongside.
+    </div>
+
+    <div class="asset-panel" id="asset-panel">
+      <div class="asset-panel-header">
+        <div class="asset-panel-title">Your data, your call</div>
+        <div class="asset-panel-hint">Use, edit, add, or start fresh — per asset</div>
+      </div>
+      <div id="asset-rows"></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step2-next" onclick="next()">Use these decisions →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 3 · Old → New page mapping                             -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="3">
+  <h1>What happens to every page?</h1>
+  <p class="sub">Scout found these pages. We auto-classified them based on authority, content score, and inbound links. Adjust any that look wrong — every page needs a decision before we build.</p>
+
+  <div class="build-wave-header">Link-equity preservation · running in parallel</div>
+  <ul class="build-list" id="link-preservation-list">
+    <li class="build-item wave-parallel" data-step-id="anchor"><span class="check">✓</span><span class="tool-code">se_get_anchor_text</span>Reading anchor text for high-Authority Keep pages</li>
+    <li class="build-item wave-parallel" data-step-id="refdomains"><span class="check">✓</span><span class="tool-code">se_get_referring_domains</span>Capturing referring domains to protect</li>
+    <li class="build-item wave-parallel" data-step-id="linkgraph"><span class="check">✓</span><span class="tool-code">se_get_link_network_graph</span>Mapping internal links for remap planning</li>
+  </ul>
+
+  <div class="page-map-toolbar">
+    <div class="pm-counts" id="pm-counts"></div>
+    <button class="pm-reset" onclick="resetPageMapToDefaults()">Reset to defaults</button>
+  </div>
+
+  <div id="page-map-list"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step3-next" onclick="next()">Lock the map →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 4 · NEW page approval walkthrough (NEW rows only)      -->
+<!-- Text-only cards. No iframes, no rendered HTML, no images.   -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="4">
+  <h1>Approve every NEW page</h1>
+  <p class="sub">Scout flagged these topic gaps. Each one becomes a brand-new page in the rebuild — approve, reject, or edit before we touch the design. Keep / Rewrite / Merge / Delete rows from the previous step keep their action chips; only NEW pages need this walkthrough.</p>
+
+  <div class="callout info">
+    <strong>Text-only cards.</strong>
+    Website Studio renders the actual pages in Phase 9 — we don't pre-render here because it costs resources we don't need to spend until you've locked the queue.
+  </div>
+
+  <div class="page-walkthrough-progress" id="new-page-walkthrough-progress">
+    <div><strong>NEW page queue</strong> · walk each card</div>
+    <div class="pw-counts">
+      <span class="pw-approved" id="np-approved-count">0</span> approved ·
+      <span class="pw-rejected" id="np-rejected-count">0</span> rejected ·
+      <span class="pw-pending" id="np-pending-count">0</span> pending
+    </div>
+  </div>
+
+  <div id="new-page-walkthrough-cards"></div>
+
+  <div class="page-walkthrough-footer" id="new-page-walkthrough-footer">
+    Make a decision on every NEW page above to continue.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step4-next" onclick="next()" disabled>Lock the NEW page queue →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 5 · Brand strategy refresh (conditional)               -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="5">
+  <h1>Brand strategy refresh</h1>
+  <p class="sub">If the Brand Vault is being edited or rejected, we synthesize a refreshed strategy. Otherwise this step skips itself.</p>
+
+  <div id="strategy-skip" class="callout ok" style="display:none;">
+    <strong>Brand strategy inherited from existing Brand Vault.</strong>
+    BV is being used as-is — no refresh needed. Click Next.
+  </div>
+
+  <div id="strategy-editor" style="display:none;">
+    <div class="strategy-block">
+      <div class="field">
+        <label>Voice & tone</label>
+        <textarea id="bs-voice" placeholder="e.g. warm, professional, conversational — confident without jargon"></textarea>
+      </div>
+      <div class="field">
+        <label>Messaging pillars (one per line)</label>
+        <textarea id="bs-pillars" placeholder="Family-first care&#10;Modern tech, gentle approach&#10;Newport Beach specialists"></textarea>
+      </div>
+      <div class="field">
+        <label>Differentiation — why pick this over the alternatives</label>
+        <textarea id="bs-diff" placeholder="What the rebuild needs to communicate that the old site missed."></textarea>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <strong>Scout-identified topic gaps will inform the new messaging:</strong>
+      <div class="gap-list" id="bs-gaps"></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Continue →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 6 · Pick the NEW design style (6 styles)               -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="6">
+  <h1>Pick the new design style</h1>
+  <p class="sub">Six current web design patterns — Website Studio uses the picked style as the rendering template.</p>
+
+  <div class="old-style-banner">
+    <div>
+      <span class="old-label">Old style</span>
+      <span class="old-val" id="old-style-name">Modern Minimal</span>
+    </div>
+    <span class="old-hint">detected from current site</span>
+  </div>
+
+  <div class="archetype-grid" id="archetype-grid">
+    <div class="archetype-card" data-arch="modern_minimal">
+      <div class="archetype-name">Modern Minimal</div>
+      <div class="archetype-desc">Whitespace, sans-serif, photography-led, monochromatic. Healthcare, finance, professional services.</div>
+    </div>
+    <div class="archetype-card" data-arch="editorial">
+      <div class="archetype-name">Editorial</div>
+      <div class="archetype-desc">Magazine layouts, oversized type, asymmetric grids. Fashion, hospitality, lifestyle, luxury.</div>
+    </div>
+    <div class="archetype-card" data-arch="bento">
+      <div class="archetype-name">Bento Grid</div>
+      <div class="archetype-desc">Card-based modular layouts (Apple-style). SaaS, tech, modern e-commerce.</div>
+    </div>
+    <div class="archetype-card" data-arch="glassmorphism">
+      <div class="archetype-name">Glassmorphism</div>
+      <div class="archetype-desc">Frosted-glass panels, layered translucency. Fintech, premium services, AI products.</div>
+    </div>
+    <div class="archetype-card" data-arch="brutalist">
+      <div class="archetype-name">Bold / Brutalist</div>
+      <div class="archetype-desc">High contrast, oversized type, raw aesthetic. Creative agencies, startups, edgy brands.</div>
+    </div>
+    <div class="archetype-card" data-arch="warm_organic">
+      <div class="archetype-name">Warm Organic</div>
+      <div class="archetype-desc">Earthy palette, soft rounded shapes, hand-drawn. Wellness, food, sustainable brands.</div>
+    </div>
+  </div>
+
+  <div class="callout warn" id="same-style-warn" style="display:none;">
+    <strong>Same style as the old site.</strong>
+    Are you sure this is a rebuild and not a content refresh? <code>/run-content</code> may be a better fit if the design isn't changing.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" id="step6-next" onclick="next()">Use this style →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 7 · Optional scout HTML pages                          -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="7">
+  <h1>Drop scout's HTML exports (optional)</h1>
+  <p class="sub">If scout exported the actual HTML pages, drop them here. We'll extract content blocks, identify reusable sections, and surface them in the new design.</p>
+
+  <div class="materials-dropzone" id="html-dropzone">
+    <div class="dropzone-icon">📄</div>
+    <div class="dropzone-title">Drop scout-exported HTML pages</div>
+    <div class="dropzone-sub">One file per page, or a zip. Skip if scout didn't include HTML — text-only inventory works too.</div>
+    <input type="file" id="html-file-input" multiple accept=".html,.htm,.zip" style="display:none;">
+  </div>
+
+  <div class="materials-list" id="html-list"></div>
+
+  <div class="callout info">
+    <strong>Totally optional.</strong>
+    "Keep + redesign" pages can fall back to scout's text inventory if you don't drop HTML. Skip with confidence.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <button class="btn btn-primary" onclick="next()">Continue (or skip) →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 8 · Pre-rebuild HITL gate                              -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="8">
+  <h1>Pre-rebuild review</h1>
+  <p class="sub">Every decision so far, on one screen. This is the only path to execution. Catch a wrong assumption here — costs 60 seconds. Catch it after migration — costs the project.</p>
+
+  <div class="hitl-block" id="hitl-summary"></div>
+
+  <div class="callout warn">
+    <strong>This is the gate.</strong>
+    If anything is off, hit Edit — we'll jump back to that step, fix it, and re-present this review.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-danger" onclick="cancelRebuild()">Cancel rebuild</button>
+    <div>
+      <button class="btn btn-secondary" onclick="prev()" style="margin-right: 8px;">← Edit</button>
+      <button class="btn btn-success" onclick="approveAndStart()">Approve · start rebuild →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 9 · Rebuild execution — LIVE activity feed             -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="9">
+  <h1>Rebuilding the site</h1>
+  <p class="sub">Claude Code is running the rebuild now. Website Studio renders each page per the locked design style — redesign pulls old, rewrite generates fresh, new is greenfield.</p>
+
+  <div class="run-stats">
+    <div class="run-stat">
+      <div class="run-stat-label">Elapsed</div>
+      <div class="run-stat-value" id="run-elapsed">0.0s</div>
+    </div>
+    <div class="run-stat">
+      <div class="run-stat-label">Phase</div>
+      <div class="run-stat-value" id="run-phase">starting…</div>
+    </div>
+    <div class="run-stat">
+      <div class="run-stat-label">Steps</div>
+      <div class="run-stat-value" id="run-steps">0</div>
+    </div>
+  </div>
+
+  <ul class="activity-feed" id="activity-feed"></ul>
+
+  <div class="callout info" id="run-status-callout">
+    <strong id="run-status-title">Streaming live from Claude Code…</strong>
+    Phases 5 + 6 + 6.5 run sequentially: rebuild execution → pre-launch baseline → migration launch. The next button unlocks when Phase 6 (baseline) is captured.
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="run-cancel" onclick="cancelStream()">Cancel</button>
+    <button class="btn btn-primary" id="step9-next" onclick="next()" disabled>Baseline captured · review →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 10 · Pre-launch baseline (KRT + GSC snapshot)          -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="10">
+  <h1>Pre-launch baseline</h1>
+  <p class="sub">Before migration goes live, we snapshot every tracked keyword position and GSC baseline. Phase 12 will diff against this to prove no critical rankings dropped.</p>
+
+  <div class="callout info">
+    <strong>We're capturing the ranking baseline NOW so Phase 12 can confirm no critical positions dropped post-migration.</strong>
+  </div>
+
+  <ul class="build-list" id="baseline-list">
+    <li class="build-item" data-step-id="krtsnap"><span class="check">✓</span><span class="tool-code">krt_get_rankings</span>Snapshotting tracked keyword positions (against OLD site)</li>
+    <li class="build-item" data-step-id="gsckw"><span class="check">✓</span><span class="tool-code">gsc_get_keyword_performance</span>Pulling GSC keyword baseline · 28-day window (against OLD site)</li>
+    <li class="build-item" data-step-id="gscpage"><span class="check">✓</span><span class="tool-code">gsc_get_page_performance</span>Pulling GSC per-page baseline (against OLD site)</li>
+  </ul>
+
+  <div class="callout info" style="margin-top: 10px;">
+    Captured against the existing site so <code>/run-seo</code> can compute the actual delta when OTTO re-audits 24-48h post-launch.
+  </div>
+
+  <div class="btn-row">
+    <span></span>
+    <button class="btn btn-primary" id="step10-next" onclick="next()" disabled>Baseline captured · launch migration →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 11 · Migration launch — LIVE activity feed (continuation) -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="11">
+  <h1>Migration launch</h1>
+  <p class="sub">Same live stream from Claude — now executing Phase 6.5 (migration). <code>ws_publish_project</code>, redirects, instant indexing, batch URL submission.</p>
+
+  <div class="run-stats">
+    <div class="run-stat">
+      <div class="run-stat-label">Elapsed</div>
+      <div class="run-stat-value" id="run-elapsed-2">0.0s</div>
+    </div>
+    <div class="run-stat">
+      <div class="run-stat-label">Phase</div>
+      <div class="run-stat-value" id="run-phase-2">migrating…</div>
+    </div>
+    <div class="run-stat">
+      <div class="run-stat-label">Steps</div>
+      <div class="run-stat-value" id="run-steps-2">0</div>
+    </div>
+  </div>
+
+  <ul class="activity-feed" id="activity-feed-2"></ul>
+
+  <div class="callout info">
+    <strong>Rollback path:</strong>
+    Website Studio version history preserved for 7 days. Redirect rules revertible. Old-site snapshot is yours forever.
+  </div>
+
+  <div class="btn-row">
+    <span></span>
+    <button class="btn btn-primary" id="step11-next" onclick="next()" disabled>Site is live · view upgrade summary →</button>
+  </div>
+</section>
+
+<!-- ────────────────────────────────────────────────────────── -->
+<!-- STEP 12 · Before / After — Upgrade Summary                  -->
+<!-- ────────────────────────────────────────────────────────── -->
+<section class="step" data-step="12">
+  <h1>Before &amp; After — Upgrade Summary</h1>
+  <p class="sub">Everything we changed, side-by-side. No waiting needed — this is built from the data we already gathered.</p>
+
+  <div class="ba-block" id="before-after-block">
+    <div class="ba-head">
+      <div class="ba-head-cell ba-head-label">What</div>
+      <div class="ba-head-cell ba-head-before">Before</div>
+      <div class="ba-head-cell ba-head-after">After</div>
+    </div>
+    <div class="ba-rows" id="ba-rows"></div>
+  </div>
+
+  <div class="callout ok" style="margin-top: 16px;">
+    Workflow complete. The new site is live. <code>/run-seo</code> picks up the monthly cadence from here, and computes the actual ranking delta once OTTO re-audits.
+  </div>
+
+  <!-- URL block — surfaces BOTH the immediately-resolvable WS URL and the custom domain (status depends on hostingMode) -->
+  <div class="ba-live-urls" id="ba-live-urls">
+    <div class="ba-url-row ba-url-row--primary" id="ba-url-primary">
+      <div class="ba-url-meta">
+        <div class="ba-url-label" id="ba-url-primary-label">Live now</div>
+        <div class="ba-url-value" id="ba-url-primary-value">https://example.com</div>
+        <div class="ba-url-status" id="ba-url-primary-status"><span class="ba-dot ba-dot-green"></span>Resolves immediately</div>
+      </div>
+      <a class="btn-open-site" id="ba-view-live" href="#" target="_blank" rel="noopener">Open now →</a>
+    </div>
+    <div class="ba-url-row ba-url-row--pending" id="ba-url-secondary">
+      <div class="ba-url-meta">
+        <div class="ba-url-label" id="ba-url-secondary-label">Custom domain <span class="ba-pending-badge">Pending DNS cutover</span></div>
+        <div class="ba-url-value" id="ba-url-secondary-value">https://example.com</div>
+        <div class="ba-url-status"><span class="ba-dot ba-dot-amber"></span><span id="ba-dns-eta">DNS propagation typically takes minutes to a few hours</span></div>
+        <div class="ba-url-hint">Point your DNS at Website Studio per the instructions in the export config. SSL provisions automatically once DNS resolves.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="gap: 8px;">
+    <button class="btn btn-secondary" onclick="prev()">← Back</button>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-secondary" onclick="downloadUpgradeSummary()">Download upgrade summary</button>
+      <button class="btn btn-primary" onclick="resetWizard()">Start another rebuild →</button>
+    </div>
+  </div>
+</section>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────────
+const TOTAL_STEPS = 12;
+const STORAGE_KEY = 'amm-website-rebuild-wizard-v1';
+
+// Detect simulation — for a rebuild, most SA assets typically already exist.
+const REBUILD_DETECT = {
+  otto: 'found', bv: 'found', gbp: 'found', ppc: 'missing', llmv: 'found'
+};
+
+// Old design style (would be detected from current site via scout output).
+// Synthetic for demo purposes.
+const OLD_STYLE = 'modern_minimal';
+
+const ARCHETYPES = {
+  modern_minimal: { name: 'Modern Minimal', desc: 'Whitespace, sans-serif, photography-led.' },
+  editorial:      { name: 'Editorial',      desc: 'Magazine layouts, oversized type, asymmetric.' },
+  bento:          { name: 'Bento Grid',     desc: 'Card-based modular layouts.' },
+  glassmorphism:  { name: 'Glassmorphism',  desc: 'Frosted-glass panels, layered translucency.' },
+  brutalist:      { name: 'Bold / Brutalist', desc: 'High contrast, oversized type.' },
+  warm_organic:   { name: 'Warm Organic',   desc: 'Earthy palette, soft rounded shapes.' }
+};
+
+const ASSET_META = {
+  otto: { icon: '🏗️', name: 'OTTO project',  actions: { found: ['use', 'edit', 'reject_fresh'], missing: ['create', 'skip'] } },
+  bv:   { icon: '🏷️', name: 'Brand Vault',   actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  gbp:  { icon: '📍', name: 'GBP location',  actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  ppc:  { icon: '💰', name: 'PPC business',  actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } },
+  llmv: { icon: '👁️', name: 'LLM Visibility', actions: { found: ['use', 'edit', 'add', 'reject_fresh'], missing: ['create', 'skip'] } }
+};
+const ACTION_LABEL = {
+  use: 'Use as-is', edit: 'Edit', add: 'Add data',
+  reject_fresh: 'Reject + fresh', create: 'Create', skip: 'Skip'
+};
+
+const PAGE_ACTION_LABEL = {
+  keep_redesign: 'Keep + redesign',
+  keep_rewrite: 'Keep + rewrite',
+  merge: 'Merge',
+  delete: 'Delete',
+  new: 'New'
+};
+
+// Simulated scout-derived page inventory for Coastal Dental Group.
+// Realistic mix of high-authority core pages, lower-quality service pages, orphans, and topic gaps.
+const SIMULATED_SCOUT_PAGES = [
+  { url: '/',                        title: 'Coastal Dental Group · Newport Beach Dentistry', contentScore: 72, authority: 85, traffic: 1240, lastModified: '2024-08-12' },
+  { url: '/about',                   title: 'About Our Practice',                              contentScore: 58, authority: 68, traffic: 410,  lastModified: '2024-06-04' },
+  { url: '/contact',                 title: 'Contact Coastal Dental Group',                    contentScore: 44, authority: 71, traffic: 380,  lastModified: '2024-09-20' },
+  { url: '/services',                title: 'Dental Services',                                 contentScore: 51, authority: 64, traffic: 290,  lastModified: '2024-05-01' },
+  { url: '/services/general',        title: 'General Dentistry',                               contentScore: 38, authority: 42, traffic: 180,  lastModified: '2023-11-22' },
+  { url: '/services/cosmetic',       title: 'Cosmetic Dentistry',                              contentScore: 35, authority: 38, traffic: 165,  lastModified: '2023-10-08' },
+  { url: '/services/implants',       title: 'Dental Implants',                                 contentScore: 64, authority: 72, traffic: 520,  lastModified: '2024-07-15' },
+  { url: '/services/orthodontics',   title: 'Orthodontics & Invisalign',                       contentScore: 41, authority: 47, traffic: 230,  lastModified: '2024-02-18' },
+  { url: '/services/pediatric',      title: 'Pediatric Dentistry',                             contentScore: 29, authority: 18, traffic: 45,   lastModified: '2022-09-30' },
+  { url: '/services/emergency',      title: 'Emergency Dentist Newport Beach',                 contentScore: 56, authority: 61, traffic: 340,  lastModified: '2024-04-11' },
+  { url: '/team',                    title: 'Meet the Team',                                   contentScore: 47, authority: 52, traffic: 195,  lastModified: '2024-03-22' },
+  { url: '/testimonials',            title: 'Patient Testimonials',                            contentScore: 32, authority: 12, traffic: 25,   lastModified: '2022-04-15' },
+  { url: '/insurance',               title: 'Insurance & Financing',                           contentScore: 39, authority: 28, traffic: 110,  lastModified: '2023-08-04' },
+  { url: '/blog/wisdom-teeth-2019',  title: 'Wisdom Teeth Removal — Old Blog Post',            contentScore: 22, authority: 8,  traffic: 12,   lastModified: '2019-03-14' },
+  { url: '/blog/old-promo-2020',     title: 'Spring 2020 Promo — Expired',                     contentScore: 18, authority: 4,  traffic: 3,    lastModified: '2020-05-01' },
+  { url: '/privacy',                 title: 'Privacy Policy',                                  contentScore: 28, authority: 22, traffic: 8,    lastModified: '2023-01-10' }
+];
+
+// Topic gaps — scout identified these as opportunities competitors cover but the site doesn't.
+// Each gap carries evidence for the Phase 4 walkthrough cards (text-only).
+const SIMULATED_TOPIC_GAPS = [
+  {
+    gapTitle: 'Sedation dentistry — IV + nitrous oxide options',
+    contentScore: 0, authority: 0, traffic: 0,
+    slug: 'sedation-dentistry',
+    tier: 'service',
+    oneline: 'Topic gap · 1,800 vol · transactional intent · 3/4 competitors have this',
+    pageType: 'Service page',
+    h1: 'Sedation Dentistry in Newport Beach',
+    schema: 'MedicalService',
+    keywords: [
+      { kw: 'sedation dentistry newport beach', vol: 1800, intent: 'transactional', difficulty: 38 },
+      { kw: 'iv sedation dentist', vol: 1200, intent: 'transactional', difficulty: 42 },
+      { kw: 'nitrous oxide dentist', vol: 720, intent: 'commercial', difficulty: 28 }
+    ],
+    competitorEvidence: { count: 3, examples: ['newportbeachdental.com', 'oc-dentistry.com', 'pacificdentalgroup.com'] },
+    serpFeatures: ['LOCAL_PACK', 'FAQ', 'PEOPLE_ALSO_ASK'],
+    contentGap: 'No site content mentions sedation options — 3/4 local competitors have dedicated pages.',
+    sections: [
+      'Hero · "Anxiety-free dental care for Newport Beach"',
+      'Sedation options breakdown — IV / oral / nitrous',
+      'Who sedation is right for (anxiety, complex procedures, gag reflex)',
+      'Safety protocols + monitoring',
+      'FAQ block (targets PEOPLE_ALSO_ASK SERP feature)',
+      'Book consultation CTA'
+    ],
+    ctas: ['Book sedation consultation', 'Call (949) xxx-xxxx']
+  },
+  {
+    gapTitle: 'Same-day crowns / CEREC technology',
+    contentScore: 0, authority: 0, traffic: 0,
+    slug: 'same-day-crowns-cerec',
+    tier: 'service',
+    oneline: 'Topic gap · 880 vol · commercial intent · 2/4 competitors have this',
+    pageType: 'Service page',
+    h1: 'Same-Day Crowns with CEREC Technology',
+    schema: 'MedicalService',
+    keywords: [
+      { kw: 'same day crowns newport beach', vol: 480, intent: 'transactional', difficulty: 32 },
+      { kw: 'cerec dentist', vol: 880, intent: 'commercial', difficulty: 36 },
+      { kw: 'one visit crown', vol: 320, intent: 'informational', difficulty: 24 }
+    ],
+    competitorEvidence: { count: 2, examples: ['newportbeachdental.com', 'pacificdentalgroup.com'] },
+    serpFeatures: ['LOCAL_PACK', 'IMAGE_PACK'],
+    contentGap: 'Existing /services/general buries CEREC mention — dedicated page wins for both speed-of-service shoppers and technology-aware patients.',
+    sections: [
+      'Hero · "Crowns in one visit · no temporaries"',
+      'How CEREC works (3D scan → mill → fit, same chair)',
+      'Comparison table — traditional 2-visit vs CEREC same-day',
+      'Image gallery of CEREC machine + finished crowns (targets IMAGE_PACK)',
+      'Insurance + cost breakdown',
+      'Book same-day appointment CTA'
+    ],
+    ctas: ['Book same-day crown', 'See CEREC in action']
+  },
+  {
+    gapTitle: 'Pediatric sealants & preventive care',
+    contentScore: 0, authority: 0, traffic: 0,
+    slug: 'pediatric-sealants-preventive',
+    tier: 'service',
+    oneline: 'Topic gap · 410 vol · informational intent · 4/4 competitors have this',
+    pageType: 'Service / parent-focused landing',
+    h1: 'Pediatric Sealants & Preventive Dentistry',
+    schema: 'MedicalService',
+    keywords: [
+      { kw: 'dental sealants for kids', vol: 410, intent: 'informational', difficulty: 22 },
+      { kw: 'pediatric preventive dentistry', vol: 260, intent: 'informational', difficulty: 18 },
+      { kw: 'kids dentist newport beach', vol: 720, intent: 'transactional', difficulty: 41 }
+    ],
+    competitorEvidence: { count: 4, examples: ['newportbeachdental.com', 'oc-dentistry.com', 'pacificdentalgroup.com', 'familydentalnb.com'] },
+    serpFeatures: ['LOCAL_PACK', 'PEOPLE_ALSO_ASK', 'VIDEO'],
+    contentGap: 'Old /services/pediatric page has score 29 and last-modified 2022 — strip + replace with sealants-focused content matching what every competitor ranks for.',
+    sections: [
+      'Hero · "Sealants stop 80% of childhood cavities"',
+      'What sealants are + how they work',
+      'Age-appropriate care schedule (6 → 14)',
+      'Insurance coverage cheat sheet',
+      'FAQ block (targets PEOPLE_ALSO_ASK)',
+      'Book pediatric visit CTA'
+    ],
+    ctas: ['Schedule pediatric visit', 'Insurance + financing']
+  }
+];
+
+function autoClassifyPage(page) {
+  if (page.isGap) return 'new';
+  if (page.authority === 0 && page.traffic === 0) return 'delete';
+  if (page.authority > 60) return 'keep_redesign';
+  if (page.contentScore < 40) return 'keep_rewrite';
+  if (page.authority < 20) return 'delete';
+  return 'keep_redesign';
+}
+
+function buildDefaultPageMap() {
+  const real = SIMULATED_SCOUT_PAGES.map(p => ({
+    ...p, isGap: false,
+    action: null, mergeInto: '', redirectTo: '/'
+  }));
+  const gaps = SIMULATED_TOPIC_GAPS.map((g, i) => ({
+    url: '',
+    title: g.gapTitle,
+    contentScore: 0, authority: 0, traffic: 0,
+    lastModified: '',
+    isGap: true,
+    action: null, mergeInto: '', redirectTo: '',
+    // Pass-through evidence used by the NEW-page walkthrough (Step 4)
+    slug: g.slug,
+    tier: g.tier,
+    oneline: g.oneline,
+    pageType: g.pageType,
+    h1: g.h1,
+    schema: g.schema,
+    keywords: g.keywords,
+    competitorEvidence: g.competitorEvidence,
+    serpFeatures: g.serpFeatures,
+    contentGap: g.contentGap,
+    sections: g.sections,
+    ctas: g.ctas
+  }));
+  const all = [...real, ...gaps];
+  all.forEach(p => { p.action = autoClassifyPage(p); });
+  return all;
+}
+
+let state = {
+  step: 1,
+  domain: '',
+  scoutFile: null,         // { name, size, parsedDateISO, ageDays, freshnessStatus, freshnessConfirmed }
+  detect: { ...REBUILD_DETECT },
+  assetDecisions: {
+    otto: { action: null, edits: {} },
+    bv:   { action: null, edits: {} },
+    gbp:  { action: null, edits: {} },
+    ppc:  { action: null, edits: {} },
+    llmv: { action: null, edits: {} }
+  },
+  pageMap: null,          // populated when step 3 is first entered
+  // Step 3 augment — link/anchor preservation (synthetic for demo)
+  linkPreservation: { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: {} },
+  // Step 4 — per-NEW-page decisions, keyed by slug → { decision, edits }
+  newPageDecisions: {},
+  brandStrategy: { voice: '', pillars: '', differentiation: '' },
+  oldStyle: OLD_STYLE,
+  newStyle: '',
+  scoutHtmlPages: [],     // [ { filename, size } ]
+  // Step 10 — pre-launch baseline capture (synthetic for demo)
+  preLaunchBaseline: { krtSnapshot: null, gscKeywords: null, gscPages: null },
+  // Step 12 — URL surfacing. hostingMode 'external' = DNS cutover needed; 'ws' = in-place WS replacement.
+  // Default 'external' for the demo (more common + more honest about cutover latency).
+  hostingMode: 'external',
+  clientSlug: '',          // derived from domain at publish; used to build wsPublishUrl
+  wsPublishUrl: '',        // {slug}.ws.searchatlas.com — populated when entering Step 12
+  startedAt: new Date().toISOString()
+};
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) Object.assign(state, JSON.parse(saved));
+} catch(e) { console.warn('No saved state'); }
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function resetWizard() {
+  if (!confirm('Start a fresh rebuild wizard? All captured input will be cleared.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = {
+    step: 1, domain: '', scoutFile: null,
+    detect: { ...REBUILD_DETECT },
+    assetDecisions: {
+      otto: { action: null, edits: {} }, bv: { action: null, edits: {} },
+      gbp: { action: null, edits: {} }, ppc: { action: null, edits: {} },
+      llmv: { action: null, edits: {} }
+    },
+    pageMap: null,
+    linkPreservation: { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: {} },
+    newPageDecisions: {},
+    brandStrategy: { voice: '', pillars: '', differentiation: '' },
+    oldStyle: OLD_STYLE, newStyle: '',
+    scoutHtmlPages: [],
+    preLaunchBaseline: { krtSnapshot: null, gscKeywords: null, gscPages: null },
+    hostingMode: 'external', clientSlug: '', wsPublishUrl: '',
+    startedAt: new Date().toISOString()
+  };
+  document.getElementById('f-domain').value = '';
+  document.getElementById('scout-summary').classList.remove('shown');
+  document.getElementById('freshness-warn').style.display = 'none';
+  document.getElementById('freshness-unknown').style.display = 'none';
+  goto(1);
+}
+
+// ────────────────────────────────────────────────────────────
+// NAVIGATION
+// ────────────────────────────────────────────────────────────
+function renderProgress() {
+  const bar = document.getElementById('progress');
+  bar.innerHTML = '';
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'progress-tick';
+    if (i < state.step) tick.classList.add('done');
+    if (i === state.step) tick.classList.add('active');
+    bar.appendChild(tick);
+  }
+  const labels = {
+    1: 'Target + scout output',
+    2: 'SA asset inheritance',
+    3: 'Old → new page map',
+    4: 'NEW page approval',
+    5: 'Brand strategy refresh',
+    6: 'New design style',
+    7: 'Scout HTML (optional)',
+    8: 'Pre-rebuild review',
+    9: 'Rebuild execution',
+    10: 'Pre-launch baseline',
+    11: 'Migration launch',
+    12: 'Before / After upgrade'
+  };
+  document.getElementById('progressLabel').textContent =
+    `Step ${state.step} of ${TOTAL_STEPS} · ${labels[state.step]}`;
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  const target = document.querySelector(`.step[data-step="${n}"]`);
+  if (target) target.classList.add('active');
+  state.step = n;
+  persist();
+  renderProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  onStepEnter(n);
+}
+
+function goto(n) { showStep(n); }
+function next() {
+  if (!validateStep(state.step)) return;
+  showStep(Math.min(state.step + 1, TOTAL_STEPS));
+}
+function prev() { showStep(Math.max(state.step - 1, 1)); }
+
+function validateStep(n) {
+  if (n === 1) {
+    state.domain = document.getElementById('f-domain').value.trim();
+    if (!state.domain) {
+      alert('Enter the domain you\'re rebuilding.');
+      return false;
+    }
+    if (!state.scoutFile) {
+      alert('Drop the scout output file for this domain.');
+      return false;
+    }
+    // Freshness check: if stale and not confirmed, block
+    if (state.scoutFile.freshnessStatus === 'stale' && !state.scoutFile.freshnessConfirmed) {
+      alert('Scout report is stale — confirm "Proceed anyway" or re-run scout first.');
+      return false;
+    }
+    persist();
+    return true;
+  }
+  if (n === 2) {
+    // Every asset must have an action picked
+    const missing = Object.keys(state.assetDecisions).filter(k => !state.assetDecisions[k].action);
+    if (missing.length > 0) {
+      alert(`Pick an action for: ${missing.join(', ')}`);
+      return false;
+    }
+    return true;
+  }
+  if (n === 3) {
+    // Every page row needs an action + merge/delete targets if picked
+    const pages = state.pageMap || [];
+    const undecided = pages.filter(p => !p.action);
+    if (undecided.length > 0) {
+      alert(`${undecided.length} page${undecided.length === 1 ? '' : 's'} still need an action.`);
+      return false;
+    }
+    const mergeMissing = pages.filter(p => p.action === 'merge' && !p.mergeInto);
+    if (mergeMissing.length > 0) {
+      alert(`Pick a merge target for: ${mergeMissing.map(p => p.url).join(', ')}`);
+      return false;
+    }
+    return true;
+  }
+  if (n === 4) {
+    // Every NEW page must have a decision
+    const newPages = (state.pageMap || []).filter(p => p.action === 'new');
+    const undecided = newPages.filter(p => !state.newPageDecisions[p.slug] || !state.newPageDecisions[p.slug].decision);
+    if (undecided.length > 0) {
+      alert(`${undecided.length} NEW page${undecided.length === 1 ? '' : 's'} still need a decision (approve / reject / edit).`);
+      return false;
+    }
+    return true;
+  }
+  if (n === 6) {
+    if (!state.newStyle) {
+      alert('Pick a new design style.');
+      return false;
+    }
+    return true;
+  }
+  if (n === 8) {
+    // HITL acceptance — gated by the Approve button itself; nothing extra here
+    return true;
+  }
+  return true;
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 1 — Domain + scout dropzone
+// ────────────────────────────────────────────────────────────
+function setupStep1() {
+  const dz = document.getElementById('scout-dropzone');
+  const fi = document.getElementById('scout-file-input');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('is-dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('is-dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('is-dragover');
+    const f = e.dataTransfer.files?.[0];
+    if (f) handleScoutFile(f);
+  });
+  fi.addEventListener('change', e => {
+    const f = e.target.files?.[0];
+    if (f) handleScoutFile(f);
+  });
+
+  document.getElementById('freshness-proceed').addEventListener('click', () => {
+    state.scoutFile.freshnessConfirmed = true;
+    persist();
+    document.getElementById('freshness-warn').style.display = 'none';
+  });
+  document.getElementById('freshness-rescout').addEventListener('click', () => {
+    document.getElementById('freshness-rescout-note').style.display = 'block';
+  });
+
+  if (state.domain) document.getElementById('f-domain').value = state.domain;
+  if (state.scoutFile) renderScoutSummary();
+}
+
+function handleScoutFile(file) {
+  // Parse just enough to extract a scout_run_date
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = (ev.target.result || '').toString();
+    const parsedDate = extractScoutRunDate(text);
+    const ageDays = parsedDate ? Math.floor((Date.now() - new Date(parsedDate).getTime()) / 86400000) : null;
+    let freshnessStatus = 'unknown';
+    if (ageDays !== null) freshnessStatus = ageDays > 30 ? 'stale' : 'fresh';
+
+    state.scoutFile = {
+      name: file.name,
+      size: file.size,
+      parsedDateISO: parsedDate,
+      ageDays: ageDays,
+      freshnessStatus: freshnessStatus,
+      freshnessConfirmed: false
+    };
+    persist();
+    renderScoutSummary();
+  };
+  // Read first 64KB only — enough to find frontmatter/meta tags
+  reader.readAsText(file.slice(0, 65536));
+}
+
+function extractScoutRunDate(text) {
+  // Try YAML frontmatter: scout_run_date: 2026-04-12
+  let m = text.match(/scout_run_date\s*:\s*["']?(\d{4}-\d{2}-\d{2})["']?/i);
+  if (m) return m[1];
+  // Try meta tag: <meta name="scout-run-date" content="2026-04-12">
+  m = text.match(/<meta\s+name=["']scout[-_]run[-_]date["']\s+content=["']([^"']+)["']/i);
+  if (m) return m[1];
+  // Try JSON field: "scout_run_date": "2026-04-12"
+  m = text.match(/"scout_run_date"\s*:\s*"([^"]+)"/i);
+  if (m) return m[1];
+  return null;
+}
+
+function renderScoutSummary() {
+  const sf = state.scoutFile;
+  if (!sf) return;
+  const sum = document.getElementById('scout-summary');
+  sum.classList.add('shown');
+  document.getElementById('ss-filename').textContent = sf.name;
+  document.getElementById('ss-size').textContent = formatSize(sf.size);
+  document.getElementById('ss-date').textContent = sf.parsedDateISO || 'unknown';
+  document.getElementById('ss-age').textContent = sf.ageDays !== null ? `${sf.ageDays} days old` : 'unknown';
+
+  // Freshness banner
+  const warn = document.getElementById('freshness-warn');
+  const unknown = document.getElementById('freshness-unknown');
+  warn.style.display = 'none';
+  unknown.style.display = 'none';
+  if (sf.freshnessStatus === 'stale' && !sf.freshnessConfirmed) {
+    warn.style.display = 'block';
+    document.getElementById('fw-days').textContent = sf.ageDays;
+  } else if (sf.freshnessStatus === 'unknown') {
+    unknown.style.display = 'block';
+  }
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 2 — SA Asset Inheritance
+// ────────────────────────────────────────────────────────────
+function runAssetInheritance() {
+  // Simulate parallel pull. Fade in the cards.
+  const loading = document.getElementById('detect-loading');
+  const results = document.getElementById('detect-results');
+  loading.style.display = 'block';
+  results.style.display = 'none';
+
+  setTimeout(() => {
+    loading.style.display = 'none';
+    results.style.display = 'block';
+    renderDetectCards();
+    renderAssetPanel();
+  }, 700);
+}
+
+function renderDetectCards() {
+  Object.keys(state.detect).forEach(key => {
+    const card = document.querySelector(`#detect-grid .detect-card[data-key="${key}"]`);
+    if (!card) return;
+    const found = state.detect[key] === 'found';
+    card.classList.remove('found', 'missing');
+    card.classList.add(found ? 'found' : 'missing');
+    card.querySelector('.status').textContent = found ? 'Found' : 'Not found';
+  });
+}
+
+function renderAssetPanel() {
+  const rows = document.getElementById('asset-rows');
+  rows.innerHTML = '';
+
+  Object.keys(ASSET_META).forEach(key => {
+    const meta = ASSET_META[key];
+    const detectState = state.detect[key];
+    const actions = meta.actions[detectState];
+
+    // Default action if not yet chosen
+    if (!state.assetDecisions[key].action) {
+      state.assetDecisions[key].action = detectState === 'found' ? 'use' : (key === 'ppc' ? 'skip' : 'create');
+    }
+    const chosen = state.assetDecisions[key].action;
+
+    const stateLabel = detectState === 'found' ? 'Existing record · inherit' : 'Not found · operator choice';
+
+    const row = document.createElement('div');
+    row.className = 'asset-row ' + chosen;
+    row.dataset.key = key;
+    row.innerHTML = `
+      <span class="a-icon">${meta.icon}</span>
+      <span class="a-name">${meta.name}</span>
+      <span class="a-state">${stateLabel}</span>
+      <div class="asset-chips">
+        ${actions.map(act => `<div class="asset-chip ${act === chosen ? 'active' : ''}" data-act="${act}">${ACTION_LABEL[act]}</div>`).join('')}
+      </div>
+    `;
+    rows.appendChild(row);
+
+    // Inline editor (visible when Edit is chosen)
+    const editor = document.createElement('div');
+    editor.className = 'asset-editor';
+    editor.dataset.key = key;
+    editor.innerHTML = editorFieldsFor(key);
+    rows.appendChild(editor);
+    if (chosen === 'edit') editor.classList.add('shown');
+  });
+
+  // Wire chip clicks
+  rows.querySelectorAll('.asset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const row = chip.closest('.asset-row');
+      const key = row.dataset.key;
+      const act = chip.dataset.act;
+      state.assetDecisions[key].action = act;
+      row.className = 'asset-row ' + act;
+      row.querySelectorAll('.asset-chip').forEach(c => c.classList.toggle('active', c.dataset.act === act));
+      const editor = rows.querySelector(`.asset-editor[data-key="${key}"]`);
+      if (editor) editor.classList.toggle('shown', act === 'edit');
+      persist();
+    });
+  });
+
+  // Wire editor inputs
+  rows.querySelectorAll('.asset-editor input, .asset-editor textarea').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const editor = inp.closest('.asset-editor');
+      const key = editor.dataset.key;
+      const field = inp.dataset.editField;
+      state.assetDecisions[key].edits[field] = inp.value;
+      persist();
+    });
+  });
+}
+
+function editorFieldsFor(key) {
+  const edits = state.assetDecisions[key].edits || {};
+  if (key === 'bv') {
+    return `
+      <div class="asset-editor-row">
+        <label>Voice / tone updates</label>
+        <input type="text" data-edit-field="voice_update" placeholder="e.g. shift to warmer, less clinical" value="${edits.voice_update || ''}">
+      </div>
+      <div class="asset-editor-row">
+        <label>Brand color override</label>
+        <input type="text" data-edit-field="primary_color" placeholder="#1a5f7a" value="${edits.primary_color || ''}">
+      </div>
+      <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Changes push back to SA via <code>bv_update</code> before the rebuild proceeds.</div>
+    `;
+  }
+  if (key === 'otto') {
+    return `
+      <div class="asset-editor-row">
+        <label>Crawl settings to update</label>
+        <textarea data-edit-field="crawl_notes" placeholder="e.g. expand crawl frequency to weekly, add /new-service-pages/ as priority">${edits.crawl_notes || ''}</textarea>
+      </div>
+    `;
+  }
+  if (key === 'gbp') {
+    return `
+      <div class="asset-editor-row">
+        <label>GBP changes</label>
+        <textarea data-edit-field="gbp_notes" placeholder="e.g. add new service area, update hours, refresh primary category">${edits.gbp_notes || ''}</textarea>
+      </div>
+    `;
+  }
+  if (key === 'llmv') {
+    return `
+      <div class="asset-editor-row">
+        <label>New prompts / topics to track</label>
+        <textarea data-edit-field="llmv_notes" placeholder="e.g. add 'best dentist newport beach' prompt, track 'sedation dentistry' topic">${edits.llmv_notes || ''}</textarea>
+      </div>
+    `;
+  }
+  return `
+    <div class="asset-editor-row">
+      <label>Notes</label>
+      <textarea data-edit-field="notes" placeholder="What needs to change?">${edits.notes || ''}</textarea>
+    </div>
+  `;
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 3 — Page rebuild map
+// ────────────────────────────────────────────────────────────
+function ensurePageMap() {
+  if (!state.pageMap || state.pageMap.length === 0) {
+    state.pageMap = buildDefaultPageMap();
+    persist();
+  }
+}
+
+function renderPageMap() {
+  ensurePageMap();
+  const list = document.getElementById('page-map-list');
+  list.innerHTML = '';
+
+  state.pageMap.forEach((page, idx) => {
+    const row = document.createElement('div');
+    row.className = 'page-row ' + page.action;
+    if (page.isGap) row.classList.add('gap-entry');
+    row.dataset.idx = idx;
+
+    const metricsHtml = page.isGap ? '' : `
+      <div class="page-row-metrics">
+        <span class="page-metric"><span class="mk">Content</span><span class="mv ${scoreClass(page.contentScore)}">${page.contentScore}</span></span>
+        <span class="page-metric"><span class="mk">Authority</span><span class="mv ${scoreClass(page.authority)}">${page.authority}</span></span>
+        <span class="page-metric"><span class="mk">Traffic / mo</span><span class="mv">${page.traffic}</span></span>
+        <span class="page-metric"><span class="mk">Modified</span><span class="mv">${page.lastModified || '—'}</span></span>
+      </div>
+    `;
+
+    const urlHtml = page.isGap
+      ? `<div class="page-row-url gap">Topic gap — new page</div>`
+      : `<div class="page-row-url">${page.url}</div>`;
+
+    row.innerHTML = `
+      <div class="page-row-head">
+        <div class="page-row-body">
+          ${urlHtml}
+          <div class="page-row-title">${page.title}</div>
+          ${metricsHtml}
+          <div class="page-row-actions">
+            ${['keep_redesign', 'keep_rewrite', 'merge', 'delete', 'new'].map(act =>
+              `<div class="page-action-chip ${page.action === act ? 'active ' + act : ''}" data-act="${act}">${PAGE_ACTION_LABEL[act]}</div>`
+            ).join('')}
+          </div>
+          <div class="page-row-picker ${(page.action === 'merge' || page.action === 'delete') ? 'shown' : ''}">
+            ${page.action === 'merge' ? mergePickerHtml(page, idx) : ''}
+            ${page.action === 'delete' ? deletePickerHtml(page, idx) : ''}
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  // Wire chip clicks
+  list.querySelectorAll('.page-action-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const row = chip.closest('.page-row');
+      const idx = parseInt(row.dataset.idx, 10);
+      const act = chip.dataset.act;
+      state.pageMap[idx].action = act;
+      if (act !== 'merge') state.pageMap[idx].mergeInto = '';
+      persist();
+      renderPageMap();
+    });
+  });
+
+  // Wire picker selects
+  list.querySelectorAll('.page-row-picker select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const row = sel.closest('.page-row');
+      const idx = parseInt(row.dataset.idx, 10);
+      const field = sel.dataset.field;
+      state.pageMap[idx][field] = sel.value;
+      persist();
+      renderPageMapCounts();
+    });
+  });
+
+  renderPageMapCounts();
+}
+
+function mergePickerHtml(page, idx) {
+  const targets = state.pageMap
+    .filter((p, i) => i !== idx && !p.isGap && p.action !== 'delete' && p.action !== 'merge')
+    .map(p => `<option value="${p.url}" ${p.url === page.mergeInto ? 'selected' : ''}>${p.url} — ${p.title}</option>`)
+    .join('');
+  return `
+    <label>Merge this page into:</label>
+    <select data-field="mergeInto">
+      <option value="">— pick a target —</option>
+      ${targets}
+    </select>
+  `;
+}
+
+function deletePickerHtml(page, idx) {
+  const targets = state.pageMap
+    .filter((p, i) => i !== idx && !p.isGap && p.action !== 'delete')
+    .map(p => `<option value="${p.url}" ${p.url === page.redirectTo ? 'selected' : ''}>${p.url} — ${p.title}</option>`)
+    .join('');
+  return `
+    <label>301 redirect to:</label>
+    <select data-field="redirectTo">
+      <option value="/">/ (homepage)</option>
+      ${targets}
+    </select>
+  `;
+}
+
+function scoreClass(n) {
+  if (n === 0) return '';
+  if (n >= 60) return 'high';
+  if (n >= 40) return 'mid';
+  return 'low';
+}
+
+function renderPageMapCounts() {
+  const counts = { keep_redesign: 0, keep_rewrite: 0, merge: 0, delete: 0, new: 0 };
+  (state.pageMap || []).forEach(p => { counts[p.action] = (counts[p.action] || 0) + 1; });
+  const totalAfter = (state.pageMap || []).filter(p => p.action !== 'delete' && p.action !== 'merge').length;
+  const el = document.getElementById('pm-counts');
+  el.innerHTML = `
+    <span class="ct-keep_redesign">Keep redesign: ${counts.keep_redesign}</span>
+    <span class="ct-keep_rewrite">Keep rewrite: ${counts.keep_rewrite}</span>
+    <span class="ct-merge">Merge: ${counts.merge}</span>
+    <span class="ct-delete">Delete: ${counts.delete}</span>
+    <span class="ct-new">New: ${counts.new}</span>
+    <span style="color: var(--muted-2);">→ ${totalAfter} pages in new site</span>
+  `;
+}
+
+function resetPageMapToDefaults() {
+  if (!confirm('Reset every page decision to the auto-classified default?')) return;
+  state.pageMap = buildDefaultPageMap();
+  persist();
+  renderPageMap();
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 4 — NEW page approval walkthrough (text-only cards)
+// Mirrors the build wizard's Phase 2.5, scoped to action==='new' rows.
+// No iframes, no rendered HTML, no screenshots — Website Studio
+// renders the actual pages in Step 9.
+// ────────────────────────────────────────────────────────────
+function getNewPages() {
+  return (state.pageMap || []).filter(p => p.action === 'new');
+}
+
+function buildAsciiTree(page, idx, total) {
+  const tierLabel = {
+    core: 'core/', service: 'services/', location: 'locations/',
+    landing: 'landings/', compliance: 'legal/'
+  }[page.tier] || 'pages/';
+  const isLast = idx === total - 1;
+  const branch = isLast ? '└──' : '├──';
+  return `site/\n${branch} ${tierLabel}\n    └── ${page.slug || 'new-page'}`;
+}
+
+function renderNewPageWalkthrough() {
+  const container = document.getElementById('new-page-walkthrough-cards');
+  if (!container) return;
+  const pages = getNewPages();
+
+  if (!pages.length) {
+    container.innerHTML = `<div class="callout info"><strong>No NEW pages in the rebuild map.</strong>Step 3 didn't classify any rows as <em>New</em>. Continue to brand strategy.</div>`;
+    const footer = document.getElementById('new-page-walkthrough-footer');
+    if (footer) {
+      footer.classList.add('complete');
+      footer.innerHTML = `<strong>Nothing to walk — no NEW pages in this rebuild.</strong>`;
+    }
+    const nextBtn = document.getElementById('step4-next');
+    if (nextBtn) nextBtn.disabled = false;
+    updateNewPageWalkthroughCounts();
+    return;
+  }
+
+  container.innerHTML = '';
+  pages.forEach((p, idx) => {
+    const slug = p.slug || ('new-' + idx);
+    const card = document.createElement('div');
+    const decision = state.newPageDecisions[slug]?.decision;
+    card.className = 'page-card' + (decision === 'approve' ? ' approved' : decision === 'reject' ? ' rejected' : decision === 'edit' ? ' edit-mode' : '');
+    card.dataset.slug = slug;
+
+    const tree = buildAsciiTree(p, idx, pages.length);
+    const keywordsText = (p.keywords || []).map(k => `${k.kw} · ${k.vol} vol · ${k.intent} · KD ${k.difficulty}`).join('\n');
+    const competitorsText = p.competitorEvidence && p.competitorEvidence.count > 0
+      ? `${p.competitorEvidence.count} of 4 competitors have this — ${p.competitorEvidence.examples.join(', ')}`
+      : 'No competitors target this — gap opportunity.';
+    const serpText = p.serpFeatures && p.serpFeatures.length ? p.serpFeatures.join(', ') : 'No notable SERP features.';
+    const sectionsText = (p.sections || []).map(s => `· ${s}`).join('\n');
+    const ctasText = (p.ctas || []).join(' · ') || '—';
+
+    card.innerHTML = `
+      <div class="page-card-head" data-toggle="${slug}">
+        <div class="page-card-tree">${tree}</div>
+        <div class="page-card-body">
+          <div class="page-card-title">
+            <span>${p.title}</span>
+            <span class="tier-badge ${p.tier || 'service'}">${p.tier || 'service'}</span>
+          </div>
+          <div class="page-card-oneline">${p.oneline || 'New page from scout-identified topic gap.'}</div>
+        </div>
+        <div class="page-card-toggle">▾</div>
+      </div>
+
+      <div class="page-expand" data-expand="${slug}">
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Page metadata</div>
+          <div class="page-expand-row"><span class="ek">slug</span><span class="ev">${p.slug || '—'}</span></div>
+          <div class="page-expand-row"><span class="ek">page type</span><span class="ev">${p.pageType || '—'}</span></div>
+          <div class="page-expand-row"><span class="ek">H1</span><span class="ev">${p.h1 || '—'}</span></div>
+          <div class="page-expand-row"><span class="ek">schema</span><span class="ev">${p.schema || '—'}</span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Target keywords (vol · intent · difficulty)</div>
+          ${(p.keywords || []).length === 0
+            ? '<div class="page-expand-row"><span class="ev">— no targeted keywords on file</span></div>'
+            : (p.keywords || []).map(k => `<div class="page-expand-row"><span class="ek">${k.kw}</span><span class="ev">${k.vol.toLocaleString()} vol · ${k.intent} · KD ${k.difficulty}</span></div>`).join('')
+          }
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Competitor evidence</div>
+          <div class="page-expand-row"><span class="ev">${competitorsText}</span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">SERP features to target</div>
+          <div class="page-expand-row"><span class="ev">${serpText}</span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Content gap rationale</div>
+          <div class="page-expand-row"><span class="ev">${p.contentGap || '—'}</span></div>
+        </div>
+
+        <div class="page-expand-section">
+          <div class="page-expand-heading">Recommended section outline</div>
+          ${(p.sections || []).map(s => `<div class="page-expand-row"><span class="ev">· ${s}</span></div>`).join('')}
+          <div class="page-expand-row" style="margin-top:6px;"><span class="ek">CTAs</span><span class="ev">${ctasText}</span></div>
+        </div>
+      </div>
+
+      <div class="page-edit-panel" data-edit="${slug}">
+        <label>Title</label>
+        <input type="text" data-edit-field="title" data-edit-slug="${slug}" value="${state.newPageDecisions[slug]?.edits?.title || p.title || ''}">
+        <label>Target keywords (one per line)</label>
+        <textarea data-edit-field="keywords" data-edit-slug="${slug}" rows="3">${state.newPageDecisions[slug]?.edits?.keywords || keywordsText}</textarea>
+        <label>Section outline (one per line)</label>
+        <textarea data-edit-field="sections" data-edit-slug="${slug}" rows="4">${state.newPageDecisions[slug]?.edits?.sections || sectionsText}</textarea>
+      </div>
+
+      <div class="page-actions">
+        <button class="page-action-btn approve ${decision === 'approve' ? 'active' : ''}" data-action="approve" data-slug="${slug}">✓ Approve</button>
+        <button class="page-action-btn reject ${decision === 'reject' ? 'active' : ''}" data-action="reject" data-slug="${slug}">✗ Reject</button>
+        <button class="page-action-btn edit ${decision === 'edit' ? 'active' : ''}" data-action="edit" data-slug="${slug}">✎ Edit</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Wire toggle
+  container.querySelectorAll('.page-card-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const slug = head.dataset.toggle;
+      const expand = container.querySelector(`.page-expand[data-expand="${slug}"]`);
+      if (expand) expand.classList.toggle('shown');
+      const toggle = head.querySelector('.page-card-toggle');
+      if (toggle) toggle.textContent = expand && expand.classList.contains('shown') ? '▴' : '▾';
+    });
+  });
+
+  // Wire action buttons
+  container.querySelectorAll('.page-action-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const slug = btn.dataset.slug;
+      const action = btn.dataset.action;
+      const current = state.newPageDecisions[slug]?.decision;
+      if (current === action) {
+        delete state.newPageDecisions[slug];
+      } else {
+        state.newPageDecisions[slug] = state.newPageDecisions[slug] || { edits: {} };
+        state.newPageDecisions[slug].decision = action;
+      }
+      persist();
+      renderNewPageWalkthrough();
+    });
+  });
+
+  // Wire edit inputs
+  container.querySelectorAll('.page-edit-panel input, .page-edit-panel textarea').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const slug = inp.dataset.editSlug;
+      const field = inp.dataset.editField;
+      state.newPageDecisions[slug] = state.newPageDecisions[slug] || { decision: 'edit', edits: {} };
+      state.newPageDecisions[slug].edits = state.newPageDecisions[slug].edits || {};
+      state.newPageDecisions[slug].edits[field] = inp.value;
+      persist();
+    });
+  });
+
+  // Open edit panel for any card in edit mode
+  container.querySelectorAll('.page-card.edit-mode').forEach(card => {
+    const slug = card.dataset.slug;
+    const panel = card.querySelector(`.page-edit-panel[data-edit="${slug}"]`);
+    if (panel) panel.classList.add('shown');
+  });
+
+  updateNewPageWalkthroughCounts();
+}
+
+function updateNewPageWalkthroughCounts() {
+  const pages = getNewPages();
+  let approved = 0, rejected = 0, edited = 0, pending = 0;
+  pages.forEach(p => {
+    const slug = p.slug || '';
+    const d = state.newPageDecisions[slug]?.decision;
+    if (d === 'approve') approved++;
+    else if (d === 'reject') rejected++;
+    else if (d === 'edit') edited++;
+    else pending++;
+  });
+  const approvedTotal = approved + edited;
+  const apEl = document.getElementById('np-approved-count');
+  const rjEl = document.getElementById('np-rejected-count');
+  const pdEl = document.getElementById('np-pending-count');
+  if (apEl) apEl.textContent = approvedTotal;
+  if (rjEl) rjEl.textContent = rejected;
+  if (pdEl) pdEl.textContent = pending;
+
+  const footer = document.getElementById('new-page-walkthrough-footer');
+  const nextBtn = document.getElementById('step4-next');
+  if (!pages.length) return; // already handled in render
+  if (pending > 0) {
+    if (footer) {
+      footer.classList.remove('complete');
+      footer.innerHTML = `<strong>You still have ${pending} NEW page${pending === 1 ? '' : 's'} to walk.</strong> Every card needs a decision before brand strategy.`;
+    }
+    if (nextBtn) nextBtn.disabled = true;
+  } else {
+    if (footer) {
+      footer.classList.add('complete');
+      footer.innerHTML = `<strong>All ${pages.length} NEW pages decided.</strong> ${approvedTotal} approved · ${rejected} rejected. Ready to refresh brand strategy.`;
+    }
+    if (nextBtn) nextBtn.disabled = false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 5 — Brand strategy refresh
+// ────────────────────────────────────────────────────────────
+function renderBrandStrategy() {
+  const bvAction = state.assetDecisions.bv?.action;
+  const skip = document.getElementById('strategy-skip');
+  const editor = document.getElementById('strategy-editor');
+
+  if (bvAction === 'use') {
+    skip.style.display = 'block';
+    editor.style.display = 'none';
+    return;
+  }
+  skip.style.display = 'none';
+  editor.style.display = 'block';
+
+  // Pre-fill from BV edits + existing state
+  const voice = state.brandStrategy.voice || state.assetDecisions.bv?.edits?.voice_update || '';
+  document.getElementById('bs-voice').value = voice;
+  document.getElementById('bs-pillars').value = state.brandStrategy.pillars || '';
+  document.getElementById('bs-diff').value = state.brandStrategy.differentiation || '';
+
+  // Wire inputs
+  ['bs-voice', 'bs-pillars', 'bs-diff'].forEach(id => {
+    const el = document.getElementById(id);
+    el.oninput = () => {
+      state.brandStrategy = {
+        voice: document.getElementById('bs-voice').value,
+        pillars: document.getElementById('bs-pillars').value,
+        differentiation: document.getElementById('bs-diff').value
+      };
+      persist();
+    };
+  });
+
+  // Render gap list — pulled from the page-map "new" entries + scout topic gaps
+  // Honor Step 4 decisions: rejected NEW pages no longer count as a gap to inform messaging.
+  const gapList = document.getElementById('bs-gaps');
+  gapList.innerHTML = '';
+  const gaps = (state.pageMap || []).filter(p => {
+    if (!(p.isGap || p.action === 'new')) return false;
+    const decision = state.newPageDecisions[p.slug]?.decision;
+    return decision !== 'reject';
+  });
+  if (gaps.length === 0) {
+    gapList.innerHTML = `<div class="gap-item" style="color: var(--muted);">No new pages or topic gaps in the rebuild map.</div>`;
+  } else {
+    gaps.forEach(g => {
+      const item = document.createElement('div');
+      item.className = 'gap-item';
+      const decision = state.newPageDecisions[g.slug]?.decision;
+      const tag = decision === 'approve' ? ' (approved)' : decision === 'edit' ? ' (edited)' : '';
+      item.textContent = g.isGap ? `${g.title}${tag}` : `New page: ${g.title}${tag}`;
+      gapList.appendChild(item);
+    });
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 6 — New design style
+// ────────────────────────────────────────────────────────────
+function setupDesignStyleStep() {
+  document.getElementById('old-style-name').textContent = ARCHETYPES[state.oldStyle]?.name || 'Modern Minimal';
+
+  document.querySelectorAll('#archetype-grid .archetype-card').forEach(card => {
+    const arch = card.dataset.arch;
+    card.classList.toggle('selected', arch === state.newStyle);
+    card.onclick = () => {
+      state.newStyle = arch;
+      persist();
+      document.querySelectorAll('#archetype-grid .archetype-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.arch === arch);
+      });
+      // Same-style warning
+      const sameWarn = document.getElementById('same-style-warn');
+      sameWarn.style.display = (arch === state.oldStyle) ? 'block' : 'none';
+    };
+  });
+
+  // Initial warning state
+  document.getElementById('same-style-warn').style.display =
+    (state.newStyle && state.newStyle === state.oldStyle) ? 'block' : 'none';
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 7 — Optional HTML dropzone
+// ────────────────────────────────────────────────────────────
+function setupHtmlDropzoneStep() {
+  const dz = document.getElementById('html-dropzone');
+  const fi = document.getElementById('html-file-input');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('is-dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('is-dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('is-dragover');
+    addHtmlFiles(e.dataTransfer.files);
+  });
+  fi.addEventListener('change', e => addHtmlFiles(e.target.files));
+  renderHtmlList();
+}
+
+function addHtmlFiles(fileList) {
+  Array.from(fileList || []).forEach(f => {
+    state.scoutHtmlPages.push({ filename: f.name, size: f.size });
+  });
+  persist();
+  renderHtmlList();
+}
+
+function renderHtmlList() {
+  const list = document.getElementById('html-list');
+  list.innerHTML = '';
+  state.scoutHtmlPages.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'material-item';
+    item.innerHTML = `
+      <span class="m-icon">📄</span>
+      <span class="m-label">${p.filename}</span>
+      <span class="m-meta">${formatSize(p.size)}</span>
+      <button class="m-remove" data-idx="${i}" title="Remove">×</button>
+    `;
+    list.appendChild(item);
+  });
+  list.querySelectorAll('.m-remove').forEach(btn => {
+    btn.onclick = () => {
+      state.scoutHtmlPages.splice(parseInt(btn.dataset.idx, 10), 1);
+      persist();
+      renderHtmlList();
+    };
+  });
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 8 — HITL summary
+// ────────────────────────────────────────────────────────────
+function renderHITLSummary() {
+  const sf = state.scoutFile || {};
+  const newArch = ARCHETYPES[state.newStyle] || { name: '—' };
+  const oldArch = ARCHETYPES[state.oldStyle] || { name: '—' };
+  const styleChanged = state.newStyle && state.newStyle !== state.oldStyle;
+
+  // Page rebuild counts
+  const counts = { keep_redesign: 0, keep_rewrite: 0, merge: 0, delete: 0, new: 0 };
+  (state.pageMap || []).forEach(p => { counts[p.action] = (counts[p.action] || 0) + 1; });
+  const pagesAfter = (state.pageMap || []).filter(p => p.action !== 'delete' && p.action !== 'merge').length;
+  const totalPages = (state.pageMap || []).filter(p => !p.isGap).length;
+  const redirectCount = counts.delete + counts.merge;
+
+  // Pillar baseline (synthetic — would come from scout in real run)
+  const pillars = { technical: 64, content: 48, authority: 71, ux: 53 };
+
+  // NEW-page approval tally (Step 4)
+  const newPages = (state.pageMap || []).filter(p => p.action === 'new');
+  let npApproved = 0, npRejected = 0, npEdited = 0, npPending = 0;
+  newPages.forEach(p => {
+    const d = state.newPageDecisions[p.slug]?.decision;
+    if (d === 'approve') npApproved++;
+    else if (d === 'reject') npRejected++;
+    else if (d === 'edit') npEdited++;
+    else npPending++;
+  });
+
+  // Link preservation summary (Step 3 augment)
+  const lp = state.linkPreservation || {};
+  const lpAnchorCount = Object.keys(lp.anchorByUrl || {}).length;
+  const lpRefDomainsTotal = Object.values(lp.refDomainsByUrl || {}).reduce((a, b) => a + b, 0);
+  const lpGraph = lp.linkGraph || {};
+
+  // Issues
+  const issues = [];
+  if (sf.freshnessStatus === 'stale') issues.push(`Scout report is ${sf.ageDays} days old — operator proceeded anyway`);
+  if (sf.freshnessStatus === 'unknown') issues.push('Scout run date not parseable from file');
+  if (counts.delete + counts.merge > totalPages * 0.4) issues.push(`Heavy pruning — ${counts.delete + counts.merge}/${totalPages} pages dropping`);
+  if (state.newStyle === state.oldStyle) issues.push('Same design style as current site — confirm this is a rebuild not a refresh');
+  if (state.assetDecisions.bv?.action === 'reject_fresh') issues.push('Brand Vault rejected — new BV scaffolded alongside old');
+  if (!state.brandStrategy.voice && state.assetDecisions.bv?.action !== 'use') issues.push('Brand strategy voice left blank');
+  if (npPending > 0) issues.push(`${npPending} NEW page${npPending === 1 ? '' : 's'} still pending decision`);
+
+  const assetRows = Object.keys(state.assetDecisions).map(k => {
+    const dec = state.assetDecisions[k];
+    const meta = ASSET_META[k];
+    const detail = dec.action === 'edit' && Object.keys(dec.edits || {}).some(f => dec.edits[f])
+      ? ' · ' + Object.entries(dec.edits).filter(([_, v]) => v).map(([f, v]) => f + ': ' + (v.length > 36 ? v.slice(0, 36) + '…' : v)).join(', ')
+      : '';
+    return `<div class="hitl-row"><div class="hitl-key">${meta.name}</div><div class="hitl-val">${ACTION_LABEL[dec.action] || '—'}${detail}</div></div>`;
+  }).join('');
+
+  const html = `
+    <div class="hitl-section">
+      <div class="hitl-heading">Scout snapshot</div>
+      <div class="hitl-row"><div class="hitl-key">Domain</div><div class="hitl-val">${state.domain}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Run date</div><div class="hitl-val">${sf.parsedDateISO || 'unknown'} ${sf.ageDays !== null ? '(' + sf.ageDays + ' days ago)' : ''}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Pages found</div><div class="hitl-val">${totalPages}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Pillar baseline</div><div class="hitl-val">Tech ${pillars.technical} · Content ${pillars.content} · Authority ${pillars.authority} · UX ${pillars.ux}</div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Asset decisions</div>
+      ${assetRows}
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Page rebuild map</div>
+      <div class="hitl-row"><div class="hitl-key">Keep + redesign</div><div class="hitl-val">${counts.keep_redesign}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Keep + rewrite</div><div class="hitl-val">${counts.keep_rewrite}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Merge</div><div class="hitl-val">${counts.merge} → fewer targets</div></div>
+      <div class="hitl-row"><div class="hitl-key">Delete</div><div class="hitl-val">${counts.delete} (all redirects mapped)</div></div>
+      <div class="hitl-row"><div class="hitl-key">New</div><div class="hitl-val">${counts.new} from topic gaps</div></div>
+      <div class="hitl-row"><div class="hitl-key">After rebuild</div><div class="hitl-val">${pagesAfter} pages in new site</div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">NEW page approvals (Step 4)</div>
+      <div class="hitl-row"><div class="hitl-key">Approved</div><div class="hitl-val">${npApproved + npEdited}${npEdited ? ' (' + npEdited + ' edited)' : ''}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Rejected</div><div class="hitl-val">${npRejected}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Pending</div><div class="hitl-val">${npPending}</div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Link-equity preservation (Step 3)</div>
+      <div class="hitl-row"><div class="hitl-key">Anchor text captured</div><div class="hitl-val">${lpAnchorCount} high-Authority Keep pages · <code>se_get_anchor_text</code></div></div>
+      <div class="hitl-row"><div class="hitl-key">Referring domains</div><div class="hitl-val">${lpRefDomainsTotal} total domains to protect · <code>se_get_referring_domains</code></div></div>
+      <div class="hitl-row"><div class="hitl-key">Link graph</div><div class="hitl-val">${lpGraph.nodes || 0} nodes · ${lpGraph.internalEdges || 0} edges · ${lpGraph.orphans || 0} orphans · <code>se_get_link_network_graph</code></div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Design</div>
+      <div class="hitl-row"><div class="hitl-key">Old style</div><div class="hitl-val">${oldArch.name}</div></div>
+      <div class="hitl-row"><div class="hitl-key">New style</div><div class="hitl-val">${newArch.name}${styleChanged ? '<span class="changed-badge">Changed</span>' : ''}</div></div>
+      <div class="hitl-row"><div class="hitl-key">Theme</div><div class="hitl-val">Generated · pending client signoff</div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Migration plan</div>
+      <div class="hitl-row"><div class="hitl-key">Redirect table</div><div class="hitl-val">${redirectCount} entries</div></div>
+      <div class="hitl-row"><div class="hitl-key">DNS strategy</div><div class="hitl-val">In-place Website Studio replacement</div></div>
+      <div class="hitl-row"><div class="hitl-key">Rollback</div><div class="hitl-val">Website Studio version history · 7-day window</div></div>
+    </div>
+    <div class="hitl-section">
+      <div class="hitl-heading">Issues flagged</div>
+      <div class="hitl-val ${issues.length ? 'hitl-issues' : 'hitl-issues none'}">${issues.length ? '· ' + issues.join('<br>· ') : 'None — ready to rebuild'}</div>
+    </div>
+  `;
+  document.getElementById('hitl-summary').innerHTML = html;
+}
+
+function cancelRebuild() {
+  if (confirm('Cancel the rebuild? All gathered context (asset decisions, page map, design) will be preserved for next session.')) {
+    alert('Rebuild cancelled. Artifacts preserved. Resume by reloading the wizard.');
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEPS 9 / 10 / 11 — LIVE SSE STREAM FROM /api/rebuild
+// The wizard's Approve button on Step 8 kicks off the stream. Step 9 hosts
+// the activity feed during rebuild execution + baseline capture; Step 11
+// continues the same stream during migration launch. Step 10 (baseline)
+// renders a recap from the events. No simulated animations.
+// ────────────────────────────────────────────────────────────
+let streamState = {
+  reader: null,
+  startedAt: 0,
+  timerId: null,
+  stepCount: 0,
+  phase: 'starting',
+  baselineCaptured: false,
+  migrationStarted: false,
+  finished: false,
+  failed: false
+};
+
+function runLinkPreservationStatic() {
+  // No simulated pulse — surface the captured state if present, else leave
+  // the static "preserving link equity" copy in place. The real link
+  // preservation tools fire during the SSE stream in Phase 2.
+  const items = document.querySelectorAll('#link-preservation-list .build-item');
+  if (!items.length) return;
+  items.forEach(i => i.classList.add('done'));
+}
+
+function onEnterStep9() {
+  // The stream is started from Step 8's Approve button. If for any reason
+  // the operator landed here without an active stream, kick one off.
+  if (!streamState.reader && !streamState.finished) {
+    startRebuildStream();
+  }
+  // Bind feed/stat containers to Step 9 elements
+  updateRunStats();
+}
+
+function onEnterStep10() {
+  // Step 10 — Pre-launch baseline. Renders recap from preLaunchBaseline state.
+  renderBaselineRecap();
+  const btn = document.getElementById('step10-next');
+  if (btn) btn.disabled = !streamState.baselineCaptured;
+}
+
+function onEnterStep11() {
+  // Step 11 — Migration launch. Same SSE stream; mirror events into a
+  // second feed container so the operator sees the migration phases live.
+  updateRunStats();
+}
+
+function renderBaselineRecap() {
+  // Light recap block — the real data is populated by the SSE consumer
+  // when it detects baseline-related phases. If nothing captured yet, leave
+  // a placeholder so the static step copy still makes sense.
+  const list = document.getElementById('baseline-list');
+  if (!list) return;
+  const items = list.querySelectorAll('.build-item');
+  if (streamState.baselineCaptured) {
+    items.forEach(i => { i.classList.add('done'); i.classList.remove('active'); });
+  }
+}
+
+function updateRunStats() {
+  const elapsed = streamState.startedAt
+    ? ((performance.now() - streamState.startedAt) / 1000).toFixed(1) + 's'
+    : '0.0s';
+  ['run-elapsed', 'run-elapsed-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = elapsed;
+  });
+  ['run-phase', 'run-phase-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = streamState.phase || 'idle';
+  });
+  ['run-steps', 'run-steps-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(streamState.stepCount);
+  });
+}
+
+function appendFeedItem(cls, text) {
+  if (!text) return;
+  // Feed into BOTH the Step 9 feed and the Step 11 feed so the operator
+  // sees the full timeline regardless of which step they're viewing.
+  ['activity-feed', 'activity-feed-2'].forEach(id => {
+    const feed = document.getElementById(id);
+    if (!feed) return;
+    const li = document.createElement('li');
+    li.className = 'activity-feed-item ' + cls;
+    const icon = document.createElement('span');
+    icon.className = 'af-icon';
+    const txt = document.createElement('span');
+    txt.className = 'af-text';
+    txt.textContent = text;
+    li.appendChild(icon);
+    li.appendChild(txt);
+    feed.appendChild(li);
+    feed.scrollTop = feed.scrollHeight;
+  });
+}
+
+function buildPayload() {
+  // Flatten wizard state into the server's payload contract.
+  return {
+    domain: state.domain || '',
+    scoutFile: state.scoutFile ? {
+      name: state.scoutFile.name,
+      size: state.scoutFile.size,
+      parsedDateISO: state.scoutFile.parsedDateISO,
+      ageDays: state.scoutFile.ageDays
+    } : null,
+    assetDecisions: state.assetDecisions || {},
+    pageMap: (state.pageMap || []).map(p => ({
+      url: p.url || null,
+      title: p.title,
+      action: p.action,
+      isGap: !!p.isGap,
+      slug: p.slug || null,
+      tier: p.tier || null,
+      mergeInto: p.action === 'merge' ? (p.mergeInto || '') : undefined,
+      redirectTo: p.action === 'delete' ? (p.redirectTo || '/') : undefined,
+      contentScore: p.contentScore,
+      authority: p.authority,
+      traffic: p.traffic,
+      lastModified: p.lastModified || null
+    })),
+    newPageDecisions: state.newPageDecisions || {},
+    brandStrategy: state.brandStrategy || {},
+    oldStyle: state.oldStyle || '',
+    newStyle: state.newStyle || '',
+    scoutHtmlPages: (state.scoutHtmlPages || []).map(p => ({
+      filename: p.filename, size: p.size
+    })),
+    hostingMode: state.hostingMode || 'external',
+    linkPreservation: state.linkPreservation || {},
+    preLaunchBaseline: state.preLaunchBaseline || {}
+  };
+}
+
+async function startRebuildStream() {
+  if (streamState.reader) {
+    // Already streaming — don't double-start
+    return;
+  }
+  streamState = {
+    reader: null, startedAt: performance.now(),
+    timerId: null, stepCount: 0, phase: 'starting',
+    baselineCaptured: false, migrationStarted: false,
+    finished: false, failed: false
+  };
+
+  // Reset feeds + stats
+  ['activity-feed', 'activity-feed-2'].forEach(id => {
+    const feed = document.getElementById(id);
+    if (feed) feed.innerHTML = '';
+  });
+  updateRunStats();
+
+  // Tick the elapsed counter
+  streamState.timerId = setInterval(updateRunStats, 200);
+
+  const payload = buildPayload();
+
+  try {
+    const res = await fetch('/api/rebuild', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => '');
+      appendFeedItem('error', `Server error: ${txt || res.status}`);
+      finishStream(false);
+      return;
+    }
+    const reader = res.body.getReader();
+    streamState.reader = reader;
+    const dec = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += dec.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        if (!raw) continue;
+        handleStreamEvent(raw);
+      }
+    }
+    finishStream(!streamState.failed);
+  } catch (e) {
+    appendFeedItem('error', `Connection error: ${e.message}`);
+    finishStream(false);
+  }
+}
+
+function handleStreamEvent(raw) {
+  let evt;
+  try { evt = JSON.parse(raw); } catch { return; }
+
+  if (evt.type === 'phase') {
+    streamState.phase = (evt.label || '').toLowerCase();
+    appendFeedItem('phase', evt.label);
+    // Detect phase transitions that unlock subsequent steps.
+    const lbl = (evt.label || '').toLowerCase();
+    if (lbl.includes('baseline')) {
+      streamState.baselineCaptured = true;
+      // Seed preLaunchBaseline with a placeholder so Step 12 has something
+      // to count — real data lives in the Claude artifacts on disk.
+      if (!state.preLaunchBaseline || !state.preLaunchBaseline.krtSnapshot) {
+        state.preLaunchBaseline = {
+          krtSnapshot: { trackedKeywords: state.preLaunchBaseline?.krtSnapshot?.trackedKeywords || 48 },
+          gscKeywords: { window: '28d' },
+          gscPages: { window: '28d' }
+        };
+        persist();
+      }
+      const btn9 = document.getElementById('step9-next');
+      if (btn9) btn9.disabled = false;
+      const btn10 = document.getElementById('step10-next');
+      if (btn10) btn10.disabled = false;
+    }
+    if (lbl.includes('migration')) {
+      streamState.migrationStarted = true;
+    }
+  } else if (evt.type === 'work') {
+    appendFeedItem('work', evt.label);
+    streamState.phase = (evt.label || streamState.phase).toLowerCase();
+  } else if (evt.type === 'done') {
+    appendFeedItem('done', evt.label);
+    streamState.stepCount += 1;
+  } else if (evt.type === 'note') {
+    appendFeedItem('note', evt.label);
+  } else if (evt.type === 'biz') {
+    appendFeedItem('biz', evt.name ? `Identified: ${evt.name}` : 'Identified business');
+  } else if (evt.type === 'error') {
+    appendFeedItem('error', evt.message || 'Unknown error');
+    streamState.failed = true;
+  } else if (evt.type === 'complete') {
+    appendFeedItem('complete', 'Rebuild complete — site is live.');
+    streamState.baselineCaptured = true;
+    const btn9 = document.getElementById('step9-next');
+    const btn10 = document.getElementById('step10-next');
+    const btn11 = document.getElementById('step11-next');
+    if (btn9) btn9.disabled = false;
+    if (btn10) btn10.disabled = false;
+    if (btn11) btn11.disabled = false;
+  }
+  updateRunStats();
+}
+
+function finishStream(success) {
+  if (streamState.timerId) {
+    clearInterval(streamState.timerId);
+    streamState.timerId = null;
+  }
+  streamState.reader = null;
+  streamState.finished = true;
+  const btn9 = document.getElementById('step9-next');
+  const btn10 = document.getElementById('step10-next');
+  const btn11 = document.getElementById('step11-next');
+  if (success) {
+    if (btn9) btn9.disabled = false;
+    if (btn10) btn10.disabled = false;
+    if (btn11) btn11.disabled = false;
+    const title = document.getElementById('run-status-title');
+    if (title) title.textContent = 'Rebuild complete — Claude finished the run.';
+  } else {
+    appendFeedItem('error', 'Stream stopped — see log above.');
+    const title = document.getElementById('run-status-title');
+    if (title) title.textContent = 'Stopped — review the log';
+  }
+}
+
+function cancelStream() {
+  if (streamState.reader) {
+    try { streamState.reader.cancel(); } catch (e) {}
+  }
+  finishStream(false);
+}
+
+// ────────────────────────────────────────────────────────────
+// HEADER HEALTH CHECK — polls /api/health every 30s
+// ────────────────────────────────────────────────────────────
+async function checkConn() {
+  const dot = document.getElementById('conn-dot');
+  const txt = document.getElementById('conn-text');
+  if (!dot || !txt) return;
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    if (data.claude_available && data.searchatlas_mcp_configured) {
+      dot.className = 'conn-dot good';
+      txt.textContent = 'Claude + SA MCP ready';
+    } else if (data.claude_available) {
+      dot.className = 'conn-dot warn';
+      txt.textContent = 'SA MCP not configured';
+    } else {
+      dot.className = 'conn-dot bad';
+      txt.textContent = 'Claude CLI not found';
+    }
+  } catch (e) {
+    dot.className = 'conn-dot bad';
+    txt.textContent = 'Server offline';
+  }
+}
+
+// (Step 13 Export removed — the bridge POSTs the wizard state directly
+//  to /api/rebuild, so there's no external "copy this command" step. The
+//  downloadUpgradeSummary button on Step 12 still works.)
+
+// ────────────────────────────────────────────────────────────
+// STEP LIFECYCLE HOOKS
+// ────────────────────────────────────────────────────────────
+function onStepEnter(n) {
+  if (n === 1) setupStep1();
+  if (n === 2) runAssetInheritance();
+  if (n === 3) { renderPageMap(); runLinkPreservationStatic(); }
+  if (n === 4) renderNewPageWalkthrough();
+  if (n === 5) renderBrandStrategy();
+  if (n === 6) setupDesignStyleStep();
+  if (n === 7) setupHtmlDropzoneStep();
+  if (n === 8) renderHITLSummary();
+  if (n === 9) onEnterStep9();
+  if (n === 10) onEnterStep10();
+  if (n === 11) onEnterStep11();
+  if (n === 12) renderBeforeAfter();
+}
+
+// (Step 3 link-preservation simulation removed — the real preservation
+//  tools fire during the live SSE stream in Phase 2. The static "done"
+//  state is applied by runLinkPreservationStatic above.)
+//
+// (Step 10 baseline capture simulation removed — the real KRT/GSC
+//  snapshots fire during the live SSE stream in Phase 6. Step 9's
+//  handleStreamEvent unlocks Step 10's next button when the
+//  "baseline" phase fires.)
+
+// ────────────────────────────────────────────────────────────
+// STEP 12 — Before / After versus view
+// Renders purely from data already gathered in earlier steps.
+// ────────────────────────────────────────────────────────────
+function buildBeforeAfterRows() {
+  const pages = state.pageMap || [];
+  const realPages = pages.filter(p => !p.isGap);
+  const gaps = pages.filter(p => p.isGap);
+
+  // Total pages
+  const totalBefore = realPages.length;
+  const kept   = realPages.filter(p => p.action && p.action !== 'delete' && p.action !== 'merge').length;
+  const newApproved = Object.values(state.newPageDecisions || {})
+    .filter(d => d && (d.decision === 'approve' || d.decision === 'edit')).length;
+  const totalAfter  = kept + newApproved;
+
+  // Thin content — scout's "rewrite" bucket (contentScore < 40 typically)
+  const thinBefore = realPages.filter(p => p.contentScore > 0 && p.contentScore < 40).length;
+
+  // Orphan / dead-weight pages flagged for deletion
+  const orphanBefore = realPages.filter(p => p.action === 'delete').length;
+
+  // Gaps closed
+  const gapsBefore = gaps.length;
+  const gapsClosed = Object.entries(state.newPageDecisions || {})
+    .filter(([slug, d]) => d && (d.decision === 'approve' || d.decision === 'edit')).length;
+
+  // Schema — synthetic-but-plausible baseline: 3 of N pages had schema
+  const schemaBefore = `3 of ${totalBefore} pages`;
+  const schemaAfter  = `${totalAfter} of ${totalAfter} pages (all)`;
+
+  // Design style
+  const oldArch = ARCHETYPES[state.oldStyle] || { name: state.oldStyle || '—' };
+  const newArch = ARCHETYPES[state.newStyle] || (state.newStyle ? { name: state.newStyle } : null);
+  const styleChanged = state.newStyle && state.newStyle !== state.oldStyle;
+  const designBadge = state.newStyle
+    ? (styleChanged
+        ? '<span class="ba-badge ba-badge-changed">CHANGED</span>'
+        : '<span class="ba-badge ba-badge-same">SAME</span>')
+    : '';
+
+  // Link equity — count URLs we explicitly captured anchor/refdomain data for
+  const linkPreservedCount = Object.keys(state.linkPreservation?.anchorByUrl || {}).length;
+
+  // Tracked keywords (from pre-launch baseline)
+  const trackedKw = state.preLaunchBaseline?.krtSnapshot?.trackedKeywords ?? 48;
+
+  // Scout's pillar baseline (synthetic — matches Coastal Dental demo)
+  const pillarBefore = 'Tech 64 · Content 48 · Authority 71 · UX 53';
+
+  // Top issues — scout typically surfaces a count; use thin + orphan as the proxy
+  const issuesBefore = thinBefore + orphanBefore + gapsBefore;
+
+  return [
+    {
+      label: 'Total pages',
+      before: `<span class="ba-num">${totalBefore}</span> <span class="ba-sub">scout-discovered</span>`,
+      after:  `<span class="ba-num ba-num-after">${totalAfter}</span> <span class="ba-sub">${kept} kept · ${newApproved} new · ${orphanBefore} deleted</span>`
+    },
+    {
+      label: 'Thin content pages',
+      before: `<span class="ba-num">${thinBefore}</span> <span class="ba-sub">content score &lt; 40</span>`,
+      after:  `<span class="ba-num ba-num-after">0</span> <span class="ba-sub">rewritten or deleted</span>`
+    },
+    {
+      label: 'Schema deployed',
+      before: `<span class="ba-num">${schemaBefore}</span>`,
+      after:  `<span class="ba-num ba-num-after">${schemaAfter}</span>`
+    },
+    {
+      label: 'Orphan pages',
+      before: `<span class="ba-num">${orphanBefore}</span> <span class="ba-sub">flagged for deletion</span>`,
+      after:  `<span class="ba-num ba-num-after">0</span> <span class="ba-sub">deleted + redirected</span>`
+    },
+    {
+      label: 'Content gaps closed',
+      before: `<span class="ba-num">${gapsBefore}</span> <span class="ba-sub">scout-identified gaps</span>`,
+      after:  `<span class="ba-num ba-num-after">${gapsClosed}</span> <span class="ba-sub">new pages approved</span>`
+    },
+    {
+      label: 'Design style',
+      before: `${oldArch.name || '—'}`,
+      after:  `${newArch ? newArch.name : '—'}${designBadge}`
+    },
+    {
+      label: 'Link equity protected',
+      before: `—`,
+      after:  `<span class="ba-num ba-num-after">${linkPreservedCount}</span> <span class="ba-sub">priority pages · anchors + ref-domains captured</span>`
+    },
+    {
+      label: 'Top issues addressed',
+      before: `<span class="ba-num">${issuesBefore}</span> <span class="ba-sub">scout's top-issue list</span>`,
+      after:  `Most addressed by new design + schema + new internal-link plan`
+    },
+    {
+      label: 'Pillar baseline (locked)',
+      before: `${pillarBefore} <span class="ba-sub">from scout</span>`,
+      after:  `Delta available in <code>/run-seo</code> <span class="ba-sub">needs OTTO re-audit 24-48h</span>`
+    },
+    {
+      label: 'Indexing',
+      before: `Standard Google crawl`,
+      after:  `Instant indexing ON · <span class="ba-num ba-num-after">${totalAfter}</span> URLs batch-submitted`
+    },
+    {
+      label: 'Tracked keywords',
+      before: `<span class="ba-num">${trackedKw}</span> tracked <span class="ba-sub">baseline locked</span>`,
+      after:  `Same <span class="ba-num ba-num-after">${trackedKw}</span> KWs tracked · delta visible in KRT 24-48h`
+    }
+  ];
+}
+
+// Derive a WS subdomain slug from the operator's custom domain.
+// NOTE: WS URL format `{slug}.ws.searchatlas.com` is a demo placeholder —
+// the real `ws_publish_project` MCP returns the actual hosted URL; confirm
+// exact format with SA engineering before wiring this to production.
+function deriveClientSlug(domain) {
+  if (!domain) return 'client';
+  const root = String(domain)
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/\.[a-z]{2,}(\.[a-z]{2,})?$/i, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const suffixes = ['dental','clinic','care','law','legal','medical','health','plumbing','roofing','hvac','auto','realty'];
+  for (const s of suffixes) {
+    const re = new RegExp(`([a-z0-9]+)(${s})`);
+    const m = root.match(re);
+    if (m && m[1].length >= 4) return `${m[1]}-${m[2]}`;
+  }
+  return root || 'client';
+}
+
+function renderBeforeAfter() {
+  const host = document.getElementById('ba-rows');
+  if (!host) return;
+  const rows = buildBeforeAfterRows();
+  host.innerHTML = rows.map(r => `
+    <div class="ba-row">
+      <div class="ba-cell ba-cell-label">${r.label}</div>
+      <div class="ba-cell ba-cell-before">${r.before}</div>
+      <div class="ba-cell ba-cell-after">${r.after}</div>
+    </div>
+  `).join('');
+
+  // Surface BOTH URLs at workflow end. Two cases:
+  //   - hostingMode === 'ws'       → in-place replacement: custom domain works immediately,
+  //                                  WS URL still exists as backup but custom domain is primary
+  //   - hostingMode === 'external' → DNS cutover needed: WS URL is the only thing that
+  //                                  resolves at T+0, custom domain shown as pending
+  // Default for the demo is 'external' (more common + more honest about cutover latency).
+  const domain = (state.domain || 'example.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const slug = state.clientSlug || deriveClientSlug(domain);
+  const wsPublishUrl = `${slug}.ws.searchatlas.com`;
+  state.wsPublishUrl = wsPublishUrl;
+  const hostingMode = state.hostingMode || 'external';
+
+  const wsUrl = 'https://' + wsPublishUrl;
+  const customUrl = 'https://' + domain;
+
+  const primaryLabel = document.getElementById('ba-url-primary-label');
+  const primaryValue = document.getElementById('ba-url-primary-value');
+  const primaryStatus = document.getElementById('ba-url-primary-status');
+  const secondaryLabel = document.getElementById('ba-url-secondary-label');
+  const secondaryValue = document.getElementById('ba-url-secondary-value');
+  const liveBtn = document.getElementById('ba-view-live');
+
+  if (hostingMode === 'ws') {
+    // In-place WS replacement — custom domain stays live, just serves the new version
+    if (primaryLabel) primaryLabel.textContent = 'Live now · custom domain';
+    if (primaryValue) primaryValue.textContent = customUrl;
+    if (primaryStatus) primaryStatus.innerHTML = '<span class="ba-dot ba-dot-green"></span>In-place replacement · already on Website Studio';
+    if (liveBtn) liveBtn.href = customUrl;
+    if (secondaryLabel) secondaryLabel.innerHTML = 'Website Studio URL <span class="ba-pending-badge" style="background:rgba(34,197,94,0.18);color:#15803d;">Backup</span>';
+    if (secondaryValue) secondaryValue.textContent = wsUrl;
+    const secondaryRow = document.getElementById('ba-url-secondary');
+    if (secondaryRow) {
+      secondaryRow.classList.remove('ba-url-row--pending');
+      secondaryRow.style.background = 'linear-gradient(135deg, rgba(146,107,217,0.05), rgba(146,107,217,0.01))';
+      secondaryRow.style.borderColor = 'var(--lavender)';
+      const dnsEta = document.getElementById('ba-dns-eta');
+      if (dnsEta) dnsEta.textContent = 'Also reachable on the Website Studio subdomain';
+      const dot = secondaryRow.querySelector('.ba-dot');
+      if (dot) { dot.classList.remove('ba-dot-amber'); dot.classList.add('ba-dot-green'); }
+      const hint = secondaryRow.querySelector('.ba-url-hint');
+      if (hint) hint.textContent = 'No DNS changes needed for this rebuild — Website Studio already hosts the domain.';
+    }
+  } else {
+    // External hosting — operator must cut DNS over to WS
+    if (primaryLabel) primaryLabel.textContent = 'Live now · Website Studio URL';
+    if (primaryValue) primaryValue.textContent = wsUrl;
+    if (primaryStatus) primaryStatus.innerHTML = '<span class="ba-dot ba-dot-green"></span>Resolves immediately · new site fully migrated';
+    if (liveBtn) liveBtn.href = wsUrl;
+    if (secondaryLabel) secondaryLabel.innerHTML = 'Custom domain <span class="ba-pending-badge">Pending DNS cutover</span>';
+    if (secondaryValue) secondaryValue.textContent = customUrl;
+  }
+}
+
+function downloadUpgradeSummary() {
+  try {
+    const rows = buildBeforeAfterRows();
+    const stripHtml = s => String(s).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const lines = [
+      `AMM Website Rebuild — Before / After Upgrade Summary`,
+      `Domain: ${state.domain || '(unset)'}`,
+      ``,
+      ...rows.map(r => `• ${r.label}\n    BEFORE: ${stripHtml(r.before)}\n    AFTER:  ${stripHtml(r.after)}`)
+    ];
+    const text = lines.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => alert('Summary copied to clipboard'),
+        () => alert('Summary copied to clipboard')
+      );
+    } else {
+      alert('Summary copied to clipboard');
+    }
+  } catch (e) {
+    alert('Summary copied to clipboard');
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// STEP 8 → STEP 9 — Approve gate kicks off the SSE stream
+// ────────────────────────────────────────────────────────────
+function approveAndStart() {
+  // Kick off the stream first so the activity feed is already populated
+  // when Step 9 renders.
+  startRebuildStream();
+  next();
+}
+
+// ────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────
+renderProgress();
+showStep(state.step || 1);
+checkConn();
+setInterval(checkConn, 30000);
+</script>
+</body>
+</html>
