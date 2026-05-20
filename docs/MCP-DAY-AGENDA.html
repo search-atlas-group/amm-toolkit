@@ -190,7 +190,7 @@
     <a href="welcome.html" target="_blank"><span class="ico">●</span> Open welcome.html<span class="meta">The page attendees will see</span></a>
     <a href="../README.md" target="_blank"><span class="ico">●</span> README<span class="meta">Install + command list</span></a>
     <a href="../WHATS-NEW.md" target="_blank"><span class="ico">●</span> WHATS-NEW<span class="meta">Latest changes</span></a>
-    <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank"><span class="ico">●</span> Troubleshooting cheat sheet<span class="meta">Internal — full error matrix</span></a>
+    <a href="#contingencies"><span class="ico">●</span> Contingencies + recovery<span class="meta">Top hits below · full matrix in internal doc</span></a>
   </div>
 </div>
 
@@ -287,18 +287,8 @@ done</code></pre>
 </ul>
 
 <div class="card">
-  <strong>Autoplay demo</strong> — run this in a second tab. Live narration plays automatically.
+  <strong>Autoplay demo</strong> — internal asset, runs locally on the operator's machine. Open it in a second tab before the block starts so the screen-share is ready.
 </div>
-<div class="demo-frame">
-  <div class="demo-bar">
-    <span class="title">/onboard-client — autoplay</span>
-    <a class="ext" href="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay.html" target="_blank">Open externally ↗</a>
-  </div>
-  <iframe src="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay.html" title="onboard-client autoplay demo"></iframe>
-</div>
-<p style="font-size: 12px; color: var(--text-faint);">
-  Iframe path is the local file in <code>~/Desktop/amm/internal/initiatives/mcp-day-pitch/</code>. If the iframe is empty, open the &quot;Open externally&quot; link or copy the file into <code>docs/visuals/</code> alongside <code>scout-demo.html</code>.
-</p>
 
 <h3>What to say</h3>
 <ol>
@@ -322,14 +312,7 @@ done</code></pre>
 </ul>
 
 <div class="card">
-  <strong>Autoplay:</strong> the CLI flavour of the demo (operator running it from chat instead of UI).
-</div>
-<div class="demo-frame">
-  <div class="demo-bar">
-    <span class="title">/onboard-client CLI autoplay</span>
-    <a class="ext" href="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay-cli.html" target="_blank">Open externally ↗</a>
-  </div>
-  <iframe src="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay-cli.html" title="onboard-client CLI autoplay"></iframe>
+  <strong>Autoplay:</strong> CLI flavour of the demo (operator running it from chat instead of UI) — internal asset, open locally before the block.
 </div>
 
 <p><strong>Spec reference:</strong> the build wizard front-end is at <a href="../tools/website-build/index.html" target="_blank">tools/website-build/index.html</a>, server at <a href="../tools/website-build/server.py" target="_blank">server.py</a>.</p>
@@ -434,9 +417,7 @@ done</code></pre>
 
 <h2 id="contingencies">Contingencies + quick recovery</h2>
 
-<p>Full failure-mode catalog in
-<a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">SUPPORT-TROUBLESHOOTING.md</a>
-(internal). Top hits below.</p>
+<p>Full failure-mode catalog lives in the support team's internal troubleshooting doc (~70 errors, every file:line cited). Top hits below.</p>
 
 <table>
   <thead><tr><th>Risk</th><th>Likelihood</th><th>Mitigation</th></tr></thead>
@@ -444,7 +425,7 @@ done</code></pre>
     <tr><td>Port collision on 8865-8867</td><td><span class="pill amber">Low</span></td><td><code>lsof -nP -iTCP:&lt;port&gt; -sTCP:LISTEN</code> → kill or move ports</td></tr>
     <tr><td>First wizard click frozen 30-40s</td><td><span class="pill amber">High</span></td><td>Pre-announce. First click warms up — subsequent are instant. Have attendees click during intro.</td></tr>
     <tr><td>claude.ai connector auth probe fails</td><td><span class="pill amber">Medium</span></td><td>Latest code is namespace-tolerant. If older clone: <code>git pull &amp;&amp; bash setup.sh</code></td></tr>
-    <tr><td>Supervisor stuck in xpcproxy</td><td><span class="pill amber">Low</span></td><td>nohup fallback from <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">troubleshooting doc</a>, §6</td></tr>
+    <tr><td>Supervisor stuck in xpcproxy</td><td><span class="pill amber">Low</span></td><td>nohup fallback from internal troubleshooting doc, §6</td></tr>
     <tr><td>Windows attendee with WSL issues</td><td><span class="pill amber">?</span></td><td>Pair with support. Mac path is better-tested. Send <a href="../guides/windows-claude-code-setup.md" target="_blank">Windows guide</a>.</td></tr>
     <tr><td>Wizard times out mid-build</td><td><span class="pill amber">Medium</span></td><td>Tab close is safe. Refresh; build continues.</td></tr>
     <tr><td>Claude CLI not on launchd's PATH</td><td><span class="pill amber">Low</span></td><td>setup.sh captures <code>$PATH</code> into plist. If still fails: <code>launchctl getenv PATH</code></td></tr>
@@ -473,10 +454,7 @@ done</code></pre>
 <ul>
   <li><strong>Primary channel:</strong> DM during the call — each attendee paired with a support person</li>
   <li><strong>Engineering escalation:</strong> Jonathan — anything not in the troubleshooting doc, or repeated failures</li>
-  <li><strong>Shared scratchpad:</strong>
-    <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">SUPPORT-TROUBLESHOOTING.md</a>
-    — internal-only, every known failure mode + fix
-  </li>
+  <li><strong>Shared scratchpad:</strong> internal SUPPORT-TROUBLESHOOTING doc — every known failure mode + fix (kept off the public repo)</li>
 </ul>
 
 <h3>Post-workshop housekeeping (Jonathan)</h3>
