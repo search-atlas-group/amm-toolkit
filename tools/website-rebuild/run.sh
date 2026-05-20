@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AMM Command Center — local launch script
+# Website Rebuild Wizard — local launch script
 # Usage: bash run.sh
 set -e
 
@@ -12,11 +12,11 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PORT="${PORT:-8765}"
+PORT="${PORT:-8767}"
 
 echo ""
-echo -e "  ${GREEN}AMM Command Center${NC}"
-echo -e "  ${DIM}local web UI for /onboard-client${NC}"
+echo -e "  ${GREEN}Website Rebuild Wizard${NC}"
+echo -e "  ${DIM}local web UI for /rebuild-website${NC}"
 echo ""
 
 # ── 1. Check Python ──────────────────────────────────────────────────────────

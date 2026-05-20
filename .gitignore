@@ -14,6 +14,11 @@
 !/WHATS-NEW.md
 !/setup.sh
 !/.env.example
+!/Start*Bridges.command
+
+# ── Never commit macOS Finder metadata ───────────────────────────────────────
+.DS_Store
+**/.DS_Store
 # ── Public folders (all contents allowed) ────────────────────────────────────
 
 !/commands/
