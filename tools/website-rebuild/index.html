@@ -891,6 +891,28 @@ textarea { resize: vertical; min-height: 60px; }
 </style>
 </head>
 <body>
+
+<!-- ────────────────────────────────────────────────────────────
+     Auth gatekeeper modal — blocks the wizard until /api/auth-probe
+     confirms the SearchAtlas MCP is authenticated.
+     ──────────────────────────────────────────────────────────── -->
+<div id="auth-modal-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,0.78);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:560px;width:100%;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:28px;box-shadow:0 30px 60px rgba(0,0,0,0.5);color:#e2e8f0;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div id="auth-modal-icon" style="width:36px;height:36px;border-radius:50%;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:20px;">🔒</div>
+      <h2 id="auth-modal-title" style="margin:0;font-size:18px;font-weight:600;">Verifying Search Atlas access…</h2>
+    </div>
+    <p id="auth-modal-body" style="margin:0 0 18px 0;line-height:1.55;color:#cbd5e1;font-size:14px;">
+      Checking that the Search Atlas MCP connector is authenticated in this Claude Code session.
+      The wizard cannot proceed without it — every step here calls real Search Atlas tools.
+    </p>
+    <div id="auth-modal-actions" style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="auth-modal-retry" type="button" style="display:none;padding:9px 16px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:13px;">Retry</button>
+      <a id="auth-modal-open-sa" href="https://claude.ai/" target="_blank" rel="noopener" style="display:none;padding:9px 16px;border-radius:8px;background:#7c3aed;color:white;text-decoration:none;font-size:13px;">Open Claude.ai → /mcp</a>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
 <div class="brand">
@@ -1108,13 +1130,8 @@ textarea { resize: vertical; min-height: 60px; }
   <h1>Pick the new design style</h1>
   <p class="sub">Six current web design patterns — Website Studio uses the picked style as the rendering template.</p>
 
-  <div class="old-style-banner">
-    <div>
-      <span class="old-label">Old style</span>
-      <span class="old-val" id="old-style-name">Modern Minimal</span>
-    </div>
-    <span class="old-hint">detected from current site</span>
-  </div>
+  <!-- Old-style banner removed — wizard no longer surfaces a fabricated "current" design
+       style. When scout starts returning a real classification this can be re-added. -->
 
   <div class="archetype-grid" id="archetype-grid">
     <div class="archetype-card" data-arch="modern_minimal">
@@ -1141,11 +1158,6 @@ textarea { resize: vertical; min-height: 60px; }
       <div class="archetype-name">Warm Organic</div>
       <div class="archetype-desc">Earthy palette, soft rounded shapes, hand-drawn. Wellness, food, sustainable brands.</div>
     </div>
-  </div>
-
-  <div class="callout warn" id="same-style-warn" style="display:none;">
-    <strong>Same style as the old site.</strong>
-    Are you sure this is a rebuild and not a content refresh? <code>/run-content</code> may be a better fit if the design isn't changing.
   </div>
 
   <div class="btn-row">
@@ -1290,14 +1302,9 @@ textarea { resize: vertical; min-height: 60px; }
 
   <ul class="activity-feed" id="activity-feed-2"></ul>
 
-  <div class="callout info">
-    <strong>Rollback path:</strong>
-    Website Studio version history preserved for 7 days. Redirect rules revertible. Old-site snapshot is yours forever.
-  </div>
-
   <div class="btn-row">
     <span></span>
-    <button class="btn btn-primary" id="step11-next" onclick="next()" disabled>Site is live · view upgrade summary →</button>
+    <button class="btn btn-primary" id="step11-next" onclick="next()" disabled>View upgrade summary →</button>
   </div>
 </section>
 
@@ -1362,9 +1369,9 @@ const REBUILD_DETECT = {
   otto: 'found', bv: 'found', gbp: 'found', ppc: 'missing', llmv: 'found'
 };
 
-// Old design style (would be detected from current site via scout output).
-// Synthetic for demo purposes.
-const OLD_STYLE = 'modern_minimal';
+// (REMOVED) The hardcoded old-design-style constant was deleted in the
+// fabrication purge. The wizard now surfaces only the operator-chosen NEW
+// style — there is no synthetic "old style" to compare against.
 
 const ARCHETYPES = {
   modern_minimal: { name: 'Modern Minimal', desc: 'Whitespace, sans-serif, photography-led.' },
@@ -1395,148 +1402,72 @@ const PAGE_ACTION_LABEL = {
   new: 'New'
 };
 
-// Simulated scout-derived page inventory for Coastal Dental Group.
-// Realistic mix of high-authority core pages, lower-quality service pages, orphans, and topic gaps.
-const SIMULATED_SCOUT_PAGES = [
-  { url: '/',                        title: 'Coastal Dental Group · Newport Beach Dentistry', contentScore: 72, authority: 85, traffic: 1240, lastModified: '2024-08-12' },
-  { url: '/about',                   title: 'About Our Practice',                              contentScore: 58, authority: 68, traffic: 410,  lastModified: '2024-06-04' },
-  { url: '/contact',                 title: 'Contact Coastal Dental Group',                    contentScore: 44, authority: 71, traffic: 380,  lastModified: '2024-09-20' },
-  { url: '/services',                title: 'Dental Services',                                 contentScore: 51, authority: 64, traffic: 290,  lastModified: '2024-05-01' },
-  { url: '/services/general',        title: 'General Dentistry',                               contentScore: 38, authority: 42, traffic: 180,  lastModified: '2023-11-22' },
-  { url: '/services/cosmetic',       title: 'Cosmetic Dentistry',                              contentScore: 35, authority: 38, traffic: 165,  lastModified: '2023-10-08' },
-  { url: '/services/implants',       title: 'Dental Implants',                                 contentScore: 64, authority: 72, traffic: 520,  lastModified: '2024-07-15' },
-  { url: '/services/orthodontics',   title: 'Orthodontics & Invisalign',                       contentScore: 41, authority: 47, traffic: 230,  lastModified: '2024-02-18' },
-  { url: '/services/pediatric',      title: 'Pediatric Dentistry',                             contentScore: 29, authority: 18, traffic: 45,   lastModified: '2022-09-30' },
-  { url: '/services/emergency',      title: 'Emergency Dentist Newport Beach',                 contentScore: 56, authority: 61, traffic: 340,  lastModified: '2024-04-11' },
-  { url: '/team',                    title: 'Meet the Team',                                   contentScore: 47, authority: 52, traffic: 195,  lastModified: '2024-03-22' },
-  { url: '/testimonials',            title: 'Patient Testimonials',                            contentScore: 32, authority: 12, traffic: 25,   lastModified: '2022-04-15' },
-  { url: '/insurance',               title: 'Insurance & Financing',                           contentScore: 39, authority: 28, traffic: 110,  lastModified: '2023-08-04' },
-  { url: '/blog/wisdom-teeth-2019',  title: 'Wisdom Teeth Removal — Old Blog Post',            contentScore: 22, authority: 8,  traffic: 12,   lastModified: '2019-03-14' },
-  { url: '/blog/old-promo-2020',     title: 'Spring 2020 Promo — Expired',                     contentScore: 18, authority: 4,  traffic: 3,    lastModified: '2020-05-01' },
-  { url: '/privacy',                 title: 'Privacy Policy',                                  contentScore: 28, authority: 22, traffic: 8,    lastModified: '2023-01-10' }
-];
+// (REMOVED) Synthetic scout fixtures used to live here. Real page inventory
+// now comes exclusively from /api/parse-scout via state.scoutData.pages.
+// Keeping a single anchor variable so any stale reference fails loudly
+// rather than silently rehydrating demo data.
+const _REBUILD_FAKE_DATA_REMOVED = true;
 
-// Topic gaps — scout identified these as opportunities competitors cover but the site doesn't.
-// Each gap carries evidence for the Phase 4 walkthrough cards (text-only).
-const SIMULATED_TOPIC_GAPS = [
-  {
-    gapTitle: 'Sedation dentistry — IV + nitrous oxide options',
-    contentScore: 0, authority: 0, traffic: 0,
-    slug: 'sedation-dentistry',
-    tier: 'service',
-    oneline: 'Topic gap · 1,800 vol · transactional intent · 3/4 competitors have this',
-    pageType: 'Service page',
-    h1: 'Sedation Dentistry in Newport Beach',
-    schema: 'MedicalService',
-    keywords: [
-      { kw: 'sedation dentistry newport beach', vol: 1800, intent: 'transactional', difficulty: 38 },
-      { kw: 'iv sedation dentist', vol: 1200, intent: 'transactional', difficulty: 42 },
-      { kw: 'nitrous oxide dentist', vol: 720, intent: 'commercial', difficulty: 28 }
-    ],
-    competitorEvidence: { count: 3, examples: ['newportbeachdental.com', 'oc-dentistry.com', 'pacificdentalgroup.com'] },
-    serpFeatures: ['LOCAL_PACK', 'FAQ', 'PEOPLE_ALSO_ASK'],
-    contentGap: 'No site content mentions sedation options — 3/4 local competitors have dedicated pages.',
-    sections: [
-      'Hero · "Anxiety-free dental care for Newport Beach"',
-      'Sedation options breakdown — IV / oral / nitrous',
-      'Who sedation is right for (anxiety, complex procedures, gag reflex)',
-      'Safety protocols + monitoring',
-      'FAQ block (targets PEOPLE_ALSO_ASK SERP feature)',
-      'Book consultation CTA'
-    ],
-    ctas: ['Book sedation consultation', 'Call (949) xxx-xxxx']
-  },
-  {
-    gapTitle: 'Same-day crowns / CEREC technology',
-    contentScore: 0, authority: 0, traffic: 0,
-    slug: 'same-day-crowns-cerec',
-    tier: 'service',
-    oneline: 'Topic gap · 880 vol · commercial intent · 2/4 competitors have this',
-    pageType: 'Service page',
-    h1: 'Same-Day Crowns with CEREC Technology',
-    schema: 'MedicalService',
-    keywords: [
-      { kw: 'same day crowns newport beach', vol: 480, intent: 'transactional', difficulty: 32 },
-      { kw: 'cerec dentist', vol: 880, intent: 'commercial', difficulty: 36 },
-      { kw: 'one visit crown', vol: 320, intent: 'informational', difficulty: 24 }
-    ],
-    competitorEvidence: { count: 2, examples: ['newportbeachdental.com', 'pacificdentalgroup.com'] },
-    serpFeatures: ['LOCAL_PACK', 'IMAGE_PACK'],
-    contentGap: 'Existing /services/general buries CEREC mention — dedicated page wins for both speed-of-service shoppers and technology-aware patients.',
-    sections: [
-      'Hero · "Crowns in one visit · no temporaries"',
-      'How CEREC works (3D scan → mill → fit, same chair)',
-      'Comparison table — traditional 2-visit vs CEREC same-day',
-      'Image gallery of CEREC machine + finished crowns (targets IMAGE_PACK)',
-      'Insurance + cost breakdown',
-      'Book same-day appointment CTA'
-    ],
-    ctas: ['Book same-day crown', 'See CEREC in action']
-  },
-  {
-    gapTitle: 'Pediatric sealants & preventive care',
-    contentScore: 0, authority: 0, traffic: 0,
-    slug: 'pediatric-sealants-preventive',
-    tier: 'service',
-    oneline: 'Topic gap · 410 vol · informational intent · 4/4 competitors have this',
-    pageType: 'Service / parent-focused landing',
-    h1: 'Pediatric Sealants & Preventive Dentistry',
-    schema: 'MedicalService',
-    keywords: [
-      { kw: 'dental sealants for kids', vol: 410, intent: 'informational', difficulty: 22 },
-      { kw: 'pediatric preventive dentistry', vol: 260, intent: 'informational', difficulty: 18 },
-      { kw: 'kids dentist newport beach', vol: 720, intent: 'transactional', difficulty: 41 }
-    ],
-    competitorEvidence: { count: 4, examples: ['newportbeachdental.com', 'oc-dentistry.com', 'pacificdentalgroup.com', 'familydentalnb.com'] },
-    serpFeatures: ['LOCAL_PACK', 'PEOPLE_ALSO_ASK', 'VIDEO'],
-    contentGap: 'Old /services/pediatric page has score 29 and last-modified 2022 — strip + replace with sealants-focused content matching what every competitor ranks for.',
-    sections: [
-      'Hero · "Sealants stop 80% of childhood cavities"',
-      'What sealants are + how they work',
-      'Age-appropriate care schedule (6 → 14)',
-      'Insurance coverage cheat sheet',
-      'FAQ block (targets PEOPLE_ALSO_ASK)',
-      'Book pediatric visit CTA'
-    ],
-    ctas: ['Schedule pediatric visit', 'Insurance + financing']
-  }
-];
+// Demo fixtures removed in fabrication purge — see git history if you need the previous shape.
 
 function autoClassifyPage(page) {
+  // Auto-classification heuristics applied to REAL parsed scout data.
+  // Source of truth: state.scoutData.pages from /api/parse-scout.
   if (page.isGap) return 'new';
   if (page.authority === 0 && page.traffic === 0) return 'delete';
   if (page.authority > 60) return 'keep_redesign';
-  if (page.contentScore < 40) return 'keep_rewrite';
-  if (page.authority < 20) return 'delete';
+  if (page.contentScore > 0 && page.contentScore < 40) return 'keep_rewrite';
+  if (page.authority > 0 && page.authority < 20) return 'delete';
   return 'keep_redesign';
 }
 
+function slugifyGapTitle(t) {
+  return (t || 'new-page').toString().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'new-page';
+}
+
 function buildDefaultPageMap() {
-  const real = SIMULATED_SCOUT_PAGES.map(p => ({
-    ...p, isGap: false,
-    action: null, mergeInto: '', redirectTo: '/'
+  // REAL data only — populated by /api/parse-scout. If scoutData is missing,
+  // return an empty array so the UI surfaces the error rather than silently
+  // showing demo data.
+  const scout = state.scoutData || {};
+  const realRaw = Array.isArray(scout.pages) ? scout.pages : [];
+  const gapsRaw = Array.isArray(scout.contentGaps) ? scout.contentGaps : [];
+
+  const real = realRaw.map(p => ({
+    url: p.url || '',
+    title: p.title || '',
+    contentScore: Number(p.contentScore || 0),
+    authority: Number(p.authority || 0),
+    traffic: Number(p.traffic || 0),
+    lastModified: p.lastModified || '',
+    isGap: false,
+    action: null,
+    mergeInto: '',
+    redirectTo: '/'
   }));
-  const gaps = SIMULATED_TOPIC_GAPS.map((g, i) => ({
+
+  const gaps = gapsRaw.map((g, i) => ({
     url: '',
-    title: g.gapTitle,
+    title: g.title || g.gapTitle || ('Topic gap ' + (i + 1)),
     contentScore: 0, authority: 0, traffic: 0,
     lastModified: '',
     isGap: true,
     action: null, mergeInto: '', redirectTo: '',
-    // Pass-through evidence used by the NEW-page walkthrough (Step 4)
-    slug: g.slug,
-    tier: g.tier,
-    oneline: g.oneline,
-    pageType: g.pageType,
-    h1: g.h1,
-    schema: g.schema,
-    keywords: g.keywords,
-    competitorEvidence: g.competitorEvidence,
-    serpFeatures: g.serpFeatures,
-    contentGap: g.contentGap,
-    sections: g.sections,
-    ctas: g.ctas
+    slug: g.slug || slugifyGapTitle(g.title || g.gapTitle),
+    tier: g.tier || 'service',
+    oneline: g.oneline || 'Topic gap surfaced by scout — evidence loads in Step 4.',
+    pageType: g.pageType || '',
+    h1: g.h1 || '',
+    schema: g.schema || '',
+    keywords: Array.isArray(g.keywords) ? g.keywords : [],
+    competitorEvidence: g.competitorEvidence || null,
+    serpFeatures: Array.isArray(g.serpFeatures) ? g.serpFeatures : [],
+    contentGap: g.contentGap || '',
+    sections: Array.isArray(g.sections) ? g.sections : [],
+    ctas: Array.isArray(g.ctas) ? g.ctas : []
   }));
+
   const all = [...real, ...gaps];
   all.forEach(p => { p.action = autoClassifyPage(p); });
   return all;
@@ -1560,7 +1491,6 @@ let state = {
   // Step 4 — per-NEW-page decisions, keyed by slug → { decision, edits }
   newPageDecisions: {},
   brandStrategy: { voice: '', pillars: '', differentiation: '' },
-  oldStyle: OLD_STYLE,
   newStyle: '',
   scoutHtmlPages: [],     // [ { filename, size } ]
   // Step 10 — pre-launch baseline capture (synthetic for demo)
@@ -1568,8 +1498,8 @@ let state = {
   // Step 12 — URL surfacing. hostingMode 'external' = DNS cutover needed; 'ws' = in-place WS replacement.
   // Default 'external' for the demo (more common + more honest about cutover latency).
   hostingMode: 'external',
-  clientSlug: '',          // derived from domain at publish; used to build wsPublishUrl
-  wsPublishUrl: '',        // {slug}.ws.searchatlas.com — populated when entering Step 12
+  clientSlug: '',          // RESERVED — not derived client-side; reserved for future server-set value
+  wsPublishUrl: '',        // Populated ONLY by the `ws_published` SSE event after ws_publish_project returns a real URL. Never derived client-side.
   startedAt: new Date().toISOString()
 };
 
@@ -1598,7 +1528,7 @@ function resetWizard() {
     linkPreservation: { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: {} },
     newPageDecisions: {},
     brandStrategy: { voice: '', pillars: '', differentiation: '' },
-    oldStyle: OLD_STYLE, newStyle: '',
+    newStyle: '',
     scoutHtmlPages: [],
     preLaunchBaseline: { krtSnapshot: null, gscKeywords: null, gscPages: null },
     hostingMode: 'external', clientSlug: '', wsPublishUrl: '',
@@ -1653,8 +1583,18 @@ function showStep(n) {
   onStepEnter(n);
 }
 
-function goto(n) { showStep(n); }
+function goto(n) {
+  if (!_authState.authenticated) {
+    showAuthRequiredModal();
+    return;
+  }
+  showStep(n);
+}
 function next() {
+  if (!_authState.authenticated) {
+    showAuthRequiredModal();
+    return;
+  }
   if (!validateStep(state.step)) return;
   showStep(Math.min(state.step + 1, TOTAL_STEPS));
 }
@@ -1662,13 +1602,31 @@ function prev() { showStep(Math.max(state.step - 1, 1)); }
 
 function validateStep(n) {
   if (n === 1) {
-    state.domain = document.getElementById('f-domain').value.trim();
+    const newDomain = document.getElementById('f-domain').value.trim();
+    if (newDomain && state.domain && newDomain !== state.domain) {
+      // Domain changed mid-session — clear all derived state that was scoped
+      // to the previous domain so the wizard never silently re-uses stale data.
+      state.clientSlug = '';
+      state.wsPublishUrl = '';
+      state.preLaunchBaseline = { krtSnapshot: null, gscKeywords: null, gscPages: null };
+      state.linkPreservation = { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: {} };
+      state.newPageEvidence = {};
+    }
+    state.domain = newDomain;
     if (!state.domain) {
       alert('Enter the domain you\'re rebuilding.');
       return false;
     }
     if (!state.scoutFile) {
       alert('Drop the scout output file for this domain.');
+      return false;
+    }
+    if (!state.scoutData || !Array.isArray(state.scoutData.pages)) {
+      alert('Scout output was not parsed successfully — re-drop the file. We will not proceed without real scout data.');
+      return false;
+    }
+    if ((state.scoutData.pages || []).length === 0) {
+      alert('Scout file contained no page inventory — re-run /scout for this domain.');
       return false;
     }
     // Freshness check: if stale and not confirmed, block
@@ -1684,6 +1642,14 @@ function validateStep(n) {
     const missing = Object.keys(state.assetDecisions).filter(k => !state.assetDecisions[k].action);
     if (missing.length > 0) {
       alert(`Pick an action for: ${missing.join(', ')}`);
+      return false;
+    }
+    // Real evidence required: at least one asset decision must carry evidence
+    // (i.e., the inheritance probe must have actually returned something).
+    const hasEvidence = Object.values(state.assetDecisions || {})
+      .some(d => d && d.evidence && d.action);
+    if (!hasEvidence) {
+      alert('No asset inheritance evidence captured yet — run the SA inheritance probe before advancing. Do not advance past a failed fetch.');
       return false;
     }
     return true;
@@ -1724,6 +1690,22 @@ function validateStep(n) {
     // HITL acceptance — gated by the Approve button itself; nothing extra here
     return true;
   }
+  if (n === 9) {
+    // Step 9 → 10: real KRT baseline must have been captured.
+    if (!state.preLaunchBaseline?.krtSnapshot?.fetchedAt) {
+      alert('Pre-launch baseline not captured yet — wait for the KRT snapshot to land before advancing. Do not advance past a failed fetch.');
+      return false;
+    }
+    return true;
+  }
+  if (n === 11) {
+    // Step 11 → 12: real WS publish URL must have arrived via SSE.
+    if (!state.wsPublishUrl) {
+      alert('Website Studio publish URL not received yet — wait for ws_publish_project to return before viewing the upgrade summary. Do not advance past a failed publish.');
+      return false;
+    }
+    return true;
+  }
   return true;
 }
 
@@ -1760,10 +1742,15 @@ function setupStep1() {
 }
 
 function handleScoutFile(file) {
-  // Parse just enough to extract a scout_run_date
+  // Read the FULL file (scout outputs can run to a few MB) and POST to
+  // /api/parse-scout for server-side structured parsing. The wizard then
+  // uses the REAL page inventory + content gaps for Steps 2 / 3 / 4.
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     const text = (ev.target.result || '').toString();
+
+    // Quick client-side date detect for the freshness banner — server will
+    // re-parse authoritatively, but this lets us paint the summary immediately.
     const parsedDate = extractScoutRunDate(text);
     const ageDays = parsedDate ? Math.floor((Date.now() - new Date(parsedDate).getTime()) / 86400000) : null;
     let freshnessStatus = 'unknown';
@@ -1777,11 +1764,78 @@ function handleScoutFile(file) {
       freshnessStatus: freshnessStatus,
       freshnessConfirmed: false
     };
+    state.scoutData = null;        // wipe any prior parse
+    state.pageMap = null;          // forces Step 3 to rebuild from the new scout
     persist();
     renderScoutSummary();
+
+    // Show parsing indicator
+    const sum = document.getElementById('scout-summary');
+    if (sum) {
+      let status = document.getElementById('scout-parse-status');
+      if (!status) {
+        status = document.createElement('div');
+        status.id = 'scout-parse-status';
+        status.style.cssText = 'margin-top:10px;font-size:13px;color:#94a3b8;';
+        sum.appendChild(status);
+      }
+      status.textContent = 'Parsing scout output…';
+    }
+
+    try {
+      const res = await fetch('/api/parse-scout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scoutContent: text })
+      });
+      const status = document.getElementById('scout-parse-status');
+      if (res.status === 400) {
+        const body = await res.json().catch(() => ({}));
+        if (status) {
+          status.style.color = '#ef4444';
+          status.textContent = 'Scout file invalid: ' + (body.detail || body.error || 'unrecognized format') + ' — re-run /scout and drop the produced file.';
+        }
+        state.scoutFile = null;       // do NOT let invalid scout proceed
+        persist();
+        return;
+      }
+      if (!res.ok) {
+        if (status) {
+          status.style.color = '#ef4444';
+          status.textContent = 'Server error parsing scout (HTTP ' + res.status + '). Retry the drop.';
+        }
+        state.scoutFile = null;
+        persist();
+        return;
+      }
+      const data = await res.json();
+      state.scoutData = data;
+      // If server got a more authoritative date, use it
+      if (data.scoutRunDate) {
+        const d = data.scoutRunDate;
+        const age = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+        state.scoutFile.parsedDateISO = d;
+        state.scoutFile.ageDays = isNaN(age) ? null : age;
+        state.scoutFile.freshnessStatus = age > 30 ? 'stale' : 'fresh';
+        renderScoutSummary();
+      }
+      persist();
+      if (status) {
+        status.style.color = '#10b981';
+        status.textContent = 'Scout parsed — ' + (data.pages || []).length + ' pages, ' + (data.contentGaps || []).length + ' content gaps, ' + (data.keywords || []).length + ' tracked keywords.';
+      }
+    } catch (e) {
+      const status = document.getElementById('scout-parse-status');
+      if (status) {
+        status.style.color = '#ef4444';
+        status.textContent = 'Connection error parsing scout: ' + (e.message || e);
+      }
+      state.scoutFile = null;
+      persist();
+    }
   };
-  // Read first 64KB only — enough to find frontmatter/meta tags
-  reader.readAsText(file.slice(0, 65536));
+  // Read full file so we can extract every page in the inventory.
+  reader.readAsText(file);
 }
 
 function extractScoutRunDate(text) {
@@ -1827,21 +1881,131 @@ function formatSize(bytes) {
 }
 
 // ────────────────────────────────────────────────────────────
-// STEP 2 — SA Asset Inheritance
+// STEP 2 — SA Asset Inheritance (REAL DATA via /api/asset-inheritance)
 // ────────────────────────────────────────────────────────────
-function runAssetInheritance() {
-  // Simulate parallel pull. Fade in the cards.
+async function runAssetInheritance() {
   const loading = document.getElementById('detect-loading');
   const results = document.getElementById('detect-results');
   loading.style.display = 'block';
   results.style.display = 'none';
 
-  setTimeout(() => {
+  // Show descriptive loading text if the element supports it
+  const loadingText = loading.querySelector('.detect-loading-text') || loading;
+  const originalLoadingText = loadingText.textContent;
+  loadingText.textContent = 'Calling Search Atlas — checking for existing OTTO, Brand Vault, GBP, PPC, and LLM Visibility records for ' + (state.domain || 'this domain') + '…';
+
+  // Reset any prior error block
+  removeAssetErrorBlock();
+
+  if (!state.domain) {
+    showAssetError('Missing domain — go back to Step 1 and enter the domain you are rebuilding.', false);
+    loading.style.display = 'none';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/asset-inheritance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: state.domain })
+    });
+
+    if (res.status === 401) {
+      loading.style.display = 'none';
+      showAuthRequiredModal();
+      showAssetError('Search Atlas authentication required. Open Claude.ai → /mcp and reconnect the SearchAtlas connector, then retry.', true);
+      return;
+    }
+    if (res.status === 502) {
+      loading.style.display = 'none';
+      showAssetError('Search Atlas MCP did not make any tool calls. This usually means the connector is not configured. Open Search Atlas to verify.', true);
+      return;
+    }
+    if (res.status === 504) {
+      loading.style.display = 'none';
+      showAssetError('Search Atlas probe timed out after 3 minutes. Retry — the MCP may have been slow to wake.', true);
+      return;
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      loading.style.display = 'none';
+      showAssetError('Asset probe failed (HTTP ' + res.status + '). ' + (body.slice(0, 200) || ''), true);
+      return;
+    }
+
+    const data = await res.json();
+    const result = data.result || {};
+
+    // Map server response into state.detect (found/missing) + carry real IDs
+    const keys = ['otto', 'bv', 'gbp', 'ppc', 'llmv'];
+    keys.forEach(k => {
+      const entry = result[k] || {};
+      state.detect[k] = entry.found ? 'found' : 'missing';
+      // Stash real IDs/details so they can be surfaced in the UI + sent to the rebuild prompt
+      state.assetDecisions[k] = state.assetDecisions[k] || { action: null, edits: {} };
+      state.assetDecisions[k].evidence = entry;
+    });
+    persist();
+
+    loadingText.textContent = originalLoadingText;
     loading.style.display = 'none';
     results.style.display = 'block';
     renderDetectCards();
     renderAssetPanel();
-  }, 700);
+    renderAssetEvidence();
+  } catch (e) {
+    loading.style.display = 'none';
+    showAssetError('Connection error reaching the wizard server: ' + (e.message || e), true);
+  }
+}
+
+function showAssetError(message, allowRetry) {
+  const results = document.getElementById('detect-results');
+  if (!results) return;
+  removeAssetErrorBlock();
+  const block = document.createElement('div');
+  block.id = 'asset-error-block';
+  block.className = 'callout warning';
+  block.style.cssText = 'margin:14px 0;padding:12px;border:1px solid #d97706;border-radius:8px;background:rgba(217,119,6,0.08);';
+  block.innerHTML = '<strong>Search Atlas probe blocked.</strong><br>' +
+    '<span>' + message.replace(/</g, '&lt;') + '</span><br>' +
+    (allowRetry ? '<button type="button" class="btn ghost" onclick="runAssetInheritance()" style="margin-top:8px;">Retry probe</button> ' : '') +
+    '<a href="https://searchatlas.com" target="_blank" rel="noopener" class="btn ghost" style="margin-top:8px;">Open Search Atlas</a>';
+  // Insert before existing results
+  const parent = results.parentNode || document.body;
+  parent.insertBefore(block, results);
+  results.style.display = 'none';
+}
+
+function removeAssetErrorBlock() {
+  const existing = document.getElementById('asset-error-block');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+}
+
+function renderAssetEvidence() {
+  // Surface the real IDs/details under each asset row so the operator can verify
+  // they're looking at the right record. No-op if no evidence captured.
+  const rows = document.getElementById('asset-rows');
+  if (!rows) return;
+  Object.keys(ASSET_META).forEach(key => {
+    const ev = (state.assetDecisions[key] && state.assetDecisions[key].evidence) || null;
+    if (!ev || !ev.found) return;
+    const editor = rows.querySelector('.asset-editor[data-key="' + key + '"]');
+    if (!editor) return;
+    let line = '';
+    if (key === 'otto') line = (ev.project_name ? ev.project_name : '') + (ev.project_id ? ' · ' + ev.project_id : '');
+    else if (key === 'bv') line = (ev.vault_name ? ev.vault_name : '') + (ev.vault_id ? ' · ' + ev.vault_id : '');
+    else if (key === 'gbp') line = (ev.name ? ev.name : '') + (ev.city ? ' · ' + ev.city : '');
+    else if (key === 'ppc') line = (ev.name ? ev.name : '') + (ev.business_id ? ' · ' + ev.business_id : '');
+    else if (key === 'llmv') line = (ev.project_name ? ev.project_name : '') + (ev.project_id ? ' · ' + ev.project_id : '');
+    if (line.trim()) {
+      const meta = document.createElement('div');
+      meta.className = 'asset-evidence';
+      meta.style.cssText = 'font-size:12px;color:#94a3b8;margin:4px 0 6px 8px;';
+      meta.textContent = 'Found: ' + line.trim();
+      editor.parentNode.insertBefore(meta, editor);
+    }
+  });
 }
 
 function renderDetectCards() {
@@ -2118,6 +2282,131 @@ function getNewPages() {
   return (state.pageMap || []).filter(p => p.action === 'new');
 }
 
+async function fetchNewPageEvidence(needsEvidence) {
+  state._evidenceFetchInFlight = true;
+  setEvidenceStatus('Calling Search Atlas — researching ' + needsEvidence.length + ' NEW page candidate' + (needsEvidence.length === 1 ? '' : 's') + ' (volume, difficulty, competitors, SERP features, subtopics)…', 'pending');
+
+  const candidates = needsEvidence.map(p => ({
+    slug: p.slug,
+    targetKw: (p.keywords && p.keywords[0] && p.keywords[0].kw) || p.title || p.slug
+  }));
+
+  // Use real competitors if scoutData has them
+  const competitors = ((state.scoutData || {}).competitors) || [];
+
+  try {
+    const res = await fetch('/api/new-page-evidence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        domain: state.domain,
+        newPageCandidates: candidates,
+        competitors: competitors
+      })
+    });
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => '');
+      setEvidenceStatus('Server error fetching evidence (HTTP ' + res.status + '). ' + txt.slice(0, 120), 'error');
+      state._evidenceFetchInFlight = false;
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buffer = '';
+    let resultMerged = null;
+    let authErr = false;
+    let noTools = false;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += dec.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        if (!raw) continue;
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.type === 'work') {
+          setEvidenceStatus(evt.label, 'pending');
+          // Mirror into the activity feed if present
+          appendFeedItem('work', evt.label);
+        } else if (evt.type === 'done') {
+          appendFeedItem('done', evt.label || 'Step complete');
+        } else if (evt.type === 'error') {
+          if ((evt.message || '').toLowerCase().includes('authentication')) {
+            authErr = true;
+          } else if ((evt.message || '').toLowerCase().includes('no_tool_calls')) {
+            noTools = true;
+          } else {
+            setEvidenceStatus('Error: ' + (evt.message || 'unknown'), 'error');
+          }
+        } else if (evt.type === 'result') {
+          resultMerged = evt.evidence || {};
+        }
+      }
+    }
+
+    if (authErr) {
+      showAuthRequiredModal();
+      setEvidenceStatus('Authentication required for Search Atlas. Reconnect and retry.', 'error');
+      state._evidenceFetchInFlight = false;
+      return;
+    }
+    if (noTools) {
+      setEvidenceStatus('Search Atlas did not invoke any tools. Connector may be misconfigured.', 'error');
+      state._evidenceFetchInFlight = false;
+      return;
+    }
+    if (resultMerged && typeof resultMerged === 'object') {
+      Object.keys(resultMerged).forEach(slug => {
+        state.newPageEvidence[slug] = resultMerged[slug];
+      });
+      persist();
+      setEvidenceStatus('Evidence captured for ' + Object.keys(resultMerged).length + ' candidate' + (Object.keys(resultMerged).length === 1 ? '' : 's') + '.', 'success');
+      state._evidenceFetchInFlight = false;
+      renderNewPageWalkthrough();
+    } else {
+      setEvidenceStatus('Stream ended without a result. Retry.', 'error');
+      state._evidenceFetchInFlight = false;
+    }
+  } catch (e) {
+    setEvidenceStatus('Connection error: ' + (e.message || e), 'error');
+    state._evidenceFetchInFlight = false;
+  }
+}
+
+function setEvidenceStatus(text, level) {
+  const container = document.getElementById('new-page-walkthrough-cards');
+  if (!container) return;
+  let banner = document.getElementById('new-page-evidence-status');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'new-page-evidence-status';
+    banner.style.cssText = 'margin:0 0 12px 0;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid;';
+    container.parentNode.insertBefore(banner, container);
+  }
+  if (level === 'error') {
+    banner.style.borderColor = '#ef4444';
+    banner.style.background = 'rgba(239,68,68,0.08)';
+    banner.style.color = '#fca5a5';
+    banner.innerHTML = text + ' <button type="button" class="btn ghost" style="margin-left:8px;padding:2px 8px;font-size:11px;" onclick="state.newPageEvidence={};state._evidenceFetchInFlight=false;renderNewPageWalkthrough();">Retry</button>';
+  } else if (level === 'success') {
+    banner.style.borderColor = '#10b981';
+    banner.style.background = 'rgba(16,185,129,0.08)';
+    banner.style.color = '#6ee7b7';
+    banner.textContent = text;
+  } else {
+    banner.style.borderColor = '#3b82f6';
+    banner.style.background = 'rgba(59,130,246,0.08)';
+    banner.style.color = '#93c5fd';
+    banner.textContent = text;
+  }
+}
+
 function buildAsciiTree(page, idx, total) {
   const tierLabel = {
     core: 'core/', service: 'services/', location: 'locations/',
@@ -2146,6 +2435,37 @@ function renderNewPageWalkthrough() {
     return;
   }
 
+  // Real-evidence enrichment: fire /api/new-page-evidence the first time
+  // we land on this step with NEW pages that lack evidence.
+  if (!state.newPageEvidence) state.newPageEvidence = {};
+  const needsEvidence = pages.filter(p => !state.newPageEvidence[p.slug]);
+  if (needsEvidence.length && !state._evidenceFetchInFlight) {
+    fetchNewPageEvidence(needsEvidence);
+  }
+  // Apply already-captured evidence onto the page objects (so the existing
+  // render code below picks them up without modification).
+  pages.forEach(p => {
+    const ev = state.newPageEvidence[p.slug];
+    if (!ev) return;
+    if (!p.keywords || p.keywords.length === 0) {
+      p.keywords = [{
+        kw: ev.primaryKw || p.slug,
+        vol: ev.volume ?? null,
+        intent: ev.intent || '—',
+        difficulty: ev.difficulty ?? null
+      }];
+    }
+    if (!p.competitorEvidence && ev.competitorEvidence) {
+      p.competitorEvidence = ev.competitorEvidence;
+    }
+    if ((!p.serpFeatures || !p.serpFeatures.length) && ev.serpFeatures) {
+      p.serpFeatures = ev.serpFeatures;
+    }
+    if (!p.contentGap && ev.serpType) {
+      p.contentGap = 'SERP type: ' + ev.serpType + '. Subtopics: ' + (ev.subtopics || []).slice(0, 4).join(', ');
+    }
+  });
+
   container.innerHTML = '';
   pages.forEach((p, idx) => {
     const slug = p.slug || ('new-' + idx);
@@ -2155,7 +2475,7 @@ function renderNewPageWalkthrough() {
     card.dataset.slug = slug;
 
     const tree = buildAsciiTree(p, idx, pages.length);
-    const keywordsText = (p.keywords || []).map(k => `${k.kw} · ${k.vol} vol · ${k.intent} · KD ${k.difficulty}`).join('\n');
+    const keywordsText = (p.keywords || []).map(k => `${k.kw} · ${k.vol == null ? '—' : k.vol} vol · ${k.intent} · KD ${k.difficulty == null ? '—' : k.difficulty}`).join('\n');
     const competitorsText = p.competitorEvidence && p.competitorEvidence.count > 0
       ? `${p.competitorEvidence.count} of 4 competitors have this — ${p.competitorEvidence.examples.join(', ')}`
       : 'No competitors target this — gap opportunity.';
@@ -2189,7 +2509,7 @@ function renderNewPageWalkthrough() {
           <div class="page-expand-heading">Target keywords (vol · intent · difficulty)</div>
           ${(p.keywords || []).length === 0
             ? '<div class="page-expand-row"><span class="ev">— no targeted keywords on file</span></div>'
-            : (p.keywords || []).map(k => `<div class="page-expand-row"><span class="ek">${k.kw}</span><span class="ev">${k.vol.toLocaleString()} vol · ${k.intent} · KD ${k.difficulty}</span></div>`).join('')
+            : (p.keywords || []).map(k => `<div class="page-expand-row"><span class="ek">${k.kw}</span><span class="ev">${k.vol == null ? '—' : k.vol.toLocaleString()} vol · ${k.intent} · KD ${k.difficulty == null ? '—' : k.difficulty}</span></div>`).join('')
           }
         </div>
 
@@ -2383,8 +2703,7 @@ function renderBrandStrategy() {
 // STEP 6 — New design style
 // ────────────────────────────────────────────────────────────
 function setupDesignStyleStep() {
-  document.getElementById('old-style-name').textContent = ARCHETYPES[state.oldStyle]?.name || 'Modern Minimal';
-
+  // No old-style comparison — operator just picks the new style.
   document.querySelectorAll('#archetype-grid .archetype-card').forEach(card => {
     const arch = card.dataset.arch;
     card.classList.toggle('selected', arch === state.newStyle);
@@ -2394,15 +2713,8 @@ function setupDesignStyleStep() {
       document.querySelectorAll('#archetype-grid .archetype-card').forEach(c => {
         c.classList.toggle('selected', c.dataset.arch === arch);
       });
-      // Same-style warning
-      const sameWarn = document.getElementById('same-style-warn');
-      sameWarn.style.display = (arch === state.oldStyle) ? 'block' : 'none';
     };
   });
-
-  // Initial warning state
-  document.getElementById('same-style-warn').style.display =
-    (state.newStyle && state.newStyle === state.oldStyle) ? 'block' : 'none';
 }
 
 // ────────────────────────────────────────────────────────────
@@ -2459,8 +2771,6 @@ function renderHtmlList() {
 function renderHITLSummary() {
   const sf = state.scoutFile || {};
   const newArch = ARCHETYPES[state.newStyle] || { name: '—' };
-  const oldArch = ARCHETYPES[state.oldStyle] || { name: '—' };
-  const styleChanged = state.newStyle && state.newStyle !== state.oldStyle;
 
   // Page rebuild counts
   const counts = { keep_redesign: 0, keep_rewrite: 0, merge: 0, delete: 0, new: 0 };
@@ -2469,8 +2779,16 @@ function renderHITLSummary() {
   const totalPages = (state.pageMap || []).filter(p => !p.isGap).length;
   const redirectCount = counts.delete + counts.merge;
 
-  // Pillar baseline (synthetic — would come from scout in real run)
-  const pillars = { technical: 64, content: 48, authority: 71, ux: 53 };
+  // Pillar baseline — read from real scout output (server extracts via _extract_otto_pillars).
+  // If a value is missing, render an em-dash, NEVER a hardcoded default.
+  const pillarsSrc = state.scoutData?.ottoPillars || {};
+  const pillarVal = (k) => (typeof pillarsSrc[k] === 'number') ? pillarsSrc[k] : '—';
+  const pillars = {
+    technical: pillarVal('technical'),
+    content:   pillarVal('content'),
+    authority: pillarVal('authority'),
+    ux:        pillarVal('ux')
+  };
 
   // NEW-page approval tally (Step 4)
   const newPages = (state.pageMap || []).filter(p => p.action === 'new');
@@ -2494,7 +2812,6 @@ function renderHITLSummary() {
   if (sf.freshnessStatus === 'stale') issues.push(`Scout report is ${sf.ageDays} days old — operator proceeded anyway`);
   if (sf.freshnessStatus === 'unknown') issues.push('Scout run date not parseable from file');
   if (counts.delete + counts.merge > totalPages * 0.4) issues.push(`Heavy pruning — ${counts.delete + counts.merge}/${totalPages} pages dropping`);
-  if (state.newStyle === state.oldStyle) issues.push('Same design style as current site — confirm this is a rebuild not a refresh');
   if (state.assetDecisions.bv?.action === 'reject_fresh') issues.push('Brand Vault rejected — new BV scaffolded alongside old');
   if (!state.brandStrategy.voice && state.assetDecisions.bv?.action !== 'use') issues.push('Brand strategy voice left blank');
   if (npPending > 0) issues.push(`${npPending} NEW page${npPending === 1 ? '' : 's'} still pending decision`);
@@ -2543,15 +2860,12 @@ function renderHITLSummary() {
     </div>
     <div class="hitl-section">
       <div class="hitl-heading">Design</div>
-      <div class="hitl-row"><div class="hitl-key">Old style</div><div class="hitl-val">${oldArch.name}</div></div>
-      <div class="hitl-row"><div class="hitl-key">New style</div><div class="hitl-val">${newArch.name}${styleChanged ? '<span class="changed-badge">Changed</span>' : ''}</div></div>
-      <div class="hitl-row"><div class="hitl-key">Theme</div><div class="hitl-val">Generated · pending client signoff</div></div>
+      <div class="hitl-row"><div class="hitl-key">New style</div><div class="hitl-val">${newArch.name}</div></div>
     </div>
     <div class="hitl-section">
       <div class="hitl-heading">Migration plan</div>
       <div class="hitl-row"><div class="hitl-key">Redirect table</div><div class="hitl-val">${redirectCount} entries</div></div>
-      <div class="hitl-row"><div class="hitl-key">DNS strategy</div><div class="hitl-val">In-place Website Studio replacement</div></div>
-      <div class="hitl-row"><div class="hitl-key">Rollback</div><div class="hitl-val">Website Studio version history · 7-day window</div></div>
+      <div class="hitl-row"><div class="hitl-key">DNS strategy</div><div class="hitl-val">${state.hostingMode === 'ws' ? 'In-place Website Studio replacement' : 'DNS cutover required — operator points custom domain at WS'}</div></div>
     </div>
     <div class="hitl-section">
       <div class="hitl-heading">Issues flagged</div>
@@ -2586,13 +2900,81 @@ let streamState = {
   failed: false
 };
 
-function runLinkPreservationStatic() {
-  // No simulated pulse — surface the captured state if present, else leave
-  // the static "preserving link equity" copy in place. The real link
-  // preservation tools fire during the SSE stream in Phase 2.
-  const items = document.querySelectorAll('#link-preservation-list .build-item');
-  if (!items.length) return;
-  items.forEach(i => i.classList.add('done'));
+async function runLinkPreservationStatic() {
+  // REAL link-preservation fetch. Selects every high-Authority Keep page from
+  // the page map and asks /api/link-preservation to capture anchor text +
+  // referring domains + the internal link graph via the Search Atlas MCP.
+  const list = document.getElementById('link-preservation-list');
+  const items = list ? list.querySelectorAll('.build-item') : [];
+
+  if (!state.domain || !Array.isArray(state.pageMap)) {
+    items.forEach(i => i.classList.add('done'));
+    return;
+  }
+
+  // Pick high-authority Keep targets (authority >= 50 + action keep_*)
+  const candidates = state.pageMap
+    .filter(p => !p.isGap && p.url && (p.action === 'keep_redesign' || p.action === 'keep_rewrite'))
+    .filter(p => Number(p.authority || 0) >= 50)
+    .slice(0, 25)
+    .map(p => ({ url: p.url }));
+
+  if (candidates.length === 0) {
+    // Nothing to preserve — render that honestly
+    state.linkPreservation = { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: { nodes: 0, edges: 0 } };
+    persist();
+    items.forEach(i => i.classList.add('done'));
+    appendLinkPreservationNote('No high-Authority Keep pages in the map — nothing to preserve.');
+    return;
+  }
+
+  appendLinkPreservationNote('Calling Search Atlas for anchor text + referring domains across ' + candidates.length + ' high-Authority Keep page' + (candidates.length === 1 ? '' : 's') + '…');
+
+  try {
+    const res = await fetch('/api/link-preservation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: state.domain, highAuthorityPages: candidates })
+    });
+    if (res.status === 401) {
+      showAuthRequiredModal();
+      appendLinkPreservationNote('Authentication required — open Claude.ai → /mcp and reconnect SearchAtlas. The static rebuild prompt will retry the same calls during execution.', 'error');
+      return;
+    }
+    if (res.status === 502 || res.status === 504) {
+      appendLinkPreservationNote('Search Atlas link-preservation probe failed (' + res.status + '). Retry — the rebuild stream will retry too.', 'error');
+      return;
+    }
+    if (!res.ok) {
+      appendLinkPreservationNote('Server error (' + res.status + '). Retry.', 'error');
+      return;
+    }
+    const data = await res.json();
+    state.linkPreservation = data.result || { anchorByUrl: {}, refDomainsByUrl: {}, linkGraph: {} };
+    persist();
+    items.forEach(i => i.classList.add('done'));
+    const anchors = Object.keys(state.linkPreservation.anchorByUrl || {}).length;
+    const refs = Object.keys(state.linkPreservation.refDomainsByUrl || {}).length;
+    const nodes = (state.linkPreservation.linkGraph || {}).nodes || 0;
+    appendLinkPreservationNote('Captured: anchors for ' + anchors + ' page' + (anchors === 1 ? '' : 's') + ' · referring domains for ' + refs + ' page' + (refs === 1 ? '' : 's') + ' · link graph with ' + nodes + ' nodes.', 'success');
+  } catch (e) {
+    appendLinkPreservationNote('Connection error: ' + (e.message || e), 'error');
+  }
+}
+
+function appendLinkPreservationNote(text, level) {
+  const list = document.getElementById('link-preservation-list');
+  if (!list) return;
+  let note = document.getElementById('link-preservation-note');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'link-preservation-note';
+    note.style.cssText = 'margin-top:10px;font-size:13px;color:#94a3b8;';
+    list.parentNode.appendChild(note);
+  }
+  const color = level === 'error' ? '#ef4444' : (level === 'success' ? '#10b981' : '#94a3b8');
+  note.style.color = color;
+  note.textContent = text;
 }
 
 function onEnterStep9() {
@@ -2608,8 +2990,104 @@ function onEnterStep9() {
 function onEnterStep10() {
   // Step 10 — Pre-launch baseline. Renders recap from preLaunchBaseline state.
   renderBaselineRecap();
+  fetchPreLaunchBaseline();
   const btn = document.getElementById('step10-next');
   if (btn) btn.disabled = !streamState.baselineCaptured;
+}
+
+async function fetchPreLaunchBaseline() {
+  // REAL pre-launch baseline via /api/pre-launch-baseline. Pulls KRT rankings
+  // + GSC 28-day keyword/page performance against the OLD domain so Phase 7
+  // can compute a real delta.
+  if (!state.domain) return;
+  if (state._baselineFetchInFlight) return;
+  if (state.preLaunchBaseline && state.preLaunchBaseline.krtSnapshot && state.preLaunchBaseline.krtSnapshot.trackedKeywords !== undefined && state.preLaunchBaseline.gscKeywords && state.preLaunchBaseline.gscKeywords.totalKeywords !== undefined) {
+    // Already captured (real data) — keep
+    return;
+  }
+
+  state._baselineFetchInFlight = true;
+  setBaselineStatus('Calling Search Atlas — capturing KRT rankings + GSC 28-day performance for ' + state.domain + '…', 'pending');
+
+  // Pass any operator-known keywords from scoutData
+  const trackedKeywords = ((state.scoutData || {}).keywords || []).map(k => k.keyword).filter(Boolean).slice(0, 80);
+
+  try {
+    const res = await fetch('/api/pre-launch-baseline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: state.domain, trackedKeywords })
+    });
+    if (res.status === 401) {
+      showAuthRequiredModal();
+      setBaselineStatus('Search Atlas authentication required.', 'error');
+      state._baselineFetchInFlight = false;
+      return;
+    }
+    if (res.status === 502 || res.status === 504) {
+      setBaselineStatus('Baseline probe failed (' + res.status + '). Retry — the rebuild stream will retry too.', 'error');
+      state._baselineFetchInFlight = false;
+      return;
+    }
+    if (!res.ok) {
+      setBaselineStatus('Server error (' + res.status + ').', 'error');
+      state._baselineFetchInFlight = false;
+      return;
+    }
+    const data = await res.json();
+    state.preLaunchBaseline = data.result || {};
+    persist();
+    setBaselineStatus('Baseline captured.', 'success');
+    state._baselineFetchInFlight = false;
+    streamState.baselineCaptured = true;
+    const btn = document.getElementById('step10-next');
+    if (btn) btn.disabled = false;
+    renderBaselineRecap();
+  } catch (e) {
+    setBaselineStatus('Connection error: ' + (e.message || e), 'error');
+    state._baselineFetchInFlight = false;
+  }
+}
+
+function setBaselineStatus(text, level) {
+  const list = document.getElementById('baseline-list');
+  if (!list) return;
+  let banner = document.getElementById('baseline-status-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'baseline-status-banner';
+    banner.style.cssText = 'margin:10px 0;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid;';
+    list.parentNode.insertBefore(banner, list);
+  }
+  const colors = { pending: ['#3b82f6', '#93c5fd', 'rgba(59,130,246,0.08)'], success: ['#10b981', '#6ee7b7', 'rgba(16,185,129,0.08)'], error: ['#ef4444', '#fca5a5', 'rgba(239,68,68,0.08)'] };
+  const [b, c, bg] = colors[level] || colors.pending;
+  banner.style.borderColor = b;
+  banner.style.color = c;
+  banner.style.background = bg;
+  if (level === 'error') {
+    banner.innerHTML = text + ' <button type="button" class="btn ghost" style="margin-left:8px;padding:2px 8px;font-size:11px;" onclick="state.preLaunchBaseline=null;state._baselineFetchInFlight=false;fetchPreLaunchBaseline();">Retry</button>';
+  } else {
+    banner.textContent = text;
+  }
+
+  // Render real numbers under the list when success
+  if (level === 'success' && state.preLaunchBaseline) {
+    let detail = document.getElementById('baseline-detail');
+    if (!detail) {
+      detail = document.createElement('div');
+      detail.id = 'baseline-detail';
+      detail.style.cssText = 'margin-top:10px;font-size:13px;color:#cbd5e1;';
+      list.parentNode.appendChild(detail);
+    }
+    const krt = state.preLaunchBaseline.krtSnapshot || {};
+    const gk = state.preLaunchBaseline.gscKeywords || {};
+    const gp = state.preLaunchBaseline.gscPages || {};
+    const fmt = v => (v === null || v === undefined || v === '') ? '—' : v;
+    detail.innerHTML =
+      '<div>KRT tracked keywords: <strong>' + fmt(krt.trackedKeywords) + '</strong></div>' +
+      '<div>GSC keywords (28d): <strong>' + fmt(gk.totalKeywords) + '</strong> · clicks: <strong>' + fmt(gk.totalClicks) + '</strong> · impressions: <strong>' + fmt(gk.totalImpressions) + '</strong></div>' +
+      '<div>GSC pages (28d): <strong>' + fmt(gp.totalPages) + '</strong> · clicks: <strong>' + fmt(gp.totalClicks) + '</strong> · impressions: <strong>' + fmt(gp.totalImpressions) + '</strong></div>';
+  }
 }
 
 function onEnterStep11() {
@@ -2696,7 +3174,6 @@ function buildPayload() {
     })),
     newPageDecisions: state.newPageDecisions || {},
     brandStrategy: state.brandStrategy || {},
-    oldStyle: state.oldStyle || '',
     newStyle: state.newStyle || '',
     scoutHtmlPages: (state.scoutHtmlPages || []).map(p => ({
       filename: p.filename, size: p.size
@@ -2778,16 +3255,10 @@ function handleStreamEvent(raw) {
     const lbl = (evt.label || '').toLowerCase();
     if (lbl.includes('baseline')) {
       streamState.baselineCaptured = true;
-      // Seed preLaunchBaseline with a placeholder so Step 12 has something
-      // to count — real data lives in the Claude artifacts on disk.
-      if (!state.preLaunchBaseline || !state.preLaunchBaseline.krtSnapshot) {
-        state.preLaunchBaseline = {
-          krtSnapshot: { trackedKeywords: state.preLaunchBaseline?.krtSnapshot?.trackedKeywords || 48 },
-          gscKeywords: { window: '28d' },
-          gscPages: { window: '28d' }
-        };
-        persist();
-      }
+      // Do NOT seed synthetic baseline data here. The real KRT/GSC capture
+      // happens via /api/pre-launch-baseline on Step 10 entry, and the
+      // running rebuild stream re-fires the same calls. Missing values
+      // render as "—" rather than fabricated numbers.
       const btn9 = document.getElementById('step9-next');
       if (btn9) btn9.disabled = false;
       const btn10 = document.getElementById('step10-next');
@@ -2809,15 +3280,41 @@ function handleStreamEvent(raw) {
   } else if (evt.type === 'error') {
     appendFeedItem('error', evt.message || 'Unknown error');
     streamState.failed = true;
+    if (evt.message === 'authentication_required' && typeof showAuthRequiredModal === 'function') {
+      showAuthRequiredModal();
+    }
+  } else if (evt.type === 'ws_published') {
+    // Real WS publish URL captured from ws_publish_project's tool_result.
+    // This is the ONLY path that may populate state.wsPublishUrl; never
+    // derive it client-side.
+    if (evt.url) {
+      state.wsPublishUrl = evt.url;
+      persist();
+      appendFeedItem('done', evt.label || `Site published · ${evt.url}`);
+    }
   } else if (evt.type === 'complete') {
-    appendFeedItem('complete', 'Rebuild complete — site is live.');
+    appendFeedItem('complete', state.wsPublishUrl
+      ? `Rebuild complete — site live at ${state.wsPublishUrl}`
+      : 'Rebuild planning complete.');
     streamState.baselineCaptured = true;
     const btn9 = document.getElementById('step9-next');
     const btn10 = document.getElementById('step10-next');
     const btn11 = document.getElementById('step11-next');
     if (btn9) btn9.disabled = false;
     if (btn10) btn10.disabled = false;
-    if (btn11) btn11.disabled = false;
+    if (btn11) {
+      btn11.disabled = false;
+      // Only claim "Site is live" if a real WS publish URL was captured.
+      btn11.textContent = state.wsPublishUrl
+        ? 'Site is live · view upgrade summary →'
+        : 'View summary →';
+    }
+  } else if (evt.type === 'incomplete') {
+    // Publish was attempted but ws_publish_project did not return a URL.
+    // Do NOT mark the run as complete; the operator must see the real reason.
+    appendFeedItem('error',
+      `Migration incomplete — ${evt.message || 'ws_publish_project did not return a URL'}. The site was NOT published.`);
+    streamState.failed = true;
   }
   updateRunStats();
 }
@@ -2936,28 +3433,36 @@ function buildBeforeAfterRows() {
   const gapsClosed = Object.entries(state.newPageDecisions || {})
     .filter(([slug, d]) => d && (d.decision === 'approve' || d.decision === 'edit')).length;
 
-  // Schema — synthetic-but-plausible baseline: 3 of N pages had schema
-  const schemaBefore = `3 of ${totalBefore} pages`;
-  const schemaAfter  = `${totalAfter} of ${totalAfter} pages (all)`;
+  // Schema — no synthetic baseline. Until a real source is wired we render '—'.
+  const schemaBefore = `—`;
+  // FAB-fix: schemaPlanned reports HOW MANY pages are queued for schema deploy
+  // (Keep+rewrite + Keep+redesign + New = everything not deleted), not a
+  // confirmed success number. The "X of X pages (all)" claim was fabrication.
+  const schemaPlanned = totalAfter;
 
-  // Design style
-  const oldArch = ARCHETYPES[state.oldStyle] || { name: state.oldStyle || '—' };
+  // FAB-fix: thinRewritePlanned is the count of pages the operator decided to
+  // rewrite — these will be rewritten as part of the build but we have no
+  // per-page confirmation signal yet, so we report it as planned, not done.
+  const thinRewritePlanned = (state.pageMap || [])
+    .filter(p => p && (p.action === 'keep_rewrite' || p.action === 'merge'))
+    .length;
+
+  // Design style — only the NEW style is operator-supplied; there is no fabricated
+  // "old style" to compare against. Render the new pick straight.
   const newArch = ARCHETYPES[state.newStyle] || (state.newStyle ? { name: state.newStyle } : null);
-  const styleChanged = state.newStyle && state.newStyle !== state.oldStyle;
-  const designBadge = state.newStyle
-    ? (styleChanged
-        ? '<span class="ba-badge ba-badge-changed">CHANGED</span>'
-        : '<span class="ba-badge ba-badge-same">SAME</span>')
-    : '';
 
   // Link equity — count URLs we explicitly captured anchor/refdomain data for
   const linkPreservedCount = Object.keys(state.linkPreservation?.anchorByUrl || {}).length;
 
-  // Tracked keywords (from pre-launch baseline)
-  const trackedKw = state.preLaunchBaseline?.krtSnapshot?.trackedKeywords ?? 48;
+  // Tracked keywords (from pre-launch baseline). NEVER default to a literal number —
+  // if KRT capture hasn't happened, show an awaiting state.
+  const trackedKw = state.preLaunchBaseline?.krtSnapshot?.trackedKeywords ?? null;
 
-  // Scout's pillar baseline (synthetic — matches Coastal Dental demo)
-  const pillarBefore = 'Tech 64 · Content 48 · Authority 71 · UX 53';
+  // Pillar baseline — read from real scout output (server extracts via _extract_otto_pillars).
+  // If a value is missing, render an em-dash, NEVER a hardcoded default.
+  const pillarsSrc = state.scoutData?.ottoPillars || {};
+  const pv = (k) => (typeof pillarsSrc[k] === 'number') ? pillarsSrc[k] : '—';
+  const pillarBefore = `Tech ${pv('technical')} · Content ${pv('content')} · Authority ${pv('authority')} · UX ${pv('ux')}`;
 
   // Top issues — scout typically surfaces a count; use thin + orphan as the proxy
   const issuesBefore = thinBefore + orphanBefore + gapsBefore;
@@ -2971,17 +3476,26 @@ function buildBeforeAfterRows() {
     {
       label: 'Thin content pages',
       before: `<span class="ba-num">${thinBefore}</span> <span class="ba-sub">content score &lt; 40</span>`,
-      after:  `<span class="ba-num ba-num-after">0</span> <span class="ba-sub">rewritten or deleted</span>`
+      // FAB-fix: only claim "0 rewritten" if we have positive proof every thin
+      // page was rewritten. We don't capture per-page rewrite confirmation
+      // signals yet, so show the operator's planned action instead of a
+      // fabricated success number.
+      after:  `<span class="ba-sub">${thinRewritePlanned} planned for rewrite — confirm in <code>/run-seo</code> next cycle</span>`
     },
     {
       label: 'Schema deployed',
       before: `<span class="ba-num">${schemaBefore}</span>`,
-      after:  `<span class="ba-num ba-num-after">${schemaAfter}</span>`
+      // FAB-fix: schemaAfter was hardcoded "${totalAfter} of ${totalAfter}".
+      // Only claim 100% if we have real otto_deploy_page_schema confirmations
+      // for every page. We don't capture that yet, so show planned coverage.
+      after:  `<span class="ba-sub">${schemaPlanned} pages queued for schema deploy</span>`
     },
     {
       label: 'Orphan pages',
       before: `<span class="ba-num">${orphanBefore}</span> <span class="ba-sub">flagged for deletion</span>`,
-      after:  `<span class="ba-num ba-num-after">0</span> <span class="ba-sub">deleted + redirected</span>`
+      // FAB-fix: only claim "0 deleted + redirected" if we have per-URL
+      // 301 confirmations. Show planned action instead.
+      after:  `<span class="ba-sub">${orphanBefore} planned to redirect — sweep verifies post-publish</span>`
     },
     {
       label: 'Content gaps closed',
@@ -2990,8 +3504,8 @@ function buildBeforeAfterRows() {
     },
     {
       label: 'Design style',
-      before: `${oldArch.name || '—'}`,
-      after:  `${newArch ? newArch.name : '—'}${designBadge}`
+      before: `—`,
+      after:  `${newArch ? newArch.name : '—'}`
     },
     {
       label: 'Link equity protected',
@@ -3011,37 +3525,30 @@ function buildBeforeAfterRows() {
     {
       label: 'Indexing',
       before: `Standard Google crawl`,
-      after:  `Instant indexing ON · <span class="ba-num ba-num-after">${totalAfter}</span> URLs batch-submitted`
+      // FAB-fix: only claim "Instant indexing ON" if we have proof that
+      // otto_activate_instant_indexing + indexer_submit_batch actually fired
+      // (state.indexingActivated set from the SSE stream). Otherwise show
+      // planned state and let the operator verify in OTTO.
+      after:  state.indexingActivated
+        ? `Instant indexing ON · <span class="ba-num ba-num-after">${state.indexingActivated.urlsSubmitted || totalAfter}</span> URLs batch-submitted`
+        : `<span class="ba-sub">Indexing activation queued — verify in OTTO after publish</span>`
     },
     {
       label: 'Tracked keywords',
-      before: `<span class="ba-num">${trackedKw}</span> tracked <span class="ba-sub">baseline locked</span>`,
-      after:  `Same <span class="ba-num ba-num-after">${trackedKw}</span> KWs tracked · delta visible in KRT 24-48h`
+      before: trackedKw === null
+        ? `<span class="ba-num">—</span> <span class="ba-sub">Awaiting KRT capture</span>`
+        : `<span class="ba-num">${trackedKw}</span> tracked <span class="ba-sub">baseline locked</span>`,
+      after:  trackedKw === null
+        ? `<span class="ba-sub">Delta visible in KRT once baseline is captured (24-48h post-launch)</span>`
+        : `Same <span class="ba-num ba-num-after">${trackedKw}</span> KWs tracked · delta visible in KRT 24-48h`
     }
   ];
 }
 
-// Derive a WS subdomain slug from the operator's custom domain.
-// NOTE: WS URL format `{slug}.ws.searchatlas.com` is a demo placeholder —
-// the real `ws_publish_project` MCP returns the actual hosted URL; confirm
-// exact format with SA engineering before wiring this to production.
-function deriveClientSlug(domain) {
-  if (!domain) return 'client';
-  const root = String(domain)
-    .replace(/^https?:\/\//, '')
-    .replace(/\/.*$/, '')
-    .replace(/\.[a-z]{2,}(\.[a-z]{2,})?$/i, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  const suffixes = ['dental','clinic','care','law','legal','medical','health','plumbing','roofing','hvac','auto','realty'];
-  for (const s of suffixes) {
-    const re = new RegExp(`([a-z0-9]+)(${s})`);
-    const m = root.match(re);
-    if (m && m[1].length >= 4) return `${m[1]}-${m[2]}`;
-  }
-  return root || 'client';
-}
+/* R-C: deriveClientSlug() was removed 2026-05-20 — it could re-introduce
+   the `${slug}.ws.searchatlas.com` fabrication vector. The only path to a
+   WS URL is the real ws_published SSE event from /api/build (or the
+   /rebuild migration handler). Do NOT re-add a client-side slug deriver. */
 
 function renderBeforeAfter() {
   const host = document.getElementById('ba-rows');
@@ -3055,20 +3562,16 @@ function renderBeforeAfter() {
     </div>
   `).join('');
 
-  // Surface BOTH URLs at workflow end. Two cases:
-  //   - hostingMode === 'ws'       → in-place replacement: custom domain works immediately,
-  //                                  WS URL still exists as backup but custom domain is primary
-  //   - hostingMode === 'external' → DNS cutover needed: WS URL is the only thing that
-  //                                  resolves at T+0, custom domain shown as pending
-  // Default for the demo is 'external' (more common + more honest about cutover latency).
-  const domain = (state.domain || 'example.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const slug = state.clientSlug || deriveClientSlug(domain);
-  const wsPublishUrl = `${slug}.ws.searchatlas.com`;
-  state.wsPublishUrl = wsPublishUrl;
+  // Surface BOTH URLs at workflow end. The WS URL is ONLY captured from a real
+  // ws_published SSE event emitted by the bridge after ws_publish_project returned.
+  // If state.wsPublishUrl is empty, do NOT fabricate one from the slug — show a
+  // pending placeholder.
+  const domain = (state.domain || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const wsPublishUrl = state.wsPublishUrl || '';
   const hostingMode = state.hostingMode || 'external';
 
-  const wsUrl = 'https://' + wsPublishUrl;
-  const customUrl = 'https://' + domain;
+  const wsUrl = wsPublishUrl ? (/^https?:\/\//.test(wsPublishUrl) ? wsPublishUrl : 'https://' + wsPublishUrl) : '';
+  const customUrl = domain ? 'https://' + domain : '';
 
   const primaryLabel = document.getElementById('ba-url-primary-label');
   const primaryValue = document.getElementById('ba-url-primary-value');
@@ -3077,11 +3580,22 @@ function renderBeforeAfter() {
   const secondaryValue = document.getElementById('ba-url-secondary-value');
   const liveBtn = document.getElementById('ba-view-live');
 
+  if (!wsPublishUrl) {
+    // Real WS publish event has not fired yet — do not fabricate a URL.
+    if (primaryLabel) primaryLabel.textContent = 'Website Studio URL';
+    if (primaryValue) primaryValue.textContent = 'Publish pending — awaiting Website Studio response';
+    if (primaryStatus) primaryStatus.innerHTML = '<span class="ba-dot ba-dot-amber"></span>ws_publish_project has not returned a URL in this run';
+    if (liveBtn) { liveBtn.removeAttribute('href'); liveBtn.setAttribute('aria-disabled', 'true'); liveBtn.style.opacity = '0.5'; liveBtn.style.pointerEvents = 'none'; }
+    if (secondaryLabel) secondaryLabel.innerHTML = 'Custom domain <span class="ba-pending-badge">Awaiting publish</span>';
+    if (secondaryValue) secondaryValue.textContent = customUrl || '(no domain captured)';
+    return;
+  }
+
   if (hostingMode === 'ws') {
     // In-place WS replacement — custom domain stays live, just serves the new version
     if (primaryLabel) primaryLabel.textContent = 'Live now · custom domain';
     if (primaryValue) primaryValue.textContent = customUrl;
-    if (primaryStatus) primaryStatus.innerHTML = '<span class="ba-dot ba-dot-green"></span>In-place replacement · already on Website Studio';
+    if (primaryStatus) primaryStatus.innerHTML = '<span class="ba-dot ba-dot-green"></span>In-place Website Studio replacement';
     if (liveBtn) liveBtn.href = customUrl;
     if (secondaryLabel) secondaryLabel.innerHTML = 'Website Studio URL <span class="ba-pending-badge" style="background:rgba(34,197,94,0.18);color:#15803d;">Backup</span>';
     if (secondaryValue) secondaryValue.textContent = wsUrl;
@@ -3095,7 +3609,7 @@ function renderBeforeAfter() {
       const dot = secondaryRow.querySelector('.ba-dot');
       if (dot) { dot.classList.remove('ba-dot-amber'); dot.classList.add('ba-dot-green'); }
       const hint = secondaryRow.querySelector('.ba-url-hint');
-      if (hint) hint.textContent = 'No DNS changes needed for this rebuild — Website Studio already hosts the domain.';
+      if (hint) hint.textContent = 'No DNS cutover needed for in-place replacement.';
     }
   } else {
     // External hosting — operator must cut DNS over to WS
@@ -3136,11 +3650,100 @@ function downloadUpgradeSummary() {
 // STEP 8 → STEP 9 — Approve gate kicks off the SSE stream
 // ────────────────────────────────────────────────────────────
 function approveAndStart() {
+  if (!_authState.authenticated) {
+    showAuthRequiredModal();
+    return;
+  }
   // Kick off the stream first so the activity feed is already populated
   // when Step 9 renders.
   startRebuildStream();
   next();
 }
+
+// ────────────────────────────────────────────────────────────
+// AUTH GATEKEEPER — must succeed before any step is interactable.
+// Calls /api/auth-probe (which fires cg_list_brand_vaults). On 401/502/504
+// the modal blocks the UI with a retry + Open Claude.ai link.
+// ────────────────────────────────────────────────────────────
+let _authState = { authenticated: false, checking: false };
+
+function showAuthRequiredModal(title, body) {
+  const overlay = document.getElementById('auth-modal-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('auth-modal-icon').textContent = '🔒';
+  document.getElementById('auth-modal-title').textContent = title || 'Search Atlas authentication required';
+  document.getElementById('auth-modal-body').innerHTML = body || (
+    'The Search Atlas MCP connector is not authenticated in this Claude Code session.<br><br>' +
+    '1. Open <a href="https://claude.ai/" target="_blank" rel="noopener" style="color:#a78bfa;">Claude.ai</a><br>' +
+    '2. Run <code>/mcp</code> and complete OAuth for the SearchAtlas connector<br>' +
+    '3. Come back here and click Retry'
+  );
+  document.getElementById('auth-modal-retry').style.display = 'inline-block';
+  document.getElementById('auth-modal-open-sa').style.display = 'inline-block';
+}
+
+function showAuthCheckingModal() {
+  const overlay = document.getElementById('auth-modal-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('auth-modal-icon').textContent = '⏳';
+  document.getElementById('auth-modal-title').textContent = 'Verifying Search Atlas access…';
+  document.getElementById('auth-modal-body').textContent = 'Calling cg_list_brand_vaults as an authentication probe. This may take 10–30 seconds the first time.';
+  document.getElementById('auth-modal-retry').style.display = 'none';
+  document.getElementById('auth-modal-open-sa').style.display = 'none';
+}
+
+function hideAuthModal() {
+  const overlay = document.getElementById('auth-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+async function runAuthProbe() {
+  if (_authState.checking) return;
+  _authState.checking = true;
+  showAuthCheckingModal();
+  try {
+    const res = await fetch('/api/auth-probe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.authenticated) {
+        _authState.authenticated = true;
+        _authState.checking = false;
+        hideAuthModal();
+        return true;
+      }
+    }
+    if (res.status === 401) {
+      showAuthRequiredModal();
+    } else if (res.status === 502) {
+      const body = await res.json().catch(() => ({}));
+      showAuthRequiredModal(
+        'Search Atlas MCP not configured',
+        (body.detail || 'No Search Atlas tool calls were made by the auth probe. Open Claude.ai → /mcp and connect the SearchAtlas connector.') +
+        '<br><br>If you already connected it, click Retry.'
+      );
+    } else if (res.status === 504) {
+      showAuthRequiredModal(
+        'Search Atlas probe timed out',
+        'The auth probe took longer than 60 seconds. The MCP connector may be slow to wake. Click Retry.'
+      );
+    } else {
+      const body = await res.text().catch(() => '');
+      showAuthRequiredModal('Auth probe failed (HTTP ' + res.status + ')', (body.slice(0, 200) || 'No detail') + '<br>Click Retry.');
+    }
+  } catch (e) {
+    showAuthRequiredModal('Connection error', 'Could not reach the wizard server: ' + (e.message || e));
+  }
+  _authState.checking = false;
+  return false;
+}
+
+document.getElementById('auth-modal-retry').addEventListener('click', () => runAuthProbe());
 
 // ────────────────────────────────────────────────────────────
 // INIT
@@ -3149,6 +3752,7 @@ renderProgress();
 showStep(state.step || 1);
 checkConn();
 setInterval(checkConn, 30000);
+runAuthProbe();
 </script>
 </body>
 </html>

@@ -744,6 +744,30 @@ textarea { resize: vertical; min-height: 60px; }
 <div class="progress" id="progress"></div>
 <div class="progress-label" id="progressLabel">Step 1 of 11 · Tell us about the client</div>
 
+<!-- AUTH MODAL · blocks the wizard until SA MCP is authenticated -->
+<div id="auth-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(26,21,48,0.78); align-items:center; justify-content:center; padding:24px;">
+  <div style="background:#fff; max-width:540px; width:100%; border-radius:14px; padding:28px; box-shadow:0 24px 48px rgba(0,0,0,0.25);">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <span style="font-size:28px;">🔐</span>
+      <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--text);">SearchAtlas needs authentication</h2>
+    </div>
+    <p id="auth-modal-msg" style="font-size:14px; line-height:1.55; color:var(--muted); margin:0 0 16px;">
+      We tried to call SearchAtlas just now and got an auth error. Connect the MCP server before continuing — nothing in this wizard runs without it.
+    </p>
+    <ol style="font-size:13px; line-height:1.7; color:var(--text); padding-left:20px; margin:0 0 18px;">
+      <li>Open <a href="https://claude.ai/new" target="_blank" rel="noopener" style="color:var(--purple); font-weight:600;">claude.ai</a> in a new tab.</li>
+      <li>Run <code>/mcp</code> in the chat input.</li>
+      <li>Click the <strong>SearchAtlas</strong> connector and complete the OAuth flow.</li>
+      <li>Come back here and hit <strong>Retry</strong>.</li>
+    </ol>
+    <div id="auth-modal-error" style="display:none; background:var(--red-bg); border-left:3px solid var(--red); padding:8px 12px; border-radius:6px; font-size:12.5px; color:#7f1d1d; margin-bottom:12px; word-break:break-word;"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn btn-secondary" id="auth-modal-cancel" onclick="hideAuthModal()">Dismiss</button>
+      <button class="btn btn-primary" id="auth-modal-retry" onclick="retryAuthProbe()">Retry</button>
+    </div>
+  </div>
+</div>
+
 <!-- STEP 1 · Client basics -->
 <section class="step active" data-step="1">
   <h1>Tell us about the client</h1>
@@ -1210,6 +1234,43 @@ try {
 
 function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
 
+// HIGH-1 / fabrication guard: when the operator changes the domain, every
+// state field that was derived from the previous domain via a real SA MCP
+// call must be cleared. Otherwise yesterday's brand vault / sitemap /
+// competitor data would silently power today's run for a different client.
+function clearDerivedStateForNewDomain() {
+  state.sitemap = null;
+  state.competitorSet = [];
+  state.keywordEvidence = [];
+  state.bvFields = null;
+  state.bvPrefill = null;
+  state.bvCreated = null;
+  state.detect = { otto: 'unknown', bv: 'unknown', gbp: 'unknown', ppc: 'unknown', llmv: 'unknown', pillars: null };
+  state.assetDecisions = {
+    otto: { action: null, edits: {} }, bv: { action: null, edits: {} },
+    gbp: { action: null, edits: {} }, ppc: { action: null, edits: {} },
+    llmv: { action: null, edits: {} }
+  };
+  state.pageDecisions = {};
+  state.wsPublishUrl = '';
+  state.clientSlug = '';
+  state.lastResearchRunId = null;
+  persist();
+}
+
+// Wire it: any time `state.domain` changes value, clear derived data.
+let _prevDomainSnapshot = state.domain || '';
+function commitDomain(newDomain) {
+  const normalized = (newDomain || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (normalized && normalized !== _prevDomainSnapshot) {
+    _prevDomainSnapshot = normalized;
+    clearDerivedStateForNewDomain();
+  }
+  state.domain = normalized;
+  persist();
+}
+
 function resetWizard() {
   if (!confirm('Start a fresh wizard? All captured input will be cleared.')) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -1274,7 +1335,8 @@ function prev() { showStep(Math.max(state.step - 1, 1)); }
 
 function validateStep(n) {
   if (n === 1) {
-    state.domain = document.getElementById('f-domain').value.trim();
+    // commitDomain clears all derived state if the domain changed.
+    commitDomain(document.getElementById('f-domain').value.trim());
     state.business = document.getElementById('f-business').value.trim();
     state.location = document.getElementById('f-location').value.trim();
     if (!state.domain || !state.business || !state.location) {
@@ -1451,31 +1513,103 @@ document.querySelectorAll('#tier-grid .tier-card').forEach(card => {
 });
 
 // ────────────────────────────────────────────────────────────
-// STEP 4 — Auto-detect (simulated client-side; real check happens in /build-website)
+// STEP 4 — Auto-detect · real SearchAtlas calls via /api/detect-assets
 // ────────────────────────────────────────────────────────────
-function runDetect() {
-  document.getElementById('detect-loading').style.display = 'block';
-  document.getElementById('detect-results').style.display = 'none';
-  document.getElementById('bv-missing-halt').style.display = 'none';
-  document.getElementById('step3-nav').style.display = 'flex';
+async function runDetect() {
+  const loadingEl = document.getElementById('detect-loading');
+  const resultsEl = document.getElementById('detect-results');
+  const missingHaltEl = document.getElementById('bv-missing-halt');
+  const navEl = document.getElementById('step3-nav');
+  const nextBtn = document.getElementById('step3-next');
 
-  setTimeout(() => {
-    const seed = state.domain.length % 5;
-    const results = {
-      otto: seed > 0 ? 'found' : 'missing',
-      bv: seed > 1 ? 'found' : 'missing',
-      gbp: seed > 2 ? 'found' : 'missing',
-      ppc: 'missing',
-      llmv: seed > 1 ? 'found' : 'missing'
-    };
-    state.detect = { ...state.detect, ...results };
+  loadingEl.style.display = 'block';
+  loadingEl.innerHTML = '<strong>Scanning…</strong>Checking Brand Vault and Google Business Profile for ' + escapeHtml(state.domain) + '. OTTO / PPC / LLM Visibility are provisioned by /run-seo after the site is live, so they are skipped here.';
+  resultsEl.style.display = 'none';
+  missingHaltEl.style.display = 'none';
+  navEl.style.display = 'flex';
+  nextBtn.disabled = true;
+  removeDetectError();
 
-    if (results.otto === 'found') {
-      state.detect.pillars = { technical: 78, content: 54, authority: 32, ux: 62 };
+  let data;
+  try {
+    const res = await fetch('/api/detect-assets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        domain: state.domain,
+        business: state.business || '',
+        location: state.location || ''
+      })
+    });
+    if (res.status === 401) {
+      loadingEl.style.display = 'none';
+      showAuthModal('SearchAtlas returned an auth error during the asset detection step.');
+      return;
     }
-    persist();
-    renderDetectResults();
-  }, 1400);
+    if (!res.ok) {
+      const txt = await safeReadText(res);
+      loadingEl.style.display = 'none';
+      renderDetectError(`Detection failed (${res.status}). ${txt}`);
+      return;
+    }
+    data = await res.json();
+  } catch (e) {
+    loadingEl.style.display = 'none';
+    renderDetectError('Could not reach the bridge: ' + e.message);
+    return;
+  }
+
+  // OTTO / PPC / LLMV are not detectable pre-launch — surface as "not yet"
+  const bvFound = !!(data?.bv?.found);
+  const gbpFound = !!(data?.gbp?.found);
+
+  state.detect = {
+    ...state.detect,
+    bv: bvFound ? 'found' : 'missing',
+    gbp: gbpFound ? 'found' : 'missing',
+    otto: 'not_yet',
+    ppc: 'not_yet',
+    llmv: 'not_yet',
+    bvUuid: (data?.bv?.uuid || '').trim(),
+    bvName: (data?.bv?.name || '').trim(),
+    gbpLocationId: (data?.gbp?.location_id || '').trim(),
+    gbpName: (data?.gbp?.name || '').trim(),
+    pillars: null
+  };
+  persist();
+  renderDetectResults();
+}
+
+function renderDetectError(msg) {
+  let box = document.getElementById('detect-error');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'detect-error';
+    box.className = 'callout warn';
+    box.style.cssText = 'background:var(--red-bg); border-left-color:var(--red);';
+    const section = document.querySelector('.step[data-step="4"]');
+    section.insertBefore(box, document.getElementById('step3-nav'));
+  }
+  box.innerHTML = `
+    <strong>Could not detect assets.</strong>
+    <div style="margin-top:4px; font-size:12.5px;">${escapeHtml(msg)}</div>
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button class="btn btn-secondary" onclick="runDetect()">Retry</button>
+      <a class="btn btn-secondary" href="https://search.searchatlas.com" target="_blank" rel="noopener">Open Search Atlas</a>
+    </div>`;
+}
+
+function removeDetectError() {
+  const box = document.getElementById('detect-error');
+  if (box) box.remove();
+}
+
+async function safeReadText(res) {
+  try { return (await res.text()).slice(0, 400); } catch { return ''; }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function renderDetectResults() {
@@ -1495,35 +1629,20 @@ function renderDetectResults() {
   const cards = document.querySelectorAll('#detect-grid .detect-card');
   cards.forEach(card => {
     const key = card.dataset.key;
-    const state2 = state.detect[key];
-    card.classList.remove('found', 'missing');
-    card.classList.add(state2);
-    card.querySelector('.status').textContent =
-      state2 === 'found' ? 'Found' : (key === 'ppc' ? 'Skip' : 'Will create');
+    const s = state.detect[key];
+    card.classList.remove('found', 'missing', 'not_yet');
+    card.classList.add(s);
+    let lbl = '—';
+    if (s === 'found') lbl = 'Found';
+    else if (s === 'missing') lbl = key === 'bv' ? 'Will create' : (key === 'gbp' ? '/run-seo will set up' : 'Skip');
+    else if (s === 'not_yet') lbl = 'After launch';
+    card.querySelector('.status').textContent = lbl;
   });
 
-  if (state.detect.pillars) {
-    document.getElementById('pillar-section').style.display = 'block';
-    const p = state.detect.pillars;
-    const pillarsEl = document.getElementById('pillars');
-    pillarsEl.innerHTML = '';
-    [['Technical', p.technical], ['Content', p.content], ['Authority', p.authority], ['UX', p.ux]].forEach(([label, val]) => {
-      const cls = val >= 70 ? 'green' : (val >= 50 ? 'yellow' : 'red');
-      pillarsEl.innerHTML += `<div class="pillar"><span class="pillar-label">${label}</span><div class="pillar-bar"><div class="pillar-fill ${cls}" style="width:${val}%"></div></div><span class="pillar-value">${val}</span></div>`;
-    });
-  }
-
-  const shifts = [];
-  if (state.detect.pillars) {
-    if (state.detect.pillars.authority < 40) shifts.push('Authority is low — PR + cloud stack moving to month 1.');
-    if (state.detect.pillars.content < 50) shifts.push('Content is light — topical map + bulk articles to week 2.');
-    if (state.detect.pillars.technical < 60) shifts.push('Technical issues — OTTO audit runs BEFORE build, not at launch.');
-    if (state.detect.pillars.ux < 60) shifts.push('UX score suggests redesign opportunity beyond content alone.');
-  }
-  const noteEl = document.getElementById('priority-note');
-  noteEl.innerHTML = shifts.length
-    ? `<div class="callout warn"><strong>Plan adjustments based on pillar scores:</strong>${shifts.map(s => '<div>· ' + s + '</div>').join('')}</div>`
-    : '';
+  // Pillar scores come from a real OTTO audit which only exists after launch.
+  // We deliberately do not render fake pillar data here.
+  document.getElementById('pillar-section').style.display = 'none';
+  document.getElementById('priority-note').innerHTML = '';
 
   document.getElementById('step3-next').disabled = false;
   renderAssetPanel();
@@ -1534,7 +1653,9 @@ function renderAssetPanel() {
   const rows = document.getElementById('asset-rows');
   rows.innerHTML = '';
 
+  // Only Brand Vault and GBP are detectable pre-launch — render those rows only.
   Object.keys(ASSET_META).forEach(key => {
+    if (key !== 'bv' && key !== 'gbp') return;
     const meta = ASSET_META[key];
     const detectState = state.detect[key];
     if (detectState !== 'found' && detectState !== 'missing') return;
@@ -1616,79 +1737,168 @@ function recheckBV() {
 }
 
 function runBVAutoCrawl() {
+  // No Brand Vault exists yet → render an editable form populated ONLY with
+  // values the operator explicitly typed (or genuinely extracted from a file).
+  // We never fabricate phone, hours, voice — those become operator-input gaps.
   const dropped = state.materials || [];
   const droppedColor = dropped.find(m => m.extractedColor)?.extractedColor;
   const droppedText = dropped.find(m => m.format === 'text');
 
+  const services = state.services.length ? state.services.join(', ') : '';
+
   const prefill = {
     fields: [
-      { key: 'business_name', label: 'Business name', value: state.business, status: 'ok', source: state.business ? 'from your input' : 'from homepage <title>' },
-      { key: 'domain', label: 'Domain', value: state.domain, status: 'ok', source: 'explicit' },
-      { key: 'industry', label: 'Industry', value: inferIndustryFromServices(state.services), status: 'ok', source: 'inferred from service list + GBP' },
-      { key: 'location', label: 'Primary location', value: state.location || 'unknown', status: state.location ? 'ok' : 'gap', source: state.location ? 'from your input' : '' },
-      { key: 'phone', label: 'Phone', value: '(555) 123-4567', status: 'ok', source: 'from Contact page crawl' },
-      { key: 'hours', label: 'Hours', value: 'Mon–Fri 8–5, Sat 9–1', status: 'ok', source: 'from GBP' },
-      { key: 'colors', label: 'Brand colors', value: droppedColor ? droppedColor + ' (primary)' : 'detected · 2 swatches', status: 'partial', source: droppedColor ? 'from dropped logo image' : 'inferred from on-site CSS' },
-      { key: 'voice', label: 'Voice', value: droppedText ? 'inferred from your text' : 'warm, professional', status: 'partial', source: droppedText ? 'from your dropped text' : 'inferred from on-site copy' },
-      { key: 'persona', label: 'Target persona', value: '—', status: 'gap', source: '' },
-      { key: 'avoid', label: 'Avoid list', value: '—', status: 'gap', source: '' },
-      { key: 'services', label: 'Services to feature', value: state.services.length ? state.services.join(', ') : '—', status: state.services.length ? 'partial' : 'gap', source: state.services.length ? 'from your input · confirm complete' : '' }
+      { key: 'business_name', label: 'Business name', value: state.business || '', status: state.business ? 'ok' : 'gap', source: state.business ? 'from your input' : '' },
+      { key: 'domain', label: 'Domain', value: state.domain || '', status: state.domain ? 'ok' : 'gap', source: 'explicit' },
+      { key: 'industry', label: 'Industry', value: inferIndustryFromServices(state.services), status: state.services.length ? 'partial' : 'gap', source: state.services.length ? 'inferred from services' : '' },
+      { key: 'location', label: 'Primary location', value: state.location || '', status: state.location ? 'ok' : 'gap', source: state.location ? 'from your input' : '' },
+      { key: 'phone',     label: 'Phone',            value: '', status: 'gap', source: '' },
+      { key: 'hours',     label: 'Hours',            value: '', status: 'gap', source: '' },
+      { key: 'colors',    label: 'Brand colors',     value: droppedColor || '', status: droppedColor ? 'partial' : 'gap', source: droppedColor ? 'from dropped logo image' : '' },
+      { key: 'voice',     label: 'Voice',            value: '', status: droppedText ? 'partial' : 'gap', source: droppedText ? 'will train from your dropped text' : '' },
+      { key: 'persona',   label: 'Target persona',   value: '', status: 'gap', source: '' },
+      { key: 'avoid',     label: 'Avoid list',       value: '', status: 'gap', source: '' },
+      { key: 'services',  label: 'Services to feature', value: services, status: services ? 'ok' : 'gap', source: services ? 'from your input' : '' }
     ],
-    crawlSources: ['domain pages', 'GBP public', 'organic SERPs', dropped.length ? 'your dropped materials' : null, 'LLM Visibility'].filter(Boolean),
+    editable: true,
+    crawlSources: ['operator inputs', dropped.length ? 'your dropped materials' : null].filter(Boolean),
     confirmed: false
   };
   state.bvPrefill = prefill;
   persist();
 
   const rowsEl = document.getElementById('bv-prefill-rows');
-  rowsEl.innerHTML = prefill.fields.map(f => {
-    const icon = f.status === 'ok' ? '✅' : f.status === 'partial' ? '🟨' : '❌';
-    return `
-      <div class="prefill-row ${f.status === 'gap' ? 'gap' : f.status === 'partial' ? 'partial' : ''}">
-        <div class="prefill-status">${icon}</div>
-        <div class="prefill-key"></div>
-        <div class="prefill-val"></div>
-      </div>
-    `;
-  }).join('');
-  const rowEls = rowsEl.querySelectorAll('.prefill-row');
-  prefill.fields.forEach((f, i) => {
-    if (!rowEls[i]) return;
-    rowEls[i].querySelector('.prefill-key').textContent = f.label;
-    const val = rowEls[i].querySelector('.prefill-val');
-    val.textContent = f.value;
-    if (f.source) {
-      const src = document.createElement('span');
-      src.className = 'prefill-source';
-      src.textContent = `[${f.source}]`;
-      val.appendChild(document.createTextNode(' '));
-      val.appendChild(src);
-    }
+  rowsEl.innerHTML = '';
+  prefill.fields.forEach((f) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'prefill-row ' + (f.status === 'gap' ? 'gap' : f.status === 'partial' ? 'partial' : '');
+    wrap.style.cssText = 'display:grid; grid-template-columns: 30px 170px 1fr; gap:8px; align-items:center; padding:8px 0; border-bottom: 1px solid #eef0f7;';
+
+    const icon = document.createElement('div'); icon.className = 'prefill-status';
+    icon.textContent = f.status === 'ok' ? '✅' : f.status === 'partial' ? '🟨' : '❌';
+
+    const key = document.createElement('div'); key.className = 'prefill-key';
+    key.style.cssText = 'font-weight:600; font-size:13px; color:var(--text);';
+    key.textContent = f.label;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.dataset.prefillKey = f.key;
+    input.placeholder = ({
+      phone: '(555) 555-5555',
+      hours: 'Mon–Fri 8–5',
+      colors: '#1a5f7a',
+      voice: 'warm, professional, plain-English',
+      persona: 'one-line description of the ideal customer',
+      avoid: 'words/topics never to use',
+      industry: 'e.g. Dental Clinic',
+      location: 'City, State',
+      services: 'comma-separated'
+    })[f.key] || '';
+    input.value = f.value || '';
+    input.style.cssText = 'width:100%; padding:7px 9px; border:1px solid var(--border); border-radius:7px; font-size:13px;';
+    input.addEventListener('input', () => {
+      f.value = input.value.trim();
+      f.status = f.value ? (f.status === 'gap' ? 'ok' : f.status) : 'gap';
+      if (f.value && !f.source) f.source = 'from your input';
+      persist();
+      updatePrefillSummary();
+    });
+
+    wrap.appendChild(icon); wrap.appendChild(key); wrap.appendChild(input);
+    rowsEl.appendChild(wrap);
   });
 
-  const okCount = prefill.fields.filter(f => f.status === 'ok').length;
-  const total = prefill.fields.length;
-  const gapCount = prefill.fields.filter(f => f.status === 'gap').length;
-
   const summary = document.createElement('div');
+  summary.id = 'bv-prefill-summary';
   summary.style.cssText = 'margin-top: 14px; padding: 11px 14px; background: var(--lavender); border-radius: 8px; font-size: 13px; color: var(--text);';
-  summary.innerHTML = `<strong>${okCount} of ${total} fields auto-filled.</strong> ${gapCount} need your input.`;
   rowsEl.appendChild(summary);
+
+  const bvCreateError = document.createElement('div');
+  bvCreateError.id = 'bv-create-error';
+  bvCreateError.style.cssText = 'display:none; margin-top:10px; padding:10px 12px; background:var(--red-bg); border-left:3px solid var(--red); border-radius:6px; font-size:12.5px; color:#7f1d1d;';
+  rowsEl.appendChild(bvCreateError);
+
+  updatePrefillSummary();
 }
 
-function proceedWithPrefill(mode) {
+function updatePrefillSummary() {
+  if (!state.bvPrefill) return;
+  const el = document.getElementById('bv-prefill-summary');
+  if (!el) return;
+  const fs = state.bvPrefill.fields;
+  const ok = fs.filter(f => f.status === 'ok').length;
+  const part = fs.filter(f => f.status === 'partial').length;
+  const gap = fs.filter(f => f.status === 'gap').length;
+  el.innerHTML = `<strong>${ok}/${fs.length} ready</strong> · ${part} partial · ${gap} still empty. Empty fields will be saved blank to the new Brand Vault.`;
+}
+
+async function proceedWithPrefill(mode) {
   state.bvPrefill.confirmed = true;
   state.bvPrefill.mode = mode;
   persist();
-  if (mode === 'fill') {
-    const gaps = state.bvPrefill.fields.filter(f => f.status === 'gap');
-    if (gaps.length) {
-      const filled = prompt(`Fill ${gaps.length} gap${gaps.length > 1 ? 's' : ''}:\n\n` + gaps.map(g => '· ' + g.label).join('\n') + '\n\nType "skip" to proceed without filling.');
-      if (filled && filled.toLowerCase() !== 'skip') {
-        gaps.forEach(g => { g.value = '(filled)'; g.status = 'ok'; g.source = 'from your input'; });
-      }
+  // Build the payload for /api/create-bv from the (possibly edited) prefill fields.
+  const fields = Object.fromEntries(state.bvPrefill.fields.map(f => [f.key, f.value || '']));
+  const payload = {
+    domain: state.domain,
+    business_name: fields.business_name || state.business,
+    industry: fields.industry || '',
+    location: fields.location || state.location || '',
+    phone: fields.phone || '',
+    hours: fields.hours || '',
+    address: fields.location || state.location || '',
+    primary_color: fields.colors || '',
+    voice_tone: fields.voice || '',
+    voice_avoid: fields.avoid || '',
+    target_persona: fields.persona || '',
+    services: (fields.services || state.services.join(', ') || '').split(/\s*,\s*/).filter(Boolean),
+    entities: state.services || [],
+    competitors: state.targetMarket?.knownCompetitors || []
+  };
+
+  const errBox = document.getElementById('bv-create-error');
+  const fillBtn = document.getElementById('bv-prefill-fill');
+  const prevText = fillBtn ? fillBtn.textContent : '';
+  if (fillBtn) { fillBtn.disabled = true; fillBtn.textContent = 'Creating brand vault…'; }
+  if (errBox) errBox.style.display = 'none';
+
+  let res, data;
+  try {
+    res = await fetch('/api/create-bv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.status === 401) {
+      if (fillBtn) { fillBtn.disabled = false; fillBtn.textContent = prevText; }
+      showAuthModal('SearchAtlas returned an auth error when creating the brand vault.');
+      return;
     }
+    data = await res.json();
+  } catch (e) {
+    if (fillBtn) { fillBtn.disabled = false; fillBtn.textContent = prevText; }
+    if (errBox) {
+      errBox.style.display = 'block';
+      errBox.textContent = 'Network error: ' + e.message + '. Your input is saved — retry when ready.';
+    }
+    return;
   }
+
+  if (!res.ok || !data?.uuid) {
+    if (fillBtn) { fillBtn.disabled = false; fillBtn.textContent = prevText; }
+    if (errBox) {
+      errBox.style.display = 'block';
+      errBox.textContent = 'Could not create brand vault: ' + (data?.error || `HTTP ${res.status}`) + '. Your input is saved — retry, or skip and create it later.';
+    }
+    return;
+  }
+
+  // Real UUID from bv_create
+  state.detect.bv = 'found';
+  state.detect.bvUuid = data.uuid;
+  state.bvCreated = { uuid: data.uuid, fields: payload, steps: data.steps_completed || [] };
+  persist();
+  if (fillBtn) { fillBtn.disabled = false; fillBtn.textContent = prevText; }
   showStep(state.step + 1);
 }
 
@@ -1702,28 +1912,17 @@ function inferIndustryFromServices(services) {
 }
 
 // ────────────────────────────────────────────────────────────
-// STEP 5 — Brand Vault confirmation
+// STEP 5 — Brand Vault confirmation · pulls real BV data from SA
 // ────────────────────────────────────────────────────────────
-function renderBVConfirm() {
-  const fields = {
-    name: state.business, domain: state.domain,
-    industry: inferIndustry(state.services),
-    address: state.location,
-    phone: '(555) ' + (Math.floor(Math.random() * 9000) + 1000).toString().slice(0,3) + '-' + (Math.floor(Math.random() * 9000) + 1000),
-    colors: ['#1a5f7a', '#d4a574'],
-    voice: 'Friendly-professional (BV active profile)',
-    entities: state.services.slice(0, 3),
-    competitors: ['competitor-1.com', 'competitor-2.com', 'competitor-3.com']
-  };
-  state.bvFields = fields;
-  persist();
-
+async function renderBVConfirm() {
   const block = document.getElementById('bv-confirm-block');
   block.innerHTML = '';
+
   const addRow = (parent, k, v) => {
     const row = document.createElement('div'); row.className = 'hitl-row';
     const key = document.createElement('div'); key.className = 'hitl-key'; key.textContent = k;
-    const val = document.createElement('div'); val.className = 'hitl-val'; val.textContent = v;
+    const val = document.createElement('div'); val.className = 'hitl-val';
+    val.textContent = (v == null || v === '' ? '—' : (Array.isArray(v) ? v.join(', ') : String(v)));
     row.appendChild(key); row.appendChild(val); parent.appendChild(row);
   };
   const sect = (heading) => {
@@ -1731,17 +1930,126 @@ function renderBVConfirm() {
     const h = document.createElement('div'); h.className = 'hitl-heading'; h.textContent = heading;
     s.appendChild(h); block.appendChild(s); return s;
   };
-  let s = sect('Business');
-  addRow(s, 'Name', fields.name);
-  addRow(s, 'Domain', fields.domain);
-  addRow(s, 'Industry', fields.industry);
-  addRow(s, 'Location', fields.address);
-  s = sect('Brand');
-  addRow(s, 'Colors', fields.colors.join(' · '));
-  addRow(s, 'Voice', fields.voice);
-  s = sect('SEO + Content');
-  addRow(s, 'Key entities', fields.entities.join(', '));
-  addRow(s, 'Competitors', fields.competitors.join(', '));
+
+  // If the operator just created the BV in step 4, render those known fields.
+  if (state.bvCreated && state.bvCreated.uuid) {
+    const f = state.bvCreated.fields || {};
+    const s1 = sect('Business · just created in SearchAtlas');
+    addRow(s1, 'Brand Vault UUID', state.bvCreated.uuid);
+    addRow(s1, 'Name', f.business_name);
+    addRow(s1, 'Domain', f.domain);
+    addRow(s1, 'Industry', f.industry);
+    addRow(s1, 'Location', f.location);
+    addRow(s1, 'Phone', f.phone);
+    addRow(s1, 'Hours', f.hours);
+    const s2 = sect('Brand');
+    addRow(s2, 'Primary color', f.primary_color);
+    addRow(s2, 'Voice', f.voice_tone);
+    addRow(s2, 'Avoid list', f.voice_avoid);
+    addRow(s2, 'Target persona', f.target_persona);
+    const s3 = sect('SEO + Content');
+    addRow(s3, 'Services', f.services);
+    addRow(s3, 'Competitors', f.competitors);
+    state.bvFields = {
+      name: f.business_name, domain: f.domain, industry: f.industry, address: f.location,
+      colors: f.primary_color ? [f.primary_color] : [], voice: f.voice_tone || '',
+      entities: f.services || [], competitors: f.competitors || [], uuid: state.bvCreated.uuid
+    };
+    persist();
+    return;
+  }
+
+  // Otherwise the BV was detected in step 4. Pull real values from SA.
+  if (!state.detect?.bvUuid) {
+    const s = sect('Brand vault not loaded');
+    addRow(s, 'Status', 'No UUID captured in detection step. Go back and re-detect.');
+    return;
+  }
+
+  const loadingSect = sect('Pulling from Brand Vault…');
+  const loadingRow = document.createElement('div');
+  loadingRow.className = 'hitl-row';
+  loadingRow.innerHTML = '<div class="hitl-val">Loading <code>bv_get_details</code>, <code>bv_get_business_info</code>, <code>bv_list_voice_profiles</code>, <code>bv_get_knowledge_graph</code>…</div>';
+  loadingSect.appendChild(loadingRow);
+
+  let res, data;
+  try {
+    res = await fetch('/api/pull-bv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brand_vault_uuid: state.detect.bvUuid,
+        hostname: state.domain
+      })
+    });
+    if (res.status === 401) {
+      block.innerHTML = '';
+      const s = sect('Authentication required');
+      addRow(s, 'Status', 'SearchAtlas returned an auth error.');
+      showAuthModal('SearchAtlas returned an auth error when loading the brand vault.');
+      return;
+    }
+    if (!res.ok) {
+      block.innerHTML = '';
+      const s = sect('Could not load Brand Vault');
+      addRow(s, 'Error', `HTTP ${res.status}: ${(await safeReadText(res)) || 'unknown'}`);
+      const retryRow = document.createElement('div');
+      retryRow.className = 'hitl-row';
+      retryRow.innerHTML = '<button class="btn btn-secondary" onclick="renderBVConfirm()">Retry</button>';
+      s.appendChild(retryRow);
+      return;
+    }
+    data = await res.json();
+  } catch (e) {
+    block.innerHTML = '';
+    const s = sect('Could not load Brand Vault');
+    addRow(s, 'Error', 'Network: ' + e.message);
+    const retryRow = document.createElement('div');
+    retryRow.className = 'hitl-row';
+    retryRow.innerHTML = '<button class="btn btn-secondary" onclick="renderBVConfirm()">Retry</button>';
+    s.appendChild(retryRow);
+    return;
+  }
+
+  // Real BV data — paint it.
+  block.innerHTML = '';
+  const det = data?.details || {};
+  const biz = data?.business_info || {};
+  const voices = data?.voice_profiles || [];
+  const kg = data?.knowledge_graph || {};
+
+  const s1 = sect('Business');
+  addRow(s1, 'Brand Vault UUID', state.detect.bvUuid);
+  addRow(s1, 'Name', det.name || biz.business_name || biz.name);
+  addRow(s1, 'Domain', det.domain || state.domain);
+  addRow(s1, 'Industry', biz.industry || biz.primary_category || det.industry);
+  addRow(s1, 'Location', biz.address || biz.location);
+  addRow(s1, 'Phone', biz.phone);
+  addRow(s1, 'Hours', biz.hours);
+
+  const s2 = sect('Brand');
+  const colors = [det.primary_color, det.secondary_color].filter(Boolean);
+  addRow(s2, 'Colors', colors.length ? colors : '—');
+  const activeVoice = (Array.isArray(voices) ? voices.find(v => v.is_active) || voices[0] : null) || {};
+  addRow(s2, 'Voice', activeVoice.name || activeVoice.tone || det.voice_tone);
+  addRow(s2, 'Voice profiles on file', Array.isArray(voices) ? voices.length : 0);
+
+  const s3 = sect('Knowledge Graph');
+  addRow(s3, 'Entities', kg.entities || kg.services || []);
+  addRow(s3, 'Competitors', kg.competitors || []);
+
+  state.bvFields = {
+    name: det.name || biz.business_name || biz.name,
+    domain: det.domain || state.domain,
+    industry: biz.industry || biz.primary_category || det.industry,
+    address: biz.address || biz.location,
+    phone: biz.phone, hours: biz.hours,
+    colors, voice: activeVoice.name || activeVoice.tone || '',
+    entities: kg.entities || kg.services || [],
+    competitors: kg.competitors || [],
+    uuid: state.detect.bvUuid
+  };
+  persist();
 }
 
 function inferIndustry(services) {
@@ -1871,199 +2179,219 @@ function looksLikeUrl(s) {
 })();
 
 // ────────────────────────────────────────────────────────────
-// STEP 7 — Market research (NO simulated waves — instant sitemap)
-// The real wave-based research happens in Claude via the bridge.
+// STEP 7 — Market research · LIVE SSE against /api/research-market
+// Streams each MCP tool call as it happens. The proposed sitemap is built
+// from the merged tool responses, never simulated.
 // ────────────────────────────────────────────────────────────
-function runArchitecture() {
-  // All items shown as "done" instantly — the real work happens on the server in Phase 11.
-  // This step is purely about producing the operator-facing proposed sitemap so they can walk it in Step 8.
-  const all = document.querySelectorAll('#arch-list .build-item');
-  all.forEach(i => i.classList.add('done'));
-  renderArchSummary();
-  document.getElementById('step7-next').disabled = false;
-}
+let _researchAbortCtrl = null;
+let _researchReader = null;
 
-function buildProposedSitemap() {
-  const pages = [];
-  const tm = state.targetMarket || {};
-  const services = state.services.length ? state.services : ['Services'];
-  const location = state.location || 'your area';
-  const industryLeaf = tm.industryTier2 || inferIndustryFromServices(services);
+async function runArchitecture() {
+  // Reset all list items to pending state.
+  const items = document.querySelectorAll('#arch-list .build-item');
+  items.forEach(i => i.classList.remove('done', 'active', 'error'));
+  document.getElementById('step7-next').disabled = true;
+  removeResearchError();
 
-  const featurePool = ['People Also Ask', 'Local Pack', 'Featured Snippet', 'Image Pack', 'Knowledge Panel', 'Video Carousel', 'FAQ'];
-  const pickFeatures = (n) => { const shuffled = [...featurePool].sort(() => Math.random() - 0.5); return shuffled.slice(0, n); };
-  const seedRand = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0; return Math.abs(h); };
+  // Show a streaming activity feed beneath the static tool list.
+  ensureResearchFeed();
+  appendResearchFeed('phase', 'Calling SearchAtlas — two parallel waves');
 
-  const evidence = (slug, kw, intent, sourceTool, baseVol) => {
-    const r = seedRand(slug);
-    const vol = baseVol || (200 + (r % 4800));
-    return {
-      kw_total_volume: vol, intent: intent,
-      competitor_count: 1 + (r % 5),
-      serp_features: pickFeatures(1 + (r % 3)),
-      gap_score: ((r % 100) / 100).toFixed(2),
-      source: sourceTool
-    };
+  // Build payload from operator inputs.
+  const payload = {
+    domain: state.domain,
+    industry: state.targetMarket?.industryTier1 || '',
+    industry_subcategory: state.targetMarket?.industryTier2 || '',
+    target_keywords: state.targetMarket?.targetKeywords || [],
+    known_competitors: state.targetMarket?.knownCompetitors || [],
+    services: state.services || [],
+    location: state.location || '',
+    business: state.business || ''
   };
 
-  pages.push({
-    slug: '/', title: 'Homepage', tier: 'core',
-    oneline: `Conversion-led homepage targeting "${state.business || 'your brand'} ${location}" with proof, services teaser, and primary CTA.`,
-    pageType: 'Homepage', h1: state.business || 'Homepage',
-    keywords: [
-      { kw: `${(state.business || 'brand').toLowerCase()} ${location.toLowerCase()}`, vol: 1900, intent: 'navigational', difficulty: 12 },
-      { kw: `best ${industryLeaf.toLowerCase()} ${location.toLowerCase()}`, vol: 2400, intent: 'commercial', difficulty: 38 }
-    ],
-    competitorEvidence: { count: 5, examples: ['competitor1.com', 'competitor2.com', 'competitor3.com', 'competitor4.com', 'competitor5.com'] },
-    serpFeatures: ['Local Pack', 'Knowledge Panel'],
-    contentGap: 'Most competitor homepages bury credentials below the fold — moving them to hero block.',
-    sections: ['Hero with primary CTA', 'Services snapshot (3 cards)', 'Proof block (reviews + credentials)', 'Service-area map', 'Secondary CTA + contact strip'],
-    ctas: ['Book a visit', 'Call now'],
-    schema: 'LocalBusiness',
-    evidence: evidence('/', `${state.business || ''}`, 'navigational', 'se_get_serp_overview', 2400)
-  });
-
-  pages.push({
-    slug: '/about', title: 'About', tier: 'core',
-    oneline: 'Trust-building team + history page with credentials, ties to community.',
-    pageType: 'About', h1: `About ${state.business || 'Us'}`,
-    keywords: [{ kw: `${(state.business || 'brand').toLowerCase()} reviews`, vol: 480, intent: 'commercial', difficulty: 22 }],
-    competitorEvidence: { count: 4, examples: ['competitor1.com/about', 'competitor2.com/about', 'competitor3.com/about', 'competitor4.com/about'] },
-    serpFeatures: ['People Also Ask'],
-    contentGap: 'Competitors lean on stock copy — owner story differentiates.',
-    sections: ['Founder/leadership intro', 'Credentials + years of experience', 'Community involvement', 'Team grid'],
-    ctas: ['Meet the team', 'Schedule'],
-    schema: 'AboutPage',
-    evidence: evidence('/about', `${state.business || ''} reviews`, 'commercial', 'se_get_indexed_pages')
-  });
-
-  pages.push({
-    slug: '/contact', title: 'Contact', tier: 'core',
-    oneline: 'Direct conversion page — phone, address, hours, form, embedded map.',
-    pageType: 'Contact', h1: 'Contact',
-    keywords: [{ kw: `${(state.business || 'brand').toLowerCase()} phone number`, vol: 320, intent: 'navigational', difficulty: 8 }],
-    competitorEvidence: { count: 5, examples: ['competitor1.com/contact', 'competitor2.com/contact', 'competitor3.com/contact', 'competitor4.com/contact', 'competitor5.com/contact'] },
-    serpFeatures: ['Local Pack'],
-    contentGap: 'Most competitors hide hours — surface them in hero.',
-    sections: ['Hero with phone + hours', 'Contact form', 'Address + embedded map', 'Driving directions block'],
-    ctas: ['Call now', 'Submit form'],
-    schema: 'ContactPage',
-    evidence: evidence('/contact', `${state.business || ''} contact`, 'navigational', 'se_get_serp_features', 480)
-  });
-
-  pages.push({
-    slug: '/services', title: 'Services Overview', tier: 'core',
-    oneline: 'Index page linking to each service detail — UX hub + internal-link power.',
-    pageType: 'Services Overview', h1: 'Our Services',
-    keywords: [{ kw: `${industryLeaf.toLowerCase()} services ${location.toLowerCase()}`, vol: 720, intent: 'commercial', difficulty: 32 }],
-    competitorEvidence: { count: 4, examples: ['competitor1.com/services', 'competitor2.com/services', 'competitor3.com/services', 'competitor4.com/services'] },
-    serpFeatures: ['Featured Snippet'],
-    contentGap: 'Competitors list services without descriptions — adding 1-2 line previews improves CTR.',
-    sections: ['Hero with category overview', 'Service cards grid', 'Why choose us block', 'CTA strip'],
-    ctas: ['Book consult', 'Browse services'],
-    schema: 'Service',
-    evidence: evidence('/services', `${industryLeaf} services`, 'commercial', 'cg_create_topical_map')
-  });
-
-  services.slice(0, 8).forEach((svc, idx) => {
-    const slug = '/services/' + svc.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const r = seedRand(slug);
-    const vol = 800 + (r % 3200);
-    pages.push({
-      slug, title: svc, tier: 'service',
-      oneline: `${svc} · ${vol.toLocaleString()} vol · ${1 + (r % 5)}/5 competitors have this — ${(r % 100) > 30 ? 'strong gap opportunity' : 'table-stakes content'}`,
-      pageType: 'Service detail', h1: svc,
-      keywords: [
-        { kw: `${svc.toLowerCase()} ${location.toLowerCase()}`, vol: vol, intent: 'commercial', difficulty: 25 + (r % 35) },
-        { kw: `${svc.toLowerCase()} cost`, vol: Math.floor(vol * 0.4), intent: 'commercial', difficulty: 18 + (r % 30) },
-        { kw: `what is ${svc.toLowerCase()}`, vol: Math.floor(vol * 0.25), intent: 'informational', difficulty: 12 + (r % 20) }
-      ],
-      competitorEvidence: { count: 1 + (r % 5), examples: ['competitor1.com', 'competitor2.com', 'competitor3.com'].slice(0, 1 + (r % 3)) },
-      serpFeatures: pickFeatures(2 + (r % 2)),
-      contentGap: `Top-ranking pages average 1,200 words. ${(r % 100) > 50 ? 'PAA boxes target "cost" + "duration" — we should answer both inline.' : 'Adding FAQ schema + price-range section unclaimed by top 5.'}`,
-      sections: ['Hero with service-specific hook', 'Procedure / what to expect', 'Pricing or ranges', 'FAQ block (answers PAA)', 'Related services links', 'Booking CTA'],
-      ctas: ['Book ' + svc.toLowerCase(), 'Ask a question'],
-      schema: 'Service',
-      evidence: evidence(slug, svc, 'commercial', 'se_lookup_keyword', vol)
+  let res;
+  try {
+    _researchAbortCtrl = new AbortController();
+    res = await fetch('/api/research-market', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: _researchAbortCtrl.signal
     });
-  });
-
-  if (state.location) {
-    const locSlug = '/' + state.location.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    pages.push({
-      slug: locSlug, title: `${industryLeaf} in ${state.location}`, tier: 'location',
-      oneline: `Geo-targeted landing for "${industryLeaf.toLowerCase()} ${state.location.toLowerCase()}" with local proof.`,
-      pageType: 'Location landing', h1: `${industryLeaf} in ${state.location}`,
-      keywords: [
-        { kw: `${industryLeaf.toLowerCase()} ${state.location.toLowerCase()}`, vol: 2900, intent: 'commercial', difficulty: 42 },
-        { kw: `${industryLeaf.toLowerCase()} near me`, vol: 4400, intent: 'commercial', difficulty: 55 }
-      ],
-      competitorEvidence: { count: 5, examples: ['competitor1.com', 'competitor2.com', 'competitor3.com', 'competitor4.com', 'competitor5.com'] },
-      serpFeatures: ['Local Pack', 'Map Pack', 'People Also Ask'],
-      contentGap: `Only 2 of 5 competitors have a dedicated location page for ${state.location}. Easy local-pack win.`,
-      sections: ['Local hero with city name in H1', 'Service area map', 'Local proof (reviews mentioning city)', 'Directions / parking', 'Hours + contact'],
-      ctas: ['Get directions', 'Call ' + state.location + ' office'],
-      schema: 'LocalBusiness',
-      evidence: evidence(locSlug, `${industryLeaf} ${state.location}`, 'commercial', 'gbp_list_categories', 2900)
-    });
+  } catch (e) {
+    renderResearchError('Could not reach bridge: ' + e.message);
+    return;
   }
 
-  const gapTopics = [
-    { topic: `${industryLeaf} cost`, slug: '/cost', intent: 'commercial' },
-    { topic: `${industryLeaf} vs alternatives`, slug: '/compare', intent: 'commercial' },
-    { topic: 'Insurance + payment', slug: '/insurance', intent: 'informational' }
-  ];
-  gapTopics.slice(0, 2).forEach(g => {
-    const r = seedRand(g.slug);
-    pages.push({
-      slug: g.slug, title: g.topic.replace(/\b\w/g, c => c.toUpperCase()), tier: 'landing',
-      oneline: `Gap-driven landing — competitors don't have this. Estimated ${(800 + r % 1600).toLocaleString()} monthly searches.`,
-      pageType: 'Gap landing', h1: g.topic.replace(/\b\w/g, c => c.toUpperCase()),
-      keywords: [{ kw: g.topic.toLowerCase(), vol: 800 + (r % 1600), intent: g.intent, difficulty: 18 + (r % 22) }],
-      competitorEvidence: { count: 0, examples: [] },
-      serpFeatures: pickFeatures(1 + (r % 2)),
-      contentGap: 'Zero of 5 top competitors target this — unclaimed territory per se_analyze_keyword_gap.',
-      sections: ['Hero answering the question', 'Detailed breakdown / comparison table', 'Internal links to service detail pages', 'CTA'],
-      ctas: ['Get a quote'],
-      schema: 'FAQPage',
-      evidence: evidence(g.slug, g.topic, g.intent, 'se_analyze_keyword_gap')
-    });
-  });
+  if (res.status === 401) {
+    showAuthModal('SearchAtlas returned an auth error during market research.');
+    return;
+  }
+  if (!res.ok || !res.body) {
+    renderResearchError(`Server returned ${res.status}. ${await safeReadText(res)}`);
+    return;
+  }
 
-  ['Privacy Policy', 'Terms of Service', 'Accessibility'].forEach((title, idx) => {
-    const slug = '/' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    pages.push({
-      slug, title, tier: 'compliance',
-      oneline: `${title} — required for trust signals and legal compliance.`,
-      pageType: 'Compliance', h1: title,
-      keywords: [],
-      competitorEvidence: { count: 5, examples: ['standard across industry'] },
-      serpFeatures: [],
-      contentGap: 'Standard legal template — no gap analysis needed.',
-      sections: [title + ' content', 'Last updated date'],
-      ctas: [],
-      schema: 'WebPage',
-      evidence: { kw_total_volume: 0, intent: 'compliance', competitor_count: 5, serp_features: [], gap_score: '0.00', source: 'required' }
-    });
-  });
+  const reader = res.body.getReader();
+  _researchReader = reader;
+  const decoder = new TextDecoder();
+  let buf = '';
+  let finalResult = null;
 
-  const byTier = pages.reduce((acc, p) => { acc[p.tier] = (acc[p.tier] || 0) + 1; return acc; }, {});
-  return { total: pages.length, byTier, proposedPages: pages };
-}
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const dataLine = chunk.split('\n').find(l => l.startsWith('data: '));
+        if (!dataLine) continue;
+        let evt;
+        try { evt = JSON.parse(dataLine.slice(6)); } catch { continue; }
+        handleResearchEvent(evt);
+        if (evt.type === 'result') finalResult = evt.data;
+      }
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    renderResearchError('Stream error: ' + e.message);
+    return;
+  }
 
-function renderArchSummary() {
-  state.sitemap = buildProposedSitemap();
-  const validSlugs = new Set(state.sitemap.proposedPages.map(p => p.slug));
+  if (!finalResult || !Array.isArray(finalResult.proposedPages) || !finalResult.proposedPages.length) {
+    renderResearchError('Research finished but no proposed pages were returned. This usually means the SA tools were rate-limited or returned empty results — retry, or check the audit log.');
+    return;
+  }
+
+  // Lock in real data — never simulate.
+  const pages = finalResult.proposedPages;
+  const byTier = pages.reduce((acc, p) => { acc[p.tier || 'core'] = (acc[p.tier || 'core'] || 0) + 1; return acc; }, {});
+  state.sitemap = { total: pages.length, byTier, proposedPages: pages };
+  state.competitorSet = finalResult.competitorSet || [];
+  state.keywordEvidence = finalResult.keywordEvidence || [];
+
+  // Drop any stale page decisions for slugs that no longer exist.
+  const validSlugs = new Set(pages.map(p => p.slug));
   Object.keys(state.pageDecisions).forEach(slug => {
     if (!validSlugs.has(slug)) delete state.pageDecisions[slug];
   });
   persist();
 
-  const sm = state.sitemap;
-  const top3 = [...sm.proposedPages].sort((a, b) => (b.evidence.kw_total_volume || 0) - (a.evidence.kw_total_volume || 0)).slice(0, 3);
-  const tierBreakdown = Object.entries(sm.byTier).map(([t, n]) => `${n} ${t}`).join(' · ');
+  // Mark all tool items as done.
+  document.querySelectorAll('#arch-list .build-item').forEach(i => i.classList.add('done'));
+  appendResearchFeed('done', `${pages.length} pages proposed from real SearchAtlas evidence`);
+  renderArchSummary();
+  document.getElementById('step7-next').disabled = false;
+}
 
+function handleResearchEvent(evt) {
+  if (evt.type === 'work') {
+    appendResearchFeed('work', evt.label || 'tool call');
+    // Best-effort: when a tool label matches a list-item, mark it active.
+    const lbl = (evt.label || '').toLowerCase();
+    document.querySelectorAll('#arch-list .build-item').forEach(li => {
+      const code = (li.querySelector('.tool-code')?.textContent || '').toLowerCase();
+      const friendly = (li.textContent || '').toLowerCase();
+      if (lbl && (friendly.includes(lbl) || (code && lbl.includes(code)))) li.classList.add('active');
+    });
+  } else if (evt.type === 'done') {
+    appendResearchFeed('done', evt.label || 'step complete');
+    document.querySelectorAll('#arch-list .build-item.active').forEach(li => {
+      li.classList.remove('active'); li.classList.add('done');
+    });
+  } else if (evt.type === 'phase') {
+    appendResearchFeed('phase', evt.label || '');
+  } else if (evt.type === 'error') {
+    appendResearchFeed('error', evt.message || 'error');
+    const msg = String(evt.message || '');
+    if (msg.includes('authentication_required')) {
+      showAuthModal('SearchAtlas returned an auth error during market research.');
+    } else if (msg.includes('fabricated_data')) {
+      renderResearchError('Bridge blocked a response containing fabricated tokens (' + msg + '). Refusing to proceed without real data.');
+    } else if (msg === 'no_tool_calls_made') {
+      renderResearchError('Claude did not call any SearchAtlas tools. This usually means the MCP connector is not configured.');
+    } else if (msg === 'no_pages_proposed' || msg === 'no_result_block') {
+      renderResearchError('Research returned no usable pages. Check the audit log at /tmp/amm-website-build-audit.log.');
+    }
+  } else if (evt.type === 'note') {
+    appendResearchFeed('note', evt.label || '');
+  }
+}
+
+function ensureResearchFeed() {
+  let feed = document.getElementById('research-feed');
+  if (feed) { feed.innerHTML = ''; return; }
+  feed = document.createElement('div');
+  feed.id = 'research-feed';
+  feed.style.cssText = 'margin-top:14px; max-height:240px; overflow-y:auto; padding:10px 12px; background:#0f1117; color:#cbd5e1; border-radius:8px; font-family:ui-monospace,Menlo,monospace; font-size:12px; line-height:1.5;';
+  const archList = document.getElementById('arch-list');
+  archList.parentNode.insertBefore(feed, archList.nextSibling);
+}
+
+function appendResearchFeed(kind, label) {
+  const feed = document.getElementById('research-feed');
+  if (!feed) return;
+  const row = document.createElement('div');
+  const color = {
+    phase: '#a78bfa', work: '#cbd5e1', done: '#86efac',
+    note: '#94a3b8', error: '#fca5a5'
+  }[kind] || '#cbd5e1';
+  row.style.color = color;
+  const icon = { phase: '◆', work: '→', done: '✓', note: '·', error: '✗' }[kind] || '·';
+  row.textContent = `${icon} ${label}`;
+  feed.appendChild(row);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function renderResearchError(msg) {
+  removeResearchError();
+  const box = document.createElement('div');
+  box.id = 'research-error';
+  box.className = 'callout warn';
+  box.style.cssText = 'background:var(--red-bg); border-left-color:var(--red); margin-top:14px;';
+  box.innerHTML = `
+    <strong>Market research failed.</strong>
+    <div style="margin-top:4px; font-size:12.5px;">${escapeHtml(msg)}</div>
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button class="btn btn-secondary" onclick="runArchitecture()">Retry</button>
+      <a class="btn btn-secondary" href="https://search.searchatlas.com" target="_blank" rel="noopener">Open Search Atlas</a>
+    </div>`;
+  const archList = document.getElementById('arch-list');
+  archList.parentNode.insertBefore(box, archList.nextSibling);
+  document.getElementById('step7-next').disabled = true;
+}
+
+function removeResearchError() {
+  const box = document.getElementById('research-error');
+  if (box) box.remove();
+}
+
+// Deprecated client-side sitemap synthesizer — kept only so older
+// localStorage payloads do not blow up if the operator reverts manually.
+// All real sitemaps now flow in via /api/research-market.
+/* The pre-MCP-day client-side sitemap synthesizer was removed 2026-05-20.
+   Real sitemaps now flow exclusively from /api/research-market (SSE).
+   No shim or fallback function is retained — any code path that previously
+   called buildProposedSitemap() now reads `state.sitemap` directly. */
+
+function renderArchSummary() {
+  // The real sitemap was written into state.sitemap by runArchitecture()
+  // after SSE finished. We never regenerate from synthetic input here.
+  const sm = state.sitemap;
   const block = document.getElementById('arch-summary');
+  if (!sm || !Array.isArray(sm.proposedPages) || !sm.proposedPages.length) {
+    block.style.display = 'none';
+    return;
+  }
+  const top3 = [...sm.proposedPages]
+    .filter(p => p.evidence && typeof p.evidence.kw_total_volume === 'number')
+    .sort((a, b) => (b.evidence.kw_total_volume || 0) - (a.evidence.kw_total_volume || 0))
+    .slice(0, 3);
+  const tierBreakdown = Object.entries(sm.byTier || {}).map(([t, n]) => `${n} ${t}`).join(' · ');
+
   block.innerHTML = '';
   const addSect = (heading) => {
     const s = document.createElement('div'); s.className = 'hitl-section';
@@ -2073,21 +2401,30 @@ function renderArchSummary() {
   const addRow = (parent, k, v) => {
     const row = document.createElement('div'); row.className = 'hitl-row';
     const key = document.createElement('div'); key.className = 'hitl-key'; key.textContent = k;
-    const val = document.createElement('div'); val.className = 'hitl-val'; val.textContent = v;
+    const val = document.createElement('div'); val.className = 'hitl-val';
+    val.textContent = (v == null || v === '') ? '—' : String(v);
     row.appendChild(key); row.appendChild(val); parent.appendChild(row);
   };
 
-  const tm = state.targetMarket;
-  const s1 = addSect('proposed-sitemap.json');
+  const tm = state.targetMarket || {};
+  const s1 = addSect('proposed-sitemap.json · real evidence');
   addRow(s1, 'Total pages', String(sm.total));
-  addRow(s1, 'By tier', tierBreakdown);
-  addRow(s1, 'Seeded by', `${tm.industryTier2 || '—'} · ${tm.targetKeywords.length || 'auto'} keywords · ${tm.knownCompetitors.length || 'auto'} competitors`);
+  addRow(s1, 'By tier', tierBreakdown || '—');
+  addRow(s1, 'Seeded by', `${tm.industryTier2 || '—'} · ${(tm.targetKeywords || []).length || 'auto'} keywords · ${(tm.knownCompetitors || []).length || 'auto'} competitors`);
+  if (Array.isArray(state.competitorSet) && state.competitorSet.length) {
+    addRow(s1, 'Competitors discovered', state.competitorSet.slice(0, 5).join(', '));
+  }
 
-  const s2 = addSect('Top 3 opportunities (by volume)');
-  top3.forEach(p => {
-    const ev = p.evidence;
-    addRow(s2, p.title, `${ev.kw_total_volume.toLocaleString()} vol · ${ev.competitor_count}/5 competitors have this · gap ${ev.gap_score}`);
-  });
+  if (top3.length) {
+    const s2 = addSect('Top 3 opportunities (by volume)');
+    top3.forEach(p => {
+      const ev = p.evidence || {};
+      const vol = ev.kw_total_volume != null ? ev.kw_total_volume.toLocaleString() : '—';
+      const cc = ev.competitor_count != null ? `${ev.competitor_count} competitors have this` : '— competitors';
+      const gap = ev.gap_score != null ? `gap ${ev.gap_score}` : '';
+      addRow(s2, p.title || p.slug, [vol + ' vol', cc, gap].filter(Boolean).join(' · '));
+    });
+  }
 
   const s3 = addSect('Next step');
   const row = document.createElement('div'); row.className = 'hitl-row';
@@ -2119,9 +2456,19 @@ function renderPageWalkthrough() {
     card.dataset.slug = p.slug;
     const tree = buildAsciiTree(p, idx, pages.length);
 
-    const keywordsText = (p.keywords || []).map(k => `${k.kw} · ${k.vol} vol · ${k.intent} · KD ${k.difficulty}`).join('\n');
+    const keywordsText = (p.keywords || []).map(k => {
+      // Never coerce null to 0 / "null" — em-dash for missing values.
+      const v = (k.vol != null && !isNaN(k.vol)) ? Number(k.vol).toLocaleString() : '—';
+      const i = k.intent || '—';
+      const d = (k.difficulty != null && !isNaN(k.difficulty)) ? k.difficulty : '—';
+      return `${k.kw} · ${v} vol · ${i} · KD ${d}`;
+    }).join('\n');
+    // Use the real "out of" denominator from the bridge (totalSampled) when
+    // present. Falls back to the live competitor set size, never a hardcoded 5.
+    const competitorDenom = (p.competitorEvidence && p.competitorEvidence.totalSampled)
+      || (Array.isArray(state.competitorSet) ? state.competitorSet.length : null);
     const competitorsText = p.competitorEvidence && p.competitorEvidence.count > 0
-      ? `${p.competitorEvidence.count} of 5 competitors have this — ${p.competitorEvidence.examples.join(', ')}`
+      ? `${p.competitorEvidence.count}${competitorDenom ? ' of ' + competitorDenom : ''} competitors have this — ${(p.competitorEvidence.examples || []).join(', ') || '—'}`
       : 'No competitors target this — gap opportunity.';
     const serpText = p.serpFeatures && p.serpFeatures.length ? p.serpFeatures.join(', ') : 'No notable SERP features.';
     const sectionsText = (p.sections || []).map(s => `· ${s}`).join('\n');
@@ -2215,7 +2562,13 @@ function renderPageWalkthrough() {
         const row = document.createElement('div'); row.className = 'page-expand-row';
         const ek = document.createElement('span'); ek.className = 'ek'; ek.textContent = k.kw;
         const ev = document.createElement('span'); ev.className = 'ev';
-        ev.textContent = `${k.vol.toLocaleString()} vol · ${k.intent} · KD ${k.difficulty}`;
+        // HIGH-4 guard: vol/difficulty/intent can be null when SA didn't
+        // return a value. Never coerce null to 0 — render an em-dash so the
+        // operator sees missing data, not fake data.
+        const volStr   = (k.vol != null && !isNaN(k.vol)) ? Number(k.vol).toLocaleString() : '—';
+        const intentStr= k.intent || '—';
+        const kdStr    = (k.difficulty != null && !isNaN(k.difficulty)) ? k.difficulty : '—';
+        ev.textContent = `${volStr} vol · ${intentStr} · KD ${kdStr}`;
         row.appendChild(ek); row.appendChild(ev); kwRows.appendChild(row);
       });
     }
@@ -2339,7 +2692,12 @@ function renderHITLSummary() {
   const tier = TIERS[state.tier] || TIERS.unknown;
   const arch = ARCHETYPES[state.archetype] || { name: '—' };
   const sm = state.sitemap || { total: 0, byTier: {}, proposedPages: [] };
-  const p = state.detect.pillars || { technical: '—', content: '—', authority: '—', ux: '—' };
+  // HIGH-3: never synthesize em-dash pillar scores. The row is rendered
+  // ONLY if a real pillars object exists with numeric values (set by a real
+  // OTTO call). For greenfield this is null and the row is suppressed.
+  const p = (state.detect && state.detect.pillars && typeof state.detect.pillars.technical === 'number')
+    ? state.detect.pillars
+    : null;
   const tm = state.targetMarket || { industryTier1: '', industryTier2: '', targetKeywords: [], knownCompetitors: [] };
 
   const decisions = state.pageDecisions || {};
@@ -2353,8 +2711,10 @@ function renderHITLSummary() {
 
   const issues = [];
   if (state.tier === 'unknown') issues.push('Budget tier flagged as unknown — defaulted to Growth');
-  if (p.authority !== '—' && p.authority < 40) issues.push('Authority < 40 — PR/cloud stack reprioritized to month 1');
-  if (p.content !== '—' && p.content < 50) issues.push('Content < 50 — topical map prioritized to week 2');
+  // HIGH-fix: p is now null when pillars haven't been measured. Skip the
+  // numeric checks entirely instead of dereferencing null.
+  if (p && typeof p.authority === 'number' && p.authority < 40) issues.push('Authority < 40 — PR/cloud stack reprioritized to month 1');
+  if (p && typeof p.content === 'number' && p.content < 50) issues.push('Content < 50 — topical map prioritized to week 2');
   if (rejected > 0) issues.push(`${rejected} page${rejected === 1 ? '' : 's'} rejected — won't be built`);
   if (!tm.targetKeywords.length) issues.push('Target keywords auto-derived from services × location × industry');
   if (!tm.knownCompetitors.length) issues.push('Competitors discovered automatically via SA organic SERPs');
@@ -2395,7 +2755,9 @@ function renderHITLSummary() {
   addRow(s, 'Proposed', `${sm.total} pages · ${byTierLabel}`);
   addRow(s, 'Decisions', `${approved} approved · ${edited} edited · ${rejected} rejected`);
   addRow(s, 'Will build', `${approved + edited} pages`);
-  addRow(s, 'Pillar baseline', `Tech ${p.technical} · Content ${p.content} · Authority ${p.authority} · UX ${p.ux}`);
+  if (p) {
+    addRow(s, 'Pillar baseline', `Tech ${p.technical} · Content ${p.content} · Authority ${p.authority} · UX ${p.ux}`);
+  } // else: no row — pillars require a real OTTO project; greenfield has none.
 
   s = addSect('Design');
   addRow(s, 'Archetype', arch.name);
@@ -2551,9 +2913,31 @@ function renderActivityEvent(evt) {
     addFeedItem(feed, 'biz', `Working on ${evt.name}`);
   } else if (evt.type === 'error') {
     addFeedItem(feed, 'error', evt.message || 'Error');
+    if (evt.auth_required) {
+      // Server told us SA MCP is not authenticated for this run.
+      // Show the auth modal so the operator can recover, and DO NOT
+      // proceed with the build flow.
+      if (typeof showAuthModal === 'function') showAuthModal();
+    }
+    finishBuild(false);
+  } else if (evt.type === 'ws_published') {
+    // CRIT-1 / CRIT-2: capture the REAL Website Studio URL from the
+    // ws_publish_project tool_result. This is the ONLY path that sets
+    // state.wsPublishUrl. revealSiteLiveBlock() refuses to render without it.
+    if (evt.url) {
+      state.wsPublishUrl = evt.url;
+      persist();
+      addFeedItem(feed, 'done', evt.label || `Site published · ${evt.url}`);
+    }
   } else if (evt.type === 'complete') {
     addFeedItem(feed, 'complete', 'Build complete · site published to Website Studio');
     revealSiteLiveBlock();
+  } else if (evt.type === 'incomplete') {
+    // CRIT-1: Claude finished but did NOT successfully publish. Surface
+    // the real reason; do NOT show the live-site block.
+    addFeedItem(feed, 'error',
+      `Build incomplete — ${evt.message || 'ws_publish_project did not return a URL'}. The site was NOT published.`);
+    finishBuild(false);
   }
 }
 
@@ -2569,31 +2953,27 @@ function addFeedItem(feed, cls, text) {
   feed.scrollTop = feed.scrollHeight;
 }
 
-function deriveClientSlug(domain) {
-  if (!domain) return 'client';
-  const root = String(domain)
-    .replace(/^https?:\/\//, '')
-    .replace(/\/.*$/, '')
-    .replace(/\.[a-z]{2,}(\.[a-z]{2,})?$/i, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  const suffixes = ['dental','clinic','care','law','legal','medical','health','plumbing','roofing','hvac','auto','realty'];
-  for (const s of suffixes) {
-    const re = new RegExp(`([a-z0-9]+)(${s})`);
-    const m = root.match(re);
-    if (m && m[1].length >= 4) return `${m[1]}-${m[2]}`;
-  }
-  return root || 'client';
-}
+/* B-D: deriveClientSlug() was removed 2026-05-20 — it could be re-introduced
+   as a fabrication vector by building `${slug}.ws.searchatlas.com`. The only
+   path to a WS URL is now the real `ws_published` SSE event. Do NOT
+   re-introduce a client-side slug deriver. */
 
 function revealSiteLiveBlock() {
-  const domain = (state.domain || 'example.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const slug = state.clientSlug || deriveClientSlug(domain);
-  const wsPublishUrl = `${slug}.ws.searchatlas.com`;
-  state.wsPublishUrl = wsPublishUrl;
-  persist();
-  const wsUrl = 'https://' + wsPublishUrl;
+  // CRIT-2: NEVER fabricate the WS URL client-side. The bridge emits a
+  // `ws_published` event with the real URL captured from ws_publish_project's
+  // tool_result. We only reveal the live-site block when that URL exists.
+  if (!state.wsPublishUrl) {
+    // Defensive: this function should only be called after `complete` event
+    // which our parser only emits when publish_succeeded. Fail loud if reached.
+    console.warn('revealSiteLiveBlock called without state.wsPublishUrl — refusing to fabricate URL');
+    return;
+  }
+  if (!state.domain) {
+    console.warn('revealSiteLiveBlock called without state.domain — refusing to render');
+    return;
+  }
+  const domain = state.domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const wsUrl = state.wsPublishUrl.startsWith('http') ? state.wsPublishUrl : 'https://' + state.wsPublishUrl;
   const customUrl = 'https://' + domain;
   const urlEl = document.getElementById('live-site-url');
   const openEl = document.getElementById('open-live-site');
@@ -2653,10 +3033,78 @@ async function checkHealth() {
 }
 
 // ────────────────────────────────────────────────────────────
+// AUTH MODAL · blocks the wizard until SA MCP is authenticated
+// ────────────────────────────────────────────────────────────
+let _authProbeInflight = false;
+
+function showAuthModal(reason) {
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const errBox = document.getElementById('auth-modal-error');
+  if (errBox) {
+    if (reason) {
+      errBox.style.display = 'block';
+      errBox.textContent = reason;
+    } else {
+      errBox.style.display = 'none';
+    }
+  }
+}
+
+function hideAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function authProbe(opts) {
+  const silent = !!(opts && opts.silent);
+  if (_authProbeInflight) return null;
+  _authProbeInflight = true;
+  const retryBtn = document.getElementById('auth-modal-retry');
+  if (retryBtn) { retryBtn.disabled = true; retryBtn.textContent = 'Checking…'; }
+  let data = null;
+  try {
+    const res = await fetch('/api/auth-probe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    if (res.status === 504) {
+      data = { authenticated: false, error: 'timeout' };
+    } else if (res.status === 502) {
+      const body = await res.json().catch(() => ({}));
+      data = { authenticated: false, error: body.error || 'no_tool_calls_made' };
+    } else {
+      data = await res.json().catch(() => ({ authenticated: false, error: 'bad_response' }));
+    }
+  } catch (e) {
+    data = { authenticated: false, error: 'network: ' + e.message };
+  }
+  _authProbeInflight = false;
+  if (retryBtn) { retryBtn.disabled = false; retryBtn.textContent = 'Retry'; }
+
+  if (!data || !data.authenticated) {
+    if (!silent) showAuthModal(data?.error ? `Reason: ${data.error}` : null);
+    return false;
+  }
+  hideAuthModal();
+  return true;
+}
+
+async function retryAuthProbe() { await authProbe({ silent: false }); }
+
+// ────────────────────────────────────────────────────────────
 // STEP LIFECYCLE HOOKS
 // ────────────────────────────────────────────────────────────
 function onStepEnter(n) {
-  if (n === 1) renderServicesPills();
+  if (n === 1) {
+    renderServicesPills();
+    // Fire-and-forget auth probe on first step. Blocks the wizard via the
+    // modal if Search Atlas is not connected.
+    authProbe({ silent: false });
+    return;
+  }
   if (n === 2) renderMaterials();
   if (n === 3) {
     document.querySelectorAll('#tier-grid .tier-card').forEach(c => {

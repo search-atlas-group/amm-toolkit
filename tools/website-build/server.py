@@ -1,25 +1,53 @@
 """
 Website Build Wizard — local server that bridges the web UI to Claude Code.
 
-Form payload from the wizard is converted into a single self-contained prompt
-that runs the `/build-website` slash command end-to-end:
+Each wizard step that needs real data calls a small, single-purpose `claude -p`
+subprocess. The Claude CLI spawned here only has permission to call SearchAtlas
+MCP tools — never WebFetch, Edit, or Bash for these step endpoints. That keeps
+the contract narrow: the JSON we return is a direct projection of real MCP
+`tool_use` / `tool_result` blocks that Claude emitted.
 
-  Phase 1  — Identify target (domain provided, slug derived)
-  Phase 2  — Quick existence check (BV + GBP)
-  Phase 3  — Multi-format intake (operator-dropped materials)
-  Phase 4  — Brand vault use OR auto-create + auto-fill
-  Phase 5  — Budget tier
-  Phase 6  — Brand strategy synthesis
-  Phase 7  — Market-evidence research (2-wave parallel research, 9 SA tools)
-  Phase 8  — Per-page approval (pre-approved by operator in the wizard)
-  Phase 9  — Design style + push to BV / WS
-  Phase 10 — Content + copy per page
-  Phase 11 — Build + push to Website Studio
-  Phase 12 — Publish + handoff (ws_publish_project, return both URLs)
+Endpoints
+---------
+- POST /api/auth-probe       — JSON. Spawns Claude with empty payload, asks it to
+                                call `cg_list_brand_vaults({})` once. Returns
+                                `{"authenticated": bool, "error": "..." | None}`.
 
-Stream parsing mirrors the Command Center: raw MCP tool names are mapped to
-readable process labels before being forwarded to the browser. Internal tools
-(Read, Skill, ToolSearch, TodoWrite) are filtered out entirely.
+- POST /api/detect-assets    — JSON. Payload `{ "domain": ... }`. Asks Claude to
+                                run `cg_list_brand_vaults` + `gbp_list_locations`
+                                filtered by domain and return a single JSON line.
+
+- POST /api/pull-bv          — JSON. Payload `{ "brand_vault_uuid", "hostname" }`.
+                                Pulls bv_get_details + bv_get_business_info +
+                                bv_list_voice_profiles + bv_get_knowledge_graph.
+
+- POST /api/create-bv        — JSON. Payload = operator-confirmed fields.
+                                Calls bv_create then bv_update_business_info,
+                                bv_update, bv_update_knowledge_graph.
+
+- POST /api/research-market  — SSE. Payload = domain + industry + target keywords
+                                + known competitors + services + location.
+                                Streams the two-wave research and emits a final
+                                `result` event with the proposed sitemap.
+
+- POST /api/build            — SSE. Original end-to-end build endpoint
+                                (unchanged behaviour, runs `/build-website`).
+
+- POST /api/preview-prompt   — JSON. Echoes the assembled build-website prompt.
+
+- GET  /api/health           — JSON. Claude CLI + SA MCP availability.
+
+Guardrails (applied to every wizard endpoint)
+---------------------------------------------
+- The Claude subprocess is asked to call SPECIFIC SA MCP tools — and is told to
+  emit `<<<RESULT>>>{json}<<<END>>>` exactly once with the merged real data.
+- If the output contains forbidden tokens (`{pending}`, `{uuid}`, `simulated`,
+  `would normally`) → HTTP 502 `{"error": "fabricated_data"}`.
+- If ZERO `tool_use` blocks were emitted but tools were required → HTTP 502
+  `{"error": "no_tool_calls_made"}`.
+- If any MCP call returns auth / 401 / unauthorized errors → HTTP 401
+  `{"error": "authentication_required"}`.
+- All requests + responses are appended to `/tmp/amm-website-build-audit.log`.
 """
 from __future__ import annotations
 
@@ -29,9 +57,12 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
+import uuid
+from datetime import datetime
 from pathlib import Path
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,6 +70,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 
 HERE = Path(__file__).resolve().parent
+AUDIT_LOG = Path("/tmp/amm-website-build-audit.log")
 
 
 def find_toolkit_root(start: Path) -> Path:
@@ -53,14 +85,28 @@ def find_toolkit_root(start: Path) -> Path:
 TOOLKIT_ROOT = find_toolkit_root(HERE)
 
 
-# ── Friendly process labels ──────────────────────────────────────────────────
-# Map raw tool name (or suffix after mcp__provider__) → human-friendly verb.
-# When a tool isn't mapped, it's hidden from the feed entirely so the user
-# never sees raw command names.
+# ── Audit log ────────────────────────────────────────────────────────────────
+
+
+def audit(event: str, payload: Any) -> None:
+    """Append a JSON line to the audit log. Best-effort, never raises."""
+    try:
+        rec = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "event": event,
+            "payload": payload,
+        }
+        with AUDIT_LOG.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec, default=str) + "\n")
+    except Exception:
+        pass
+
+
+# ── Tool labels (used by the SSE build endpoint) ─────────────────────────────
+
+
 TOOL_LABELS: dict[str, str] = {
-    # Built-in Claude tools we WANT to surface
     "WebFetch":      "Reading the website",
-    # SearchAtlas brand vault
     "bv_list":             "Checking for an existing brand vault",
     "bv_create":           "Creating the brand vault",
     "bv_update":           "Saving brand details to the vault",
@@ -78,7 +124,6 @@ TOOL_LABELS: dict[str, str] = {
     "update_brand_vault":  "Saving brand details to the vault",
     "update_knowledge_graph": "Building the knowledge graph",
     "update_brand_vault_business_info": "Saving business info",
-    # GBP
     "gbp_search_places":            "Searching Google for the business",
     "gbp_list_unconnected_locations": "Looking up Google Business listings",
     "gbp_list_locations":           "Listing connected GBP locations",
@@ -95,7 +140,6 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_suggest_description":      "Drafting GBP description",
     "gbp_create_audit_report_external": "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
-    # SEO / Site explorer — including the 9 wave-research tools
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
     "se_get_organic_keywords":      "Analyzing organic keywords",
     "se_get_organic_competitors":   "Identifying organic competitors",
@@ -108,12 +152,10 @@ TOOL_LABELS: dict[str, str] = {
     "se_create_keyword_research":   "Setting up keyword research",
     "se_create_project":            "Creating the Site Explorer project",
     "se_lookup_keyword":            "Validating target keywords",
-    # Keyword tracking
     "krt_create_project":           "Setting up keyword tracking",
     "krt_add_keywords":             "Adding target keywords",
     "krt_bulk_add_keywords":        "Adding target keywords",
     "krt_refresh_rankings":         "Pulling current rankings",
-    # Content
     "cg_create_topical_map":        "Building topical map",
     "cg_search_topical_maps":       "Looking up topical maps",
     "cg_topic_suggestions":         "Pulling knowledge-graph topics",
@@ -123,7 +165,6 @@ TOOL_LABELS: dict[str, str] = {
     "cg_get_brand_vault_details":   "Loading brand vault",
     "cg_run_content_grader":        "Grading content quality",
     "cg_list_brand_vaults":         "Checking for an existing brand vault",
-    # OTTO — schema + indexing pieces touched by /build-website
     "otto_list_projects":           "Checking for an existing OTTO project",
     "otto_find_project_by_hostname":"Looking up OTTO project",
     "otto_get_project_details":     "Loading OTTO project",
@@ -141,25 +182,19 @@ TOOL_LABELS: dict[str, str] = {
     "otto_get_quota":               "Checking your quota",
     "otto_get_task_status":         "Checking task status",
     "otto_update_knowledge_graph":  "Updating knowledge graph",
-    # Indexer
     "indexer_submit_batch":         "Submitting URLs to Google",
     "indexer_check_status":         "Checking indexing status",
-    # Website Studio
     "ws_create_project":            "Scaffolding Website Studio project",
     "ws_publish_project":           "Publishing to Website Studio",
     "ws_get_project":               "Verifying Website Studio state",
     "ws_ensure_containers_running": "Starting Website Studio build environment",
     "ws_list_projects":             "Listing Website Studio projects",
-    # LLM visibility (referenced in BV auto-crawl)
     "llmv_get_brand_overview":      "Reading brand presence in LLMs",
-    # KG validation
     "kg_validate_completeness":     "Validating knowledge graph completeness",
-    # Account / quota
     "get_balance":                  "Checking your balance",
     "show_otto_quota":              "Checking your quota",
 }
 
-# Tools we silently skip (internal / noisy)
 SILENT_TOOLS = {
     "Read", "Skill", "ToolSearch", "TodoWrite", "Glob", "Grep",
     "ListMcpResourcesTool", "ReadMcpResourceTool",
@@ -169,7 +204,6 @@ SILENT_TOOLS = {
 
 
 def short_tool_name(raw: str) -> str:
-    """Strip 'mcp__provider__' prefix to get the bare tool name."""
     if not raw:
         return ""
     if raw.startswith("mcp__"):
@@ -180,14 +214,12 @@ def short_tool_name(raw: str) -> str:
 
 
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
-    """Returns a friendly label, or None if the tool should be hidden."""
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":
-        # Hide all bash by default — too noisy. The phase headings cover it.
         return None
     if tool_name == "WebFetch":
         url = (tool_input.get("url") or "").strip()
@@ -195,17 +227,15 @@ def friendly_label(tool_name: str, tool_input: dict) -> str | None:
             host = re.sub(r"^https?://(www\.)?", "", url).split("/")[0]
             return f"Reading {host}"
         return TOOL_LABELS["WebFetch"]
-    if tool_name == "Edit":
-        return None  # covered by file-write rollup
-    if tool_name == "Write":
-        return None  # covered by file-write rollup
+    if tool_name in ("Edit", "Write"):
+        return None
     return None
 
 
 # ── App ──────────────────────────────────────────────────────────────────────
 
 
-app = FastAPI(title="Website Build Wizard", version="1.0")
+app = FastAPI(title="Website Build Wizard", version="2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -219,17 +249,22 @@ async def root():
     return FileResponse(HERE / "index.html")
 
 
-# ── Health (cached, slow first call) ─────────────────────────────────────────
+# ── Health (cached) ──────────────────────────────────────────────────────────
 
 
 _mcp_cache: dict = {"checked_at": 0.0, "sa_configured": False}
-_MCP_CACHE_TTL = 300
+_MCP_CACHE_TTL_OK = 300
+_MCP_CACHE_TTL_FAIL = 10  # HIGH-6: never trap operator in a 5-minute false negative.
 
 
 async def _check_sa_mcp_configured(claude_path: str) -> bool:
     now = time.monotonic()
-    if now - _mcp_cache["checked_at"] < _MCP_CACHE_TTL:
-        return bool(_mcp_cache["sa_configured"])
+    elapsed = now - _mcp_cache["checked_at"]
+    cached_ok = bool(_mcp_cache.get("sa_configured"))
+    if cached_ok and elapsed < _MCP_CACHE_TTL_OK:
+        return True
+    if (not cached_ok) and elapsed < _MCP_CACHE_TTL_FAIL:
+        return False
     try:
         proc = await asyncio.create_subprocess_exec(
             claude_path, "mcp", "list",
@@ -238,7 +273,7 @@ async def _check_sa_mcp_configured(claude_path: str) -> bool:
         )
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
         text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        ok = "searchatlas" in text
+        ok = "searchatlas" in text or "search_atlas" in text or "search-atlas" in text
     except Exception:
         ok = False
     _mcp_cache["checked_at"] = now
@@ -260,7 +295,7 @@ async def health():
     }
 
 
-# ── Prompt builder ───────────────────────────────────────────────────────────
+# ── Domain helpers ───────────────────────────────────────────────────────────
 
 
 def domain_clean(raw: str) -> str:
@@ -277,6 +312,898 @@ def domain_to_slug(domain: str) -> str:
     if len(parts) >= 2:
         return re.sub(r"[^a-z0-9-]+", "-", "-".join(parts[:-1])).strip("-") or "client"
     return re.sub(r"[^a-z0-9-]+", "-", d).strip("-") or "client"
+
+
+# ── Subprocess runner: spawn `claude -p`, collect every tool_use / tool_result,
+# extract the operator-supplied <<<RESULT>>>{json}<<<END>>> block ────────────
+
+
+RESULT_BLOCK_RE = re.compile(r"<<<RESULT>>>(.*?)<<<END>>>", re.DOTALL)
+FORBIDDEN_TOKENS = (
+    "{pending}", "{uuid}", "would normally", "simulated",
+    "i would call", "i'll call", "in a real run",
+)
+AUTH_ERROR_RE = re.compile(
+    r"(not authenticated|unauthorized|401|connector\s*not\s*authenticated|"
+    r"oauth|please\s+authenticate|sign\s+in\s+to|authentication\s+required|"
+    r"authorize.*searchatlas)",
+    re.IGNORECASE,
+)
+
+
+class ClaudeRunResult:
+    __slots__ = (
+        "raw_lines", "stdout_text", "stderr_text", "tool_calls",
+        "tool_results", "rc", "timeout", "result_blob"
+    )
+
+    def __init__(self) -> None:
+        self.raw_lines: list[str] = []
+        self.stdout_text: str = ""
+        self.stderr_text: str = ""
+        self.tool_calls: list[dict] = []  # [{name, input}]
+        self.tool_results: list[dict] = []  # [{tool_use_id, content_text, is_error}]
+        self.rc: int = -1
+        self.timeout: bool = False
+        self.result_blob: dict | None = None
+
+
+async def run_claude_step(
+    prompt: str,
+    *,
+    timeout_s: float = 60.0,
+    expect_tools: bool = True,
+    required_tool_substrings: list[str] | None = None,
+) -> ClaudeRunResult:
+    """Spawn `claude -p` with stream-json output, collect all tool activity,
+    and parse the operator's <<<RESULT>>>{json}<<<END>>> block out of the
+    final assistant text."""
+    out = ClaudeRunResult()
+    claude_path = shutil.which("claude")
+    if not claude_path:
+        out.stderr_text = "claude CLI not found on PATH"
+        return out
+
+    cmd = [
+        claude_path, "-p",
+        "--output-format", "stream-json",
+        "--verbose",
+        prompt,
+    ]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            cwd=str(TOOLKIT_ROOT),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except Exception as exc:
+        out.stderr_text = f"failed to spawn claude: {exc}"
+        return out
+
+    text_chunks: list[str] = []
+
+    async def _read_stream() -> None:
+        assert proc.stdout is not None
+        while True:
+            line_bytes = await proc.stdout.readline()
+            if not line_bytes:
+                break
+            line = line_bytes.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            out.raw_lines.append(line)
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            mtype = data.get("type")
+            if mtype == "assistant":
+                msg = data.get("message", {}) or {}
+                for block in msg.get("content", []) or []:
+                    btype = block.get("type")
+                    if btype == "text":
+                        text_chunks.append(block.get("text") or "")
+                    elif btype == "tool_use":
+                        out.tool_calls.append({
+                            "id": block.get("id"),
+                            "name": block.get("name", ""),
+                            "input": block.get("input") or {},
+                        })
+            elif mtype == "user":
+                msg = data.get("message", {}) or {}
+                for block in msg.get("content", []) or []:
+                    if block.get("type") == "tool_result":
+                        content = block.get("content", "")
+                        if isinstance(content, list):
+                            content_text = " ".join(
+                                c.get("text", "") for c in content
+                                if isinstance(c, dict)
+                            )
+                        else:
+                            content_text = str(content)
+                        out.tool_results.append({
+                            "tool_use_id": block.get("tool_use_id"),
+                            "content_text": content_text,
+                            "is_error": bool(block.get("is_error")),
+                        })
+
+    try:
+        await asyncio.wait_for(_read_stream(), timeout=timeout_s)
+        out.rc = await proc.wait()
+    except asyncio.TimeoutError:
+        out.timeout = True
+        try:
+            proc.kill()
+        except Exception:
+            pass
+        try:
+            await proc.wait()
+        except Exception:
+            pass
+
+    if proc.stderr is not None:
+        try:
+            err = await proc.stderr.read()
+            out.stderr_text = err.decode("utf-8", errors="replace")
+        except Exception:
+            pass
+
+    out.stdout_text = "\n".join(text_chunks)
+
+    # Extract <<<RESULT>>>{json}<<<END>>>
+    m = RESULT_BLOCK_RE.search(out.stdout_text)
+    if m:
+        blob_text = m.group(1).strip()
+        # Tolerate fenced code wrappers
+        blob_text = re.sub(r"^```(?:json)?\s*", "", blob_text)
+        blob_text = re.sub(r"\s*```$", "", blob_text)
+        try:
+            out.result_blob = json.loads(blob_text)
+        except json.JSONDecodeError:
+            out.result_blob = None
+
+    return out
+
+
+_STRONG_AUTH_PATTERNS = re.compile(
+    r"(\b401\b|not\s+authenticated|connector\s*not\s*authenticated|oauth\s+required)",
+    re.IGNORECASE,
+)
+
+
+def _has_auth_error(run: ClaudeRunResult) -> bool:
+    # Auth error if any tool_result contains an auth-shaped string AND is_error
+    for tr in run.tool_results:
+        if tr.get("is_error") and AUTH_ERROR_RE.search(tr.get("content_text", "")):
+            return True
+    # Or if the assistant text itself surfaces auth failure
+    if AUTH_ERROR_RE.search(run.stdout_text or ""):
+        # Strong auth patterns (401 / "not authenticated" / "connector not
+        # authenticated" / "OAuth required") are unambiguous — no keyword
+        # qualifier required.
+        if _STRONG_AUTH_PATTERNS.search(run.stdout_text):
+            return True
+        # Weaker auth-shaped strings still require an SA/MCP/BV keyword to
+        # avoid false positives on unrelated narration.
+        if re.search(r"(searchatlas|mcp|brand\s*vault)", run.stdout_text, re.I):
+            return True
+    return False
+
+
+def _contains_forbidden_token(run: ClaudeRunResult) -> str | None:
+    text = (run.stdout_text or "").lower()
+    for tok in FORBIDDEN_TOKENS:
+        if tok in text:
+            return tok
+    return None
+
+
+def _called_required_tools(run: ClaudeRunResult, required: list[str]) -> bool:
+    names = [short_tool_name(t.get("name", "")) for t in run.tool_calls]
+    return all(any(req in n for n in names) for req in required)
+
+
+# ── /api/auth-probe ──────────────────────────────────────────────────────────
+
+
+AUTH_PROBE_PROMPT = """You are a non-interactive auth probe for the SearchAtlas MCP connector.
+
+Call exactly ONE tool, with empty parameters, then emit the result block. Do not
+narrate. Do not call any other tool.
+
+  Tool: mcp__searchatlas__cg_list_brand_vaults
+  Input: {}
+
+After the tool returns, emit on its own line, with no prefix:
+
+<<<RESULT>>>{"authenticated": <true|false>, "tool_called": "cg_list_brand_vaults", "error": "<short message or empty>"}<<<END>>>
+
+Rules:
+- If the tool returns ANY result (even an empty list) → authenticated: true, error: "".
+- If the tool returns an authentication / OAuth / 401 / "not authenticated" / "unauthorized" / "connector not authenticated" error → authenticated: false, error: <the error message, single line, < 240 chars>.
+- Do NOT invent or simulate a response. The probe is invalid unless the real tool was invoked.
+- After emitting the RESULT block, stop. Do not continue.
+"""
+
+
+@app.post("/api/auth-probe")
+async def auth_probe(request: Request):
+    rid = uuid.uuid4().hex[:8]
+    audit("auth-probe:request", {"rid": rid})
+
+    # Fast path: if `claude mcp list` doesn't show searchatlas, no need to spawn
+    # a 60-second subprocess just to discover the connector is missing.
+    claude_path = shutil.which("claude")
+    if claude_path:
+        sa_configured = await _check_sa_mcp_configured(claude_path)
+        if not sa_configured:
+            audit("auth-probe:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
+            return JSONResponse(
+                {"authenticated": False, "error": "searchatlas_mcp_not_configured"},
+                status_code=200,
+            )
+
+    try:
+        run = await run_claude_step(
+            AUTH_PROBE_PROMPT,
+            timeout_s=45.0,
+            expect_tools=True,
+            required_tool_substrings=["cg_list_brand_vaults"],
+        )
+    except Exception as exc:
+        audit("auth-probe:exception", {"rid": rid, "err": str(exc)})
+        return JSONResponse({"authenticated": False, "error": f"server_error: {exc}"}, status_code=500)
+
+    audit("auth-probe:tool_calls", {
+        "rid": rid,
+        "tool_calls": [t.get("name") for t in run.tool_calls],
+        "tool_results_n": len(run.tool_results),
+        "rc": run.rc,
+        "timeout": run.timeout,
+        "result_blob": run.result_blob,
+    })
+
+    if run.timeout:
+        # Treat as not-authenticated rather than a hard 504 — the modal will
+        # show a friendly retry path and the wizard stays operable.
+        return JSONResponse(
+            {"authenticated": False, "error": "timeout — probe took too long"},
+            status_code=200,
+        )
+
+    # No tool calls at all → cannot trust the answer
+    if not run.tool_calls:
+        return JSONResponse(
+            {"authenticated": False, "error": "no_tool_calls_made"},
+            status_code=200,
+        )
+
+    # The probe is only meaningful if the model actually called the BV-list
+    # tool. If it ran some other tool we cannot trust the auth verdict.
+    if not _called_required_tools(run, ["cg_list_brand_vaults"]):
+        audit("auth-probe:wrong-tool", {
+            "rid": rid,
+            "tool_calls": [t.get("name") for t in run.tool_calls],
+        })
+        return JSONResponse(
+            {"authenticated": False, "error": "wrong_tool_called"},
+            status_code=502,
+        )
+
+    if _has_auth_error(run):
+        return JSONResponse(
+            {"authenticated": False, "error": "authentication_required"},
+            status_code=200,
+        )
+
+    # Inspect the result blob the model emitted
+    blob = run.result_blob or {}
+    authed = bool(blob.get("authenticated"))
+    if authed:
+        return {"authenticated": True, "error": None}
+
+    err = (blob.get("error") or "").strip() or "unknown"
+    return {"authenticated": False, "error": err}
+
+
+# ── /api/detect-assets ───────────────────────────────────────────────────────
+
+
+def detect_assets_prompt(domain: str, business: str, location: str) -> str:
+    return f"""You are a non-interactive SearchAtlas asset detector. Do not narrate.
+
+Domain: {domain}
+Business hint: {business or "(unknown)"}
+Location hint: {location or "(unknown)"}
+
+Fire BOTH tools in parallel (single tool batch):
+
+  1. mcp__searchatlas__cg_list_brand_vaults  with input filtering by the hostname `{domain}`
+     (try {{ "search": "{domain}" }} or {{ "domain": "{domain}" }} — whichever the schema accepts).
+  2. mcp__searchatlas__gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
+     (try {{ "search": "{business or domain}" }} or {{ "domain": "{domain}" }} — whichever is accepted).
+
+Then emit exactly one result block. Use ONLY real values returned by the tools — never invent UUIDs.
+
+<<<RESULT>>>
+{{
+  "bv":  {{ "found": <true|false>, "uuid": "<real uuid or empty>", "name": "<real name or empty>" }},
+  "gbp": {{ "found": <true|false>, "location_id": "<real id or empty>", "name": "<real name or empty>" }}
+}}
+<<<END>>>
+
+Rules:
+- If a tool returns an authentication error, emit `<<<RESULT>>>{{"error":"authentication_required"}}<<<END>>>` and stop.
+- If either list is empty for this domain → found: false, ids empty.
+- Match is case-insensitive against hostname or business name.
+- Do not invent. Do not say "would normally". Do not include unrelated entries.
+"""
+
+
+@app.post("/api/detect-assets")
+async def detect_assets(request: Request):
+    rid = uuid.uuid4().hex[:8]
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid_json"}, status_code=400)
+
+    domain = domain_clean(payload.get("domain") or "")
+    business = (payload.get("business") or "").strip()
+    location = (payload.get("location") or "").strip()
+    if not domain:
+        return JSONResponse({"error": "domain is required"}, status_code=400)
+
+    audit("detect-assets:request", {"rid": rid, "domain": domain, "business": business})
+
+    # Fast path: if SA MCP isn't configured, this call would just sit. Block.
+    claude_path = shutil.which("claude")
+    if claude_path:
+        sa_configured = await _check_sa_mcp_configured(claude_path)
+        if not sa_configured:
+            audit("detect-assets:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
+            return JSONResponse(
+                {"error": "authentication_required", "detail": "searchatlas_mcp_not_configured"},
+                status_code=401,
+            )
+
+    prompt = detect_assets_prompt(domain, business, location)
+    run = await run_claude_step(prompt, timeout_s=90.0, expect_tools=True)
+
+    audit("detect-assets:run", {
+        "rid": rid,
+        "tool_calls": [t.get("name") for t in run.tool_calls],
+        "rc": run.rc,
+        "timeout": run.timeout,
+        "result_blob": run.result_blob,
+    })
+
+    if run.timeout:
+        return JSONResponse({"error": "timeout"}, status_code=504)
+
+    if _has_auth_error(run):
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+
+    if not run.tool_calls:
+        return JSONResponse({"error": "no_tool_calls_made"}, status_code=502)
+
+    forbidden = _contains_forbidden_token(run)
+    if forbidden:
+        return JSONResponse({"error": "fabricated_data", "token": forbidden}, status_code=502)
+
+    blob = run.result_blob
+    if not isinstance(blob, dict):
+        return JSONResponse({"error": "no_result_block"}, status_code=502)
+
+    if blob.get("error") == "authentication_required":
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+
+    # Normalize shape
+    bv = blob.get("bv") or {}
+    gbp = blob.get("gbp") or {}
+    out = {
+        "bv": {
+            "found": bool(bv.get("found")),
+            "uuid": str(bv.get("uuid") or "").strip(),
+            "name": str(bv.get("name") or "").strip(),
+        },
+        "gbp": {
+            "found": bool(gbp.get("found")),
+            "location_id": str(gbp.get("location_id") or "").strip(),
+            "name": str(gbp.get("name") or "").strip(),
+        },
+    }
+    return out
+
+
+# ── /api/pull-bv ─────────────────────────────────────────────────────────────
+
+
+def pull_bv_prompt(bv_uuid: str, hostname: str) -> str:
+    return f"""You are a non-interactive SearchAtlas Brand Vault pull. Do not narrate.
+
+Brand Vault UUID: {bv_uuid}
+Hostname: {hostname}
+
+Fire all FOUR tools in parallel (single tool batch):
+
+  1. mcp__searchatlas__bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
+  2. mcp__searchatlas__bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
+  3. mcp__searchatlas__bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
+  4. mcp__searchatlas__bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
+
+Then emit exactly one result block with the real values returned:
+
+<<<RESULT>>>
+{{
+  "details":         <tool 1 raw response, JSON object or null on error>,
+  "business_info":   <tool 2 raw response, JSON object or null on error>,
+  "voice_profiles":  <tool 3 raw response, JSON array  or [] on error>,
+  "knowledge_graph": <tool 4 raw response, JSON object or null on error>
+}}
+<<<END>>>
+
+Rules:
+- If any call returns an authentication error, emit `<<<RESULT>>>{{"error":"authentication_required"}}<<<END>>>` and stop.
+- Do not invent values. Pass through exactly what each MCP tool returned.
+"""
+
+
+@app.post("/api/pull-bv")
+async def pull_bv(request: Request):
+    rid = uuid.uuid4().hex[:8]
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid_json"}, status_code=400)
+
+    bv_uuid = (payload.get("brand_vault_uuid") or "").strip()
+    hostname = domain_clean(payload.get("hostname") or "")
+    if not bv_uuid:
+        return JSONResponse({"error": "brand_vault_uuid is required"}, status_code=400)
+
+    audit("pull-bv:request", {"rid": rid, "bv_uuid": bv_uuid, "hostname": hostname})
+
+    claude_path = shutil.which("claude")
+    if claude_path:
+        sa_configured = await _check_sa_mcp_configured(claude_path)
+        if not sa_configured:
+            audit("pull-bv:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
+            return JSONResponse(
+                {"error": "authentication_required", "detail": "searchatlas_mcp_not_configured"},
+                status_code=401,
+            )
+
+    prompt = pull_bv_prompt(bv_uuid, hostname)
+    run = await run_claude_step(prompt, timeout_s=90.0, expect_tools=True)
+
+    audit("pull-bv:run", {
+        "rid": rid,
+        "tool_calls": [t.get("name") for t in run.tool_calls],
+        "rc": run.rc,
+        "timeout": run.timeout,
+        "result_blob_keys": list((run.result_blob or {}).keys()) if isinstance(run.result_blob, dict) else None,
+    })
+
+    if run.timeout:
+        return JSONResponse({"error": "timeout"}, status_code=504)
+    if _has_auth_error(run):
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+    if not run.tool_calls:
+        return JSONResponse({"error": "no_tool_calls_made"}, status_code=502)
+    forbidden = _contains_forbidden_token(run)
+    if forbidden:
+        return JSONResponse({"error": "fabricated_data", "token": forbidden}, status_code=502)
+
+    blob = run.result_blob
+    if not isinstance(blob, dict):
+        return JSONResponse({"error": "no_result_block"}, status_code=502)
+    if blob.get("error") == "authentication_required":
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+    return blob
+
+
+# ── /api/create-bv ───────────────────────────────────────────────────────────
+
+
+def create_bv_prompt(payload: dict) -> str:
+    payload_json = json.dumps(payload, indent=2)
+    return f"""You are a non-interactive SearchAtlas Brand Vault writer. Do not narrate.
+
+Operator-confirmed fields:
+```json
+{payload_json}
+```
+
+Perform these tool calls in order (each call must wait on the prior's response):
+
+  1. mcp__searchatlas__bv_create
+       input: {{ "domain": "<from payload.domain>", "name": "<from payload.business_name>" }}
+       → capture the returned brand_vault_uuid.
+
+  2. mcp__searchatlas__bv_update_business_info
+       input: {{ "uuid": "<uuid from step 1>", "business_name": ..., "industry": ..., "phone": ..., "address": ..., "hours": ..., "service_areas": ... }}
+       (populate from payload — omit empty fields, do not invent).
+
+  3. mcp__searchatlas__bv_update
+       input: {{ "uuid": "<uuid>", "primary_color": ..., "secondary_color": ..., "voice_tone": ..., "voice_style": ..., "voice_avoid": ... }}
+       (only set fields that are present in the payload).
+
+  4. mcp__searchatlas__bv_update_knowledge_graph
+       input: {{ "uuid": "<uuid>", "entities": [...], "competitors": [...] }}
+       (only set fields that are present in the payload).
+
+Then emit exactly one result block:
+
+<<<RESULT>>>
+{{
+  "success": true,
+  "uuid": "<real uuid from bv_create>",
+  "steps_completed": ["bv_create", "bv_update_business_info", "bv_update", "bv_update_knowledge_graph"],
+  "errors": []
+}}
+<<<END>>>
+
+Rules:
+- If bv_create fails or returns no uuid, emit `<<<RESULT>>>{{"success": false, "error": "<message>"}}<<<END>>>` and stop.
+- If any later step fails, include the failure in `errors` and still report success: true if bv_create succeeded.
+- If an auth error is returned by any call, emit `<<<RESULT>>>{{"error":"authentication_required"}}<<<END>>>` and stop.
+- Do not invent the UUID. Use only what bv_create returned.
+"""
+
+
+@app.post("/api/create-bv")
+async def create_bv(request: Request):
+    rid = uuid.uuid4().hex[:8]
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid_json"}, status_code=400)
+
+    if not (payload.get("domain") or "").strip():
+        return JSONResponse({"error": "domain is required"}, status_code=400)
+    if not (payload.get("business_name") or "").strip():
+        return JSONResponse({"error": "business_name is required"}, status_code=400)
+
+    audit("create-bv:request", {"rid": rid, "payload": payload})
+
+    claude_path = shutil.which("claude")
+    if claude_path:
+        sa_configured = await _check_sa_mcp_configured(claude_path)
+        if not sa_configured:
+            audit("create-bv:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
+            return JSONResponse(
+                {"error": "authentication_required", "detail": "searchatlas_mcp_not_configured"},
+                status_code=401,
+            )
+
+    prompt = create_bv_prompt(payload)
+    run = await run_claude_step(prompt, timeout_s=120.0, expect_tools=True)
+
+    audit("create-bv:run", {
+        "rid": rid,
+        "tool_calls": [t.get("name") for t in run.tool_calls],
+        "rc": run.rc,
+        "timeout": run.timeout,
+        "result_blob": run.result_blob,
+    })
+
+    if run.timeout:
+        return JSONResponse({"error": "timeout"}, status_code=504)
+    if _has_auth_error(run):
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+    if not run.tool_calls:
+        return JSONResponse({"error": "no_tool_calls_made"}, status_code=502)
+    forbidden = _contains_forbidden_token(run)
+    if forbidden:
+        return JSONResponse({"error": "fabricated_data", "token": forbidden}, status_code=502)
+
+    blob = run.result_blob
+    if not isinstance(blob, dict):
+        return JSONResponse({"error": "no_result_block"}, status_code=502)
+    if blob.get("error") == "authentication_required":
+        return JSONResponse({"error": "authentication_required"}, status_code=401)
+
+    if not blob.get("success"):
+        return JSONResponse(
+            {"error": blob.get("error") or "create_failed", "detail": blob},
+            status_code=502,
+        )
+
+    if not blob.get("uuid"):
+        return JSONResponse({"error": "no_uuid_returned"}, status_code=502)
+    return blob
+
+
+# ── /api/research-market (SSE) ───────────────────────────────────────────────
+
+
+def research_market_prompt(payload: dict) -> str:
+    payload_json = json.dumps(payload, indent=2)
+    return f"""You are a non-interactive SearchAtlas market-research runner. Do not pause for input.
+
+Operator inputs:
+```json
+{payload_json}
+```
+
+Run TWO parallel waves of SA MCP tools, then synthesize a proposed sitemap.
+
+### Wave 1 (fire all five tools in a SINGLE tool batch)
+
+For each target keyword in `payload.target_keywords` (or, if empty, infer 3 seed keywords from services × location × industry):
+
+  - mcp__searchatlas__se_lookup_keyword       → volume + intent + difficulty
+  - mcp__searchatlas__se_get_serp_overview    → who ranks today
+  - mcp__searchatlas__se_get_serp_features    → which SERP features
+
+Also fire ONCE in the same batch:
+
+  - mcp__searchatlas__gbp_list_categories            → category taxonomy
+  - mcp__searchatlas__se_get_organic_competitors per keyword → discovered competitors
+
+Merge auto-discovered competitors with `payload.known_competitors`, cap at 5.
+
+### Wave 2 (fire all four tools in a SINGLE tool batch, after Wave 1 returns)
+
+  - mcp__searchatlas__se_get_indexed_pages per competitor → real page structures
+  - mcp__searchatlas__se_analyze_keyword_gap between competitors → unclaimed territory
+  - mcp__searchatlas__cg_create_topical_map seeded with the Wave 1 keyword data
+  - mcp__searchatlas__cg_topic_suggestions (no BV uuid required — use `domain` if needed)
+
+### Synthesis
+
+Combine: competitor_pages ∪ gap_clusters ∪ topical_map ∪ topic_suggestions ∪ operator services ∪ location.
+
+Produce a sitemap of 8–14 pages spread across these tiers:
+- `core`        — homepage, about, contact, services overview (always include all four)
+- `service`     — one per item in payload.services, capped at 8
+- `location`    — only if payload.location is set; one geo-targeted page
+- `landing`     — 1–2 gap-driven landing pages from se_analyze_keyword_gap
+- `compliance`  — privacy policy, terms of service (always include both)
+
+Each page object MUST have these fields. Use real values from the tool responses — never invent numbers:
+```
+{{
+  "slug": "/services/dental-implants",
+  "title": "Dental Implants",
+  "tier": "service",
+  "pageType": "Service detail",
+  "h1": "Dental Implants",
+  "schema": "Service",
+  "oneline": "<one-sentence rationale grounded in evidence>",
+  "keywords": [{{ "kw": "...", "vol": <int or null>, "intent": "...", "difficulty": <int or null> }}, ...],
+  "competitorEvidence": {{ "count": <int>, "examples": ["...", "..."] }},
+  "serpFeatures": ["Local Pack", "People Also Ask"],
+  "contentGap": "<grounded sentence from se_analyze_keyword_gap or empty>",
+  "sections": ["Hero", "What to expect", "Pricing", "FAQ", "CTA"],
+  "ctas": ["Book a visit", "Call now"],
+  "evidence": {{
+    "kw_total_volume": <int sum or null>,
+    "intent": "...",
+    "competitor_count": <int>,
+    "serp_features": ["..."],
+    "gap_score": <number or null>,
+    "source": "<tool name that produced this>"
+  }}
+}}
+```
+
+If a field is unknown from the tool responses, use `null` or an empty string — NEVER invent volumes, competitor URLs, or KD values.
+
+Finally emit exactly one result block:
+
+<<<RESULT>>>
+{{
+  "proposedPages": [ <page object>, ... ],
+  "competitorSet": ["competitor1.com", "competitor2.com", ...],
+  "keywordEvidence": [
+    {{ "kw": "...", "vol": <int or null>, "intent": "...", "difficulty": <int or null>, "source": "se_lookup_keyword" }}
+  ],
+  "waves": {{
+    "wave1": ["se_lookup_keyword", "se_get_serp_overview", "gbp_list_categories", "se_get_organic_competitors", "se_get_serp_features"],
+    "wave2": ["se_get_indexed_pages", "se_analyze_keyword_gap", "cg_create_topical_map", "cg_topic_suggestions"]
+  }}
+}}
+<<<END>>>
+
+Rules:
+- If any tool returns an auth error, emit `<<<RESULT>>>{{"error":"authentication_required"}}<<<END>>>` and stop.
+- Do NOT invent UUIDs. Do NOT invent traffic volumes. Do NOT invent competitor URLs.
+- Do NOT use the phrase "would normally" or "simulated" — fail loudly instead.
+- After the RESULT block, stop.
+"""
+
+
+async def _sse_event(obj: dict) -> bytes:
+    return f"data: {json.dumps(obj, default=str)}\n\n".encode()
+
+
+async def research_market_stream(payload: dict) -> AsyncIterator[bytes]:
+    rid = uuid.uuid4().hex[:8]
+    audit("research-market:request", {"rid": rid, "payload": payload})
+
+    yield await _sse_event({"type": "phase", "label": "Market research"})
+    yield await _sse_event({"type": "note", "label": "Spawning Claude with SearchAtlas MCP"})
+
+    claude_path = shutil.which("claude")
+    if not claude_path:
+        yield await _sse_event({"type": "error", "message": "claude CLI not found on PATH"})
+        return
+
+    sa_configured = await _check_sa_mcp_configured(claude_path)
+    if not sa_configured:
+        audit("research-market:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
+        yield await _sse_event({"type": "error", "message": "authentication_required"})
+        return
+
+    prompt = research_market_prompt(payload)
+    cmd = [
+        claude_path, "-p",
+        "--output-format", "stream-json",
+        "--verbose",
+        prompt,
+    ]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            cwd=str(TOOLKIT_ROOT),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except Exception as exc:
+        yield await _sse_event({"type": "error", "message": f"spawn_failed: {exc}"})
+        return
+
+    assert proc.stdout is not None
+
+    text_chunks: list[str] = []
+    tool_calls: list[dict] = []
+    tool_results: list[dict] = []
+    auth_err = False
+    started = time.monotonic()
+    TIMEOUT_S = 180.0
+
+    try:
+        while True:
+            try:
+                line_bytes = await asyncio.wait_for(
+                    proc.stdout.readline(),
+                    timeout=max(1.0, TIMEOUT_S - (time.monotonic() - started)),
+                )
+            except asyncio.TimeoutError:
+                yield await _sse_event({"type": "error", "message": "timeout"})
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+                return
+            if not line_bytes:
+                break
+            line = line_bytes.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            mtype = data.get("type")
+            if mtype == "assistant":
+                msg = data.get("message", {}) or {}
+                for block in msg.get("content", []) or []:
+                    btype = block.get("type")
+                    if btype == "text":
+                        text_chunks.append(block.get("text") or "")
+                    elif btype == "tool_use":
+                        tname = block.get("name", "")
+                        tinput = block.get("input") or {}
+                        tool_calls.append({"name": tname, "input": tinput})
+                        label = friendly_label(tname, tinput) or short_tool_name(tname)
+                        yield await _sse_event({"type": "work", "label": label})
+            elif mtype == "user":
+                msg = data.get("message", {}) or {}
+                for block in msg.get("content", []) or []:
+                    if block.get("type") == "tool_result":
+                        content = block.get("content", "")
+                        if isinstance(content, list):
+                            ctext = " ".join(
+                                c.get("text", "") for c in content
+                                if isinstance(c, dict)
+                            )
+                        else:
+                            ctext = str(content)
+                        is_err = bool(block.get("is_error"))
+                        tool_results.append({"is_error": is_err, "content_text": ctext})
+                        if is_err and AUTH_ERROR_RE.search(ctext):
+                            auth_err = True
+                        yield await _sse_event({
+                            "type": "done" if not is_err else "error",
+                            "label": "Step complete" if not is_err else (ctext[:200] if ctext else "Tool error"),
+                        })
+            elif mtype == "result":
+                pass
+
+        rc = await proc.wait()
+    except Exception as exc:
+        yield await _sse_event({"type": "error", "message": f"stream_error: {exc}"})
+        return
+
+    audit("research-market:summary", {
+        "rid": rid,
+        "tool_calls": [t.get("name") for t in tool_calls],
+        "rc": rc,
+        "auth_err": auth_err,
+    })
+
+    if auth_err:
+        yield await _sse_event({"type": "error", "message": "authentication_required"})
+        return
+
+    full_text = "\n".join(text_chunks)
+    low = full_text.lower()
+    for tok in FORBIDDEN_TOKENS:
+        if tok in low:
+            yield await _sse_event({"type": "error", "message": f"fabricated_data:{tok}"})
+            return
+
+    if not tool_calls:
+        yield await _sse_event({"type": "error", "message": "no_tool_calls_made"})
+        return
+
+    m = RESULT_BLOCK_RE.search(full_text)
+    if not m:
+        yield await _sse_event({"type": "error", "message": "no_result_block"})
+        return
+
+    blob_text = m.group(1).strip()
+    blob_text = re.sub(r"^```(?:json)?\s*", "", blob_text)
+    blob_text = re.sub(r"\s*```$", "", blob_text)
+    try:
+        blob = json.loads(blob_text)
+    except json.JSONDecodeError as exc:
+        yield await _sse_event({"type": "error", "message": f"bad_result_json: {exc}"})
+        return
+
+    if isinstance(blob, dict) and blob.get("error") == "authentication_required":
+        yield await _sse_event({"type": "error", "message": "authentication_required"})
+        return
+
+    pages = (blob.get("proposedPages") or []) if isinstance(blob, dict) else []
+    if not isinstance(pages, list) or not pages:
+        yield await _sse_event({"type": "error", "message": "no_pages_proposed"})
+        return
+
+    audit("research-market:result", {"rid": rid, "page_count": len(pages)})
+
+    yield await _sse_event({
+        "type": "result",
+        "data": {
+            "proposedPages": pages,
+            "competitorSet": blob.get("competitorSet") or [],
+            "keywordEvidence": blob.get("keywordEvidence") or [],
+            "waves": blob.get("waves") or {},
+        },
+    })
+    yield await _sse_event({"type": "complete"})
+
+
+@app.post("/api/research-market")
+async def research_market(request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid_json"}, status_code=400)
+    if not (payload.get("domain") or "").strip():
+        return JSONResponse({"error": "domain is required"}, status_code=400)
+    return StreamingResponse(
+        research_market_stream(payload),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ── /api/build (original end-to-end build) ───────────────────────────────────
 
 
 def _bullet_list(items, prefix: str = "- ") -> list[str]:
@@ -326,7 +1253,7 @@ def build_prompt(payload: dict) -> str:
     L.append("**HARD RULES — NEVER violate:**")
     L.append("- NEVER fabricate UUIDs, project IDs, Website Studio URLs, or any data that should come from a real MCP call. If you don't have it from a successful tool response, omit the line.")
     L.append("- NEVER say `Build complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `mcp__searchatlas__ws_publish_project` actually returned a URL in this run.")
-    L.append("- NEVER `proceed with local artifacts` as a fallback for failed MCP calls. The user does NOT want a fake/simulated run.")
+    L.append("- NEVER `proceed with local artifacts` as a fallback for failed MCP calls. The user does NOT want a fake run.")
     L.append("- If the auth probe succeeds, proceed normally with the phases below using real MCP calls only.")
     L.append("")
     L.append("Output formatting rules — important for the UI:")
@@ -339,7 +1266,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 1 — Identify target ──
+    # ── Phase 1 ──
     L.append("## Phase 1 — Identify target")
     L.append("")
     L.append(f"- Domain: `{domain}`")
@@ -354,7 +1281,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 2 — Quick existence check (BV + GBP) ──
+    # ── Phase 2 ──
     L.append("## Phase 2 — Quick existence check")
     L.append("")
     L.append("Run these two SA lookups in parallel:")
@@ -363,15 +1290,15 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("Do not check OTTO, PPC, LLM Visibility — `/run-seo` provisions those after the site is live.")
     if detect:
-        bv_status = detect.get("bv") or "unknown"
-        gbp_status = detect.get("gbp") or "unknown"
+        bv_status = "found" if (detect.get("bv") or {}).get("found") else "missing"
+        gbp_status = "found" if (detect.get("gbp") or {}).get("found") else "missing"
         L.append("")
         L.append(f"Operator-side detection earlier showed: BV={bv_status}, GBP={gbp_status}. Confirm against live SA.")
     L.append("")
     L.append("---")
     L.append("")
 
-    # ── Phase 3 — Multi-format operator intake ──
+    # ── Phase 3 ──
     L.append("## Phase 3 — Operator materials")
     L.append("")
     if materials:
@@ -400,7 +1327,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 4 — Brand vault use OR auto-create ──
+    # ── Phase 4 ──
     L.append("## Phase 4 — Brand vault")
     L.append("")
     L.append("If BV exists from Phase 2, pull all 4 surfaces in parallel: `bv_get_details`, `bv_get_business_info`, `bv_get_knowledge_graph`, `bv_list_voice_profiles`.")
@@ -446,7 +1373,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 5 — Budget tier ──
+    # ── Phase 5 ──
     L.append("## Phase 5 — Budget tier")
     L.append("")
     if tier:
@@ -457,7 +1384,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 6 — Brand strategy synthesis ──
+    # ── Phase 6 ──
     L.append("## Phase 6 — Brand strategy")
     L.append("")
     L.append("Synthesize `brand-strategy.md` from BV fields + operator materials + competitor crawl + logo color cues.")
@@ -466,10 +1393,12 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 7 — Market-evidence research (the two waves) ──
+    # ── Phase 7 ──
     L.append("## Phase 7 — Market-evidence research")
     L.append("")
-    L.append("**This is the wave-based research phase — fire each wave in PARALLEL (single tool batch, not sequential calls).**")
+    L.append("**Note:** the wizard already ran the two-wave research before kicking off the build, and the per-page approvals below are LOCKED. You should still confirm coverage by running:")
+    L.append("- `krt_create_project` for the domain")
+    L.append("- `krt_bulk_add_keywords` with the validated target KWs (listed in Phase 8 below)")
     L.append("")
     L.append("### Target seeds (from operator)")
     L.append(f"- Industry tier 1: **{industry_t1 or '(not specified — infer from services)'}**")
@@ -483,43 +1412,18 @@ def build_prompt(payload: dict) -> str:
     else:
         L.append("- Known competitors: (none — discover via `se_get_organic_competitors`)")
     L.append("")
-    L.append("Push industry → BV `primary_category`; target keywords + competitors → BV knowledge graph (`bv_update_knowledge_graph`).")
-    L.append("")
-    L.append("### Wave 1 — 5 tools in PARALLEL")
-    L.append("Fire all five in one tool batch:")
-    L.append("- `se_lookup_keyword` per target KW → volume + intent + difficulty")
-    L.append("- `se_get_serp_overview` per target KW → who ranks today")
-    L.append("- `gbp_list_categories` → category taxonomy")
-    L.append("- `se_get_organic_competitors` per target KW → auto-discovered competitor set")
-    L.append("- `se_get_serp_features` per target KW → LOCAL_PACK / FAQ / IMAGE_PACK / etc.")
-    L.append("")
-    L.append("Merge: `competitor_set = operator_competitors ∪ auto_competitors` (cap at 3–5).")
-    L.append("")
-    L.append("### Wave 2 — 4 tools in PARALLEL")
-    L.append("After Wave 1, fire all four in one tool batch:")
-    L.append("- `se_get_indexed_pages` per competitor → real page structures")
-    L.append("- `se_analyze_keyword_gap` between competitors → unclaimed keyword territory")
-    L.append("- `cg_create_topical_map` seeded with kw_data → content clusters")
-    L.append("- `cg_topic_suggestions` with `brand_vault_uuid` → BV-driven topic suggestions")
-    L.append("")
-    L.append("### Synthesis (no SA calls)")
-    L.append("Combine competitor_pages + gap_clusters + topical_map + bv_topics + operator services + location. Produce `proposed-sitemap.json` with per-page evidence (kw_total_volume, intent, competitor_count, serp_features, gap_score, source).")
-    L.append("")
-    L.append("### Rank tracking")
-    L.append("After synthesis: `krt_create_project` for the domain, `krt_bulk_add_keywords` with the validated target KWs.")
-    L.append("")
     L.append("---")
     L.append("")
 
-    # ── Phase 8 — Per-page approval (already done by operator) ──
+    # ── Phase 8 ──
     L.append("## Phase 8 — Page queue (operator pre-approved)")
     L.append("")
     L.append("**Operator already walked every proposed page in the wizard.** Do NOT re-run the walkthrough.")
     L.append("Below is the locked queue. Write it directly to `page-build-queue.csv`.")
     L.append("")
-    approved_pages = []
-    rejected_pages = []
-    edited_pages = []
+    approved_pages: list[dict] = []
+    rejected_pages: list[dict] = []
+    edited_pages: list[tuple[dict, dict]] = []
     for p in proposed_pages:
         slug_p = p.get("slug") or ""
         dec = (page_decisions.get(slug_p) or {}).get("decision") or "(no decision)"
@@ -565,7 +1469,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 9 — Design style ──
+    # ── Phase 9 ──
     L.append("## Phase 9 — Design style")
     L.append("")
     if archetype:
@@ -580,7 +1484,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 10 — Content + copy ──
+    # ── Phase 10 ──
     L.append("## Phase 10 — Content + copy")
     L.append("")
     L.append("For each row in `page-build-queue.csv`, generate copy in parallel batches:")
@@ -593,7 +1497,7 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 11 — Build + push to Website Studio ──
+    # ── Phase 11 ──
     L.append("## Phase 11 — Build + push to Website Studio")
     L.append("")
     L.append("BV completeness check first: `bv_get_business_info`, `bv_list_voice_profiles`, `bv_get_knowledge_graph`, `bv_get_details`. Optional: `kg_validate_completeness`.")
@@ -615,26 +1519,27 @@ def build_prompt(payload: dict) -> str:
     L.append("---")
     L.append("")
 
-    # ── Phase 12 — Publish + handoff ──
+    # ── Phase 12 ──
     L.append("## Phase 12 — Publish + handoff")
     L.append("")
     L.append("Final pre-publish sweep — all pages render in WS preview.")
     L.append("Then publish:")
-    L.append("- `ws_publish_project` (project_id) → returns the WS-hosted URL (`{slug}.ws.searchatlas.com`)")
+    L.append("- `ws_publish_project` (project_id) → returns the WS-hosted URL — use EXACTLY what the tool returns; do NOT guess a URL pattern.")
     L.append("- `otto_activate_instant_indexing` for the domain")
     L.append("- `indexer_submit_batch` with the approved page URLs → push to Google")
     L.append("- Emit DNS cutover instructions for the operator's custom domain")
     L.append("")
-    L.append("End with the standard completion block:")
+    L.append("End with a completion block — but ONLY if `ws_publish_project` actually returned a URL in this run:")
     L.append("```")
-    L.append(f"Site is live on Website Studio")
+    L.append("Site is live on Website Studio")
     L.append("")
-    L.append(f"Live now:       https://{slug}.ws.searchatlas.com")
+    L.append("Live now:       <URL returned by ws_publish_project — do NOT template it, do NOT guess>")
     L.append(f"Custom domain:  https://{domain} (pending DNS cutover)")
     L.append("")
     L.append("What's next:")
     L.append(f"  /run-seo {domain}   — provisions OTTO, LLM Visibility, GBP, and sizes ongoing cadence")
     L.append("```")
+    L.append("**CRITICAL**: NEVER print a URL that wasn't returned by `ws_publish_project`. If that tool was not called or returned no URL, OMIT the completion block entirely — just emit a brief `## Phase ERROR — PUBLISH INCOMPLETE` line with the real reason. NEVER invent `{slug}.ws.searchatlas.com` or any other URL pattern.")
     L.append("")
     L.append("Then write `clients/{slug}/CLAUDE.md` and `clients/{slug}/brand-profile.md` from the templates. Don't print the full contents — just confirm both files exist.")
     L.append("")
@@ -643,12 +1548,10 @@ def build_prompt(payload: dict) -> str:
     return "\n".join(L)
 
 
-# ── Stream parser → friendly UI events ───────────────────────────────────────
+# ── Stream parser → friendly UI events (used by /api/build) ──────────────────
 
 
 PHASE_RE = re.compile(r"^##\s+Phase\s+\d+\s*[—\-:]\s*(.+)$", re.IGNORECASE)
-BIZ_LINE_RE = re.compile(r"(?:business name|business is|client(?:'s)? name|onboarding)\s*[:\-]?\s*\*?\*?([A-Z][A-Za-z0-9&'\.\- ]{2,60?})\*?\*?", re.IGNORECASE)
-
 
 _state: dict = {"workspace_announced": False, "biz_seen": False}
 
@@ -687,15 +1590,12 @@ def parse_claude_event(raw_line: str) -> list[dict]:
                     ln = ln.strip()
                     if not ln:
                         continue
-                    # Detect a "## Phase N — name" line → phase event
                     m = PHASE_RE.match(ln)
                     if m:
                         events.append({"type": "phase", "label": m.group(1).strip()})
                         continue
-                    # Skip empty markdown rules
                     if ln in ("---", "***", "===") or ln.startswith("#"):
                         continue
-                    # Try to capture business name (first time only)
                     if not _state["biz_seen"]:
                         bm = re.search(
                             r"(?:business\s+(?:name|is)\s*[:\-]?\s*|\bfound\s*[:\-]?\s*)\*?\*?([A-Z][A-Za-z0-9&'\.\- ]{2,80}?)\*?\*?(?:\s+in\s+|\s*[\.,]|$)",
@@ -706,20 +1606,39 @@ def parse_claude_event(raw_line: str) -> list[dict]:
                             if 3 <= len(name) <= 80:
                                 _state["biz_seen"] = True
                                 events.append({"type": "biz", "name": name})
-                    # Plain assistant narration → "note" item
                     if len(ln) > 200:
                         ln = ln[:197] + "…"
                     events.append({"type": "note", "label": ln})
             elif btype == "tool_use":
                 tool_name = block.get("name", "tool")
                 tool_input = block.get("input", {}) or {}
-                # File writes → consolidated workspace event, only once
+                tool_use_id = block.get("id") or ""
                 if tool_name in ("Write", "Edit"):
                     if not _state["workspace_announced"]:
                         _state["workspace_announced"] = True
                         events.append({"type": "work", "label": "Creating your workspace"})
+                    # Track for tool_result correlation
+                    _state.setdefault("tool_use_index", {})[tool_use_id] = {
+                        "name": tool_name, "is_sa": False,
+                    }
                     continue
                 label = friendly_label(tool_name, tool_input)
+                # Detect ws_publish_project (CRIT-1): record the call so we know to
+                # look for its return URL in a subsequent tool_result.
+                is_publish_call = (
+                    "ws_publish_project" in tool_name.lower()
+                )
+                short = short_tool_name(tool_name)
+                is_sa = (
+                    tool_name.startswith("mcp__searchatlas__")
+                    or tool_name.startswith("mcp__claude_ai_Search_Atlas__")
+                    or short in TOOL_LABELS
+                )
+                _state.setdefault("tool_use_index", {})[tool_use_id] = {
+                    "name": tool_name, "is_sa": is_sa, "is_publish": is_publish_call,
+                }
+                if is_publish_call:
+                    _state["publish_call_seen"] = True
                 if label:
                     events.append({"type": "work", "label": label})
         return events
@@ -728,22 +1647,134 @@ def parse_claude_event(raw_line: str) -> list[dict]:
         message = data.get("message", {})
         for block in message.get("content", []):
             if block.get("type") == "tool_result":
+                tool_use_id = block.get("tool_use_id") or ""
+                is_error_flag = bool(block.get("is_error", False))
                 content = block.get("content", "")
                 if isinstance(content, list):
                     text = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
                 else:
                     text = str(content)
-                if text and "error" not in text.lower()[:200]:
+                idx = _state.get("tool_use_index", {}).get(tool_use_id, {})
+                is_sa = bool(idx.get("is_sa"))
+                is_publish = bool(idx.get("is_publish"))
+
+                # Auth-error detection on tool_result (CRIT-1 + B-B guard).
+                # We check EITHER an explicit is_error flag OR auth-shaped text
+                # — some SA tool responses surface "Not authenticated" / "OAuth
+                # required" in the body of a non-error response, and we must
+                # still treat that as an auth failure (not a successful call).
+                low = (text or "").lower()
+                auth_keywords = (
+                    "not authenticated", "connector not authenticated",
+                    "unauthorized", " 401", "401 ", "authentication required",
+                    "oauth required", "please authenticate", "sign in to continue",
+                )
+                # Only consider auth-keyword-only matches on SA tool results
+                # (avoids false positives on Bash output etc. that may contain
+                # the word "unauthorized" in unrelated narration).
+                auth_hit = any(k in low for k in auth_keywords)
+                if (is_error_flag and auth_hit) or (is_sa and auth_hit):
+                    events.append({
+                        "type": "error",
+                        "message": "Search Atlas MCP authentication required. Open claude.ai → /mcp → SearchAtlas → complete OAuth. Then re-run the build.",
+                        "auth_required": True,
+                    })
+                    _state["fatal_error"] = True
+                    return events
+
+                # Generic tool_result error.
+                if is_error_flag:
+                    events.append({
+                        "type": "error",
+                        "message": (text or "Tool returned an error")[:280],
+                    })
+                    return events
+
+                # Capture real ws_publish URL if the publish call succeeded
+                # (CRIT-1, CRIT-2). The wizard MUST NOT fabricate a URL.
+                if is_publish and not is_error_flag:
+                    url = _extract_url_from_text(text)
+                    if url:
+                        _state["publish_url"] = url
+                        _state["publish_succeeded"] = True
+                        events.append({
+                            "type": "ws_published",
+                            "url": url,
+                            "label": f"Site published · {url}",
+                        })
+                    else:
+                        _state["publish_call_returned_without_url"] = True
+
+                # Only emit "Step complete" for real SA MCP tool results
+                # (MED-2). Silent built-ins (Read/TodoWrite/Skill) never get
+                # a green checkmark; they were never user-meaningful.
+                if is_sa and text:
                     events.append({"type": "done", "label": "Step complete"})
-                elif text:
-                    events.append({"type": "error", "message": text[:200]})
         return events
 
     if msg_type == "result":
-        events.append({"type": "complete"})
+        # CRIT-1: a `result` event from Claude does NOT mean the build succeeded.
+        # Only emit `complete` if ws_publish_project actually returned a URL.
+        # Otherwise emit `incomplete` so the UI knows not to render the live-site block.
+        if _state.get("fatal_error"):
+            # Already emitted; nothing more to do.
+            return events
+        if _state.get("publish_succeeded") and _state.get("publish_url"):
+            events.append({"type": "complete"})
+        else:
+            reason = (
+                "ws_publish_project did not return a URL"
+                if _state.get("publish_call_returned_without_url")
+                else "Build ended before ws_publish_project was called"
+            )
+            events.append({
+                "type": "incomplete",
+                "message": reason,
+            })
         return events
 
     return events
+
+
+_URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
+# B-C: Only accept URLs whose hostname looks like a real Website Studio
+# publish target. We refuse to extract documentation links, error-page
+# URLs, or other unrelated URLs that could appear in a tool_result body.
+_WS_URL_HOST_RE = re.compile(
+    r"https?://[a-z0-9][a-z0-9\-]*(?:\.[a-z0-9\-]+)*\.(?:searchatlas\.com|ws\.searchatlas\.com)(?:/|$)",
+    re.IGNORECASE,
+)
+
+
+def _is_ws_publish_url(url: str) -> bool:
+    if not isinstance(url, str):
+        return False
+    return bool(_WS_URL_HOST_RE.match(url))
+
+
+def _extract_url_from_text(text: str) -> str | None:
+    if not text:
+        return None
+    # Try JSON shape first: {"url": "..."} or {"site_url": "..."} etc.
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            for k in ("url", "site_url", "live_url", "preview_url", "publish_url", "published_url"):
+                v = obj.get(k)
+                if isinstance(v, str) and v.startswith(("http://", "https://")):
+                    # Prefer URLs that look like a WS-hosted target. If the
+                    # explicit key gave us a URL with the right host, return it.
+                    if _is_ws_publish_url(v):
+                        return v
+    except (json.JSONDecodeError, ValueError):
+        pass
+    # Fall back: first http(s) URL that matches the WS-host shape. We refuse
+    # to accept arbitrary URLs (e.g. docs, error links) as a publish result.
+    for m in _URL_RE.finditer(text):
+        candidate = m.group(0).rstrip(".,);]")
+        if _is_ws_publish_url(candidate):
+            return candidate
+    return None
 
 
 async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
@@ -788,11 +1819,12 @@ async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
     if rc != 0:
         stderr = (await proc.stderr.read()).decode("utf-8", errors="replace") if proc.stderr else ""
         yield await emit({"type": "error", "message": f"Claude exited {rc}. {stderr[:300]}"})
-    else:
-        yield await emit({"type": "complete"})
-
-
-# ── Endpoints ────────────────────────────────────────────────────────────────
+    # Note: on rc == 0 we deliberately do NOT emit an unconditional `complete`.
+    # parse_claude_event's `result` branch already emits either `complete`
+    # (when ws_publish_project really returned a URL) or `incomplete`
+    # (when it didn't). Emitting an unconditional success here would let a
+    # Claude run that never published fall through to "Build complete · site
+    # published" in the UI feed — a fabricated outcome message.
 
 
 @app.post("/api/build")
@@ -800,6 +1832,26 @@ async def build(request: Request):
     payload = await request.json()
     if not domain_clean(payload.get("domain") or ""):
         return JSONResponse({"error": "domain is required"}, status_code=400)
+
+    # CRIT-1 guard: refuse to spawn the build if SA MCP isn't configured.
+    # Returning 401 instead of streaming fake-success events.
+    claude_path = shutil.which("claude")
+    if not claude_path:
+        return JSONResponse(
+            {"error": "claude_cli_not_found"},
+            status_code=503,
+        )
+    sa_ok = await _check_sa_mcp_configured(claude_path)
+    if not sa_ok:
+        return JSONResponse(
+            {
+                "error": "authentication_required",
+                "detail": "searchatlas_mcp_not_configured",
+                "message": "Open claude.ai → /mcp → SearchAtlas → complete OAuth, then re-run the build.",
+            },
+            status_code=401,
+        )
+
     prompt = build_prompt(payload)
     return StreamingResponse(
         stream_claude(prompt),
@@ -816,13 +1868,12 @@ async def preview_prompt(request: Request):
 
 @app.post("/api/shutdown")
 async def shutdown(request: Request):
-    """Graceful shutdown — called by welcome.html on tab close or Stop button.
-    Returns 200, then exits the process after a short delay so the response flushes."""
+    """Graceful shutdown — called by welcome.html on tab close or Stop button."""
     import os
     import signal
 
     async def _exit_soon():
-        await asyncio.sleep(0.2)  # let response flush
+        await asyncio.sleep(0.2)
         os.kill(os.getpid(), signal.SIGTERM)
 
     asyncio.create_task(_exit_soon())
@@ -838,5 +1889,6 @@ if __name__ == "__main__":
     print(f"\n  Website Build Wizard")
     print(f"  → http://localhost:{port}\n")
     print(f"  Toolkit root: {TOOLKIT_ROOT}")
-    print(f"  Claude CLI:   {shutil.which('claude') or '(not found)'}\n")
+    print(f"  Claude CLI:   {shutil.which('claude') or '(not found)'}")
+    print(f"  Audit log:    {AUDIT_LOG}\n")
     uvicorn.run("server:app", host="127.0.0.1", port=port, reload=False, log_level="info")
