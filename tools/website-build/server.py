@@ -56,6 +56,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -71,6 +72,56 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 HERE = Path(__file__).resolve().parent
 AUDIT_LOG = Path("/tmp/amm-website-build-audit.log")
+
+
+# ── Lifecycle: heartbeat + PID-aware idle shutdown ───────────────────────────
+# See command-center/server.py for the full design. Bridge stays alive while:
+#   - The welcome.html (or wizard) tab is open (heartbeats every 60s)
+#   - A Claude subprocess we spawned is still running
+#   - An SSE stream is open
+# After IDLE_TIMEOUT_S with none of the above, the bridge exits cleanly.
+IDLE_TIMEOUT_S = 300
+IDLE_CHECK_INTERVAL_S = 30
+_last_heartbeat: float = time.monotonic()
+_active_jobs: set[int] = set()
+_active_streams: int = 0
+
+
+def _bump_heartbeat() -> None:
+    global _last_heartbeat
+    _last_heartbeat = time.monotonic()
+
+
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _reap_dead_jobs() -> None:
+    dead = [pid for pid in _active_jobs if not _pid_alive(pid)]
+    for pid in dead:
+        _active_jobs.discard(pid)
+
+
+async def _idle_watcher() -> None:
+    while True:
+        await asyncio.sleep(IDLE_CHECK_INTERVAL_S)
+        _reap_dead_jobs()
+        idle_age = time.monotonic() - _last_heartbeat
+        if (
+            idle_age > IDLE_TIMEOUT_S
+            and not _active_jobs
+            and _active_streams == 0
+        ):
+            print(
+                f"[idle-shutdown] no activity for {idle_age:.0f}s — exiting",
+                flush=True,
+            )
+            os.kill(os.getpid(), signal.SIGTERM)
+            return
 
 
 def find_toolkit_root(start: Path) -> Path:
@@ -235,7 +286,7 @@ def friendly_label(tool_name: str, tool_input: dict) -> str | None:
 # ── App ──────────────────────────────────────────────────────────────────────
 
 
-app = FastAPI(title="Website Build Wizard", version="2.0")
+app = FastAPI(title="Website Build Wizard", version="2.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -244,9 +295,36 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def _start_idle_watcher() -> None:
+    _bump_heartbeat()
+    asyncio.create_task(_idle_watcher())
+
+
 @app.get("/")
 async def root():
     return FileResponse(HERE / "index.html")
+
+
+@app.post("/api/heartbeat")
+async def heartbeat():
+    """Browser tab pings this every ~60s while the wizard or welcome.html is
+    open. Stops idle-shutdown from firing while a user is around."""
+    _bump_heartbeat()
+    return {
+        "ok": True,
+        "active_jobs": len(_active_jobs),
+        "active_streams": _active_streams,
+        "idle_timeout_s": IDLE_TIMEOUT_S,
+    }
+
+
+@app.get("/api/ping")
+async def ping():
+    """Cheap liveness probe — /api/health blocks on `claude mcp list` for up to
+    30 s on cold start. welcome.html uses this instead for fast UP detection."""
+    _bump_heartbeat()
+    return {"ok": True, "bridge": "website-build"}
 
 
 # ── Health (cached) ──────────────────────────────────────────────────────────
@@ -324,6 +402,18 @@ def domain_to_slug(domain: str) -> str:
 # extract the operator-supplied <<<RESULT>>>{json}<<<END>>> block ────────────
 
 
+MCP_NAMESPACE_HINT = (
+    "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed under one of two\n"
+    "namespace prefixes depending on how the user installed the connector:\n"
+    "  - `mcp__searchatlas__<tool>`               (manual `claude mcp add` install)\n"
+    "  - `mcp__claude_ai_Search_Atlas__<tool>`    (claude.ai connector install)\n"
+    "If a referenced tool name isn't directly available in your tool set,\n"
+    "call `ToolSearch` with the query `select:mcp__claude_ai_Search_Atlas__<tool>`\n"
+    "to load its schema, then call the loaded tool. Use whichever variant works.\n"
+    "Either namespace produces an identical response shape.\n"
+    "\n"
+)
+
 RESULT_BLOCK_RE = re.compile(r"<<<RESULT>>>(.*?)<<<END>>>", re.DOTALL)
 FORBIDDEN_TOKENS = (
     "{pending}", "{uuid}", "would normally", "simulated",
@@ -387,6 +477,8 @@ async def run_claude_step(
         out.stderr_text = f"failed to spawn claude: {exc}"
         return out
 
+    _active_jobs.add(proc.pid)
+    _bump_heartbeat()
     text_chunks: list[str] = []
 
     async def _read_stream() -> None:
@@ -447,6 +539,8 @@ async def run_claude_step(
             await proc.wait()
         except Exception:
             pass
+    finally:
+        _active_jobs.discard(proc.pid)
 
     if proc.stderr is not None:
         try:
@@ -515,21 +609,30 @@ def _called_required_tools(run: ClaudeRunResult, required: list[str]) -> bool:
 
 AUTH_PROBE_PROMPT = """You are a non-interactive auth probe for the SearchAtlas MCP connector.
 
-Call exactly ONE tool, with empty parameters, then emit the result block. Do not
-narrate. Do not call any other tool.
+Call exactly ONE Search Atlas MCP tool, with empty parameters, then emit the
+result block. The Search Atlas MCP may be exposed under any of these
+namespace prefixes — use whichever variant is available in this session:
 
-  Tool: mcp__searchatlas__cg_list_brand_vaults
-  Input: {}
+  - mcp__searchatlas__cg_list_brand_vaults
+  - mcp__claude_ai_Search_Atlas__cg_list_brand_vaults
 
-After the tool returns, emit on its own line, with no prefix:
+Input: {}
+
+If you cannot find ANY variant of `cg_list_brand_vaults` in your available
+tools, you MUST first call `ToolSearch` with the query
+`select:mcp__claude_ai_Search_Atlas__cg_list_brand_vaults` to load its schema,
+then immediately call the loaded tool. This is acceptable.
+
+After the SA tool returns, emit on its own line, with no prefix:
 
 <<<RESULT>>>{"authenticated": <true|false>, "tool_called": "cg_list_brand_vaults", "error": "<short message or empty>"}<<<END>>>
 
 Rules:
 - If the tool returns ANY result (even an empty list) → authenticated: true, error: "".
 - If the tool returns an authentication / OAuth / 401 / "not authenticated" / "unauthorized" / "connector not authenticated" error → authenticated: false, error: <the error message, single line, < 240 chars>.
-- Do NOT invent or simulate a response. The probe is invalid unless the real tool was invoked.
+- Do NOT invent or simulate a response. The probe is invalid unless the real SA tool was invoked.
 - After emitting the RESULT block, stop. Do not continue.
+- Do not call WebFetch, Read, Bash, Edit, or any tool other than ToolSearch (to load) and the SA cg_list_brand_vaults tool.
 """
 
 
@@ -585,9 +688,23 @@ async def auth_probe(request: Request):
             status_code=200,
         )
 
-    # The probe is only meaningful if the model actually called the BV-list
-    # tool. If it ran some other tool we cannot trust the auth verdict.
-    if not _called_required_tools(run, ["cg_list_brand_vaults"]):
+    # We require the model to have called cg_list_brand_vaults via ANY namespace.
+    # If it only called ToolSearch (deferred-tool loader) and never reached the
+    # SA tool, fall through to the result_blob, which the model populates with
+    # the error message — that's still authoritative for our auth verdict.
+    called_sa_bv = _called_required_tools(run, ["cg_list_brand_vaults"])
+    blob = run.result_blob or {}
+
+    if not called_sa_bv:
+        # Trust the result blob if the model honestly reported that the tool
+        # wasn't available in this environment. That's the same outcome as
+        # "MCP not configured" from the user's perspective.
+        err = (blob.get("error") or "").strip()
+        if err:
+            return JSONResponse(
+                {"authenticated": False, "error": err},
+                status_code=200,
+            )
         audit("auth-probe:wrong-tool", {
             "rid": rid,
             "tool_calls": [t.get("name") for t in run.tool_calls],
@@ -604,7 +721,6 @@ async def auth_probe(request: Request):
         )
 
     # Inspect the result blob the model emitted
-    blob = run.result_blob or {}
     authed = bool(blob.get("authenticated"))
     if authed:
         return {"authenticated": True, "error": None}
@@ -617,7 +733,7 @@ async def auth_probe(request: Request):
 
 
 def detect_assets_prompt(domain: str, business: str, location: str) -> str:
-    return f"""You are a non-interactive SearchAtlas asset detector. Do not narrate.
+    return f"""{MCP_NAMESPACE_HINT}You are a non-interactive SearchAtlas asset detector. Do not narrate.
 
 Domain: {domain}
 Business hint: {business or "(unknown)"}
@@ -727,7 +843,7 @@ async def detect_assets(request: Request):
 
 
 def pull_bv_prompt(bv_uuid: str, hostname: str) -> str:
-    return f"""You are a non-interactive SearchAtlas Brand Vault pull. Do not narrate.
+    return f"""{MCP_NAMESPACE_HINT}You are a non-interactive SearchAtlas Brand Vault pull. Do not narrate.
 
 Brand Vault UUID: {bv_uuid}
 Hostname: {hostname}
@@ -815,7 +931,7 @@ async def pull_bv(request: Request):
 
 def create_bv_prompt(payload: dict) -> str:
     payload_json = json.dumps(payload, indent=2)
-    return f"""You are a non-interactive SearchAtlas Brand Vault writer. Do not narrate.
+    return f"""{MCP_NAMESPACE_HINT}You are a non-interactive SearchAtlas Brand Vault writer. Do not narrate.
 
 Operator-confirmed fields:
 ```json
@@ -927,7 +1043,7 @@ async def create_bv(request: Request):
 
 def research_market_prompt(payload: dict) -> str:
     payload_json = json.dumps(payload, indent=2)
-    return f"""You are a non-interactive SearchAtlas market-research runner. Do not pause for input.
+    return f"""{MCP_NAMESPACE_HINT}You are a non-interactive SearchAtlas market-research runner. Do not pause for input.
 
 Operator inputs:
 ```json
@@ -1062,6 +1178,11 @@ async def research_market_stream(payload: dict) -> AsyncIterator[bytes]:
         yield await _sse_event({"type": "error", "message": f"spawn_failed: {exc}"})
         return
 
+    _active_jobs.add(proc.pid)
+    global _active_streams
+    _active_streams += 1
+    _bump_heartbeat()
+
     assert proc.stdout is not None
 
     text_chunks: list[str] = []
@@ -1134,6 +1255,9 @@ async def research_market_stream(payload: dict) -> AsyncIterator[bytes]:
     except Exception as exc:
         yield await _sse_event({"type": "error", "message": f"stream_error: {exc}"})
         return
+    finally:
+        _active_jobs.discard(proc.pid)
+        _active_streams -= 1
 
     audit("research-market:summary", {
         "rid": rid,
@@ -1240,6 +1364,8 @@ def build_prompt(payload: dict) -> str:
     known_competitors = target_market.get("knownCompetitors") or []
 
     L: list[str] = []
+    L.append(MCP_NAMESPACE_HINT.rstrip())
+    L.append("")
     L.append("# /build-website · automated run from Website Build Wizard")
     L.append("")
     L.append("Run the `/build-website` slash command end-to-end with the data below.")
@@ -1783,14 +1909,21 @@ def _extract_url_from_text(text: str) -> str | None:
     return None
 
 
-async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
-    reset_run_state()
+async def _build_runner(prompt: str, queue: asyncio.Queue) -> None:
+    """Spawn the long-running website-build Claude session as a detached task.
+    Survives client disconnect — the user can close the wizard tab and Claude
+    will still run to completion. PID is tracked in _active_jobs so the idle
+    watcher never kills the bridge while a build is in flight."""
 
-    async def emit(obj: dict) -> bytes:
-        return f"data: {json.dumps(obj)}\n\n".encode()
-
-    yield await emit({"type": "phase", "label": "Setup"})
-    yield await emit({"type": "note", "label": f"Working from {TOOLKIT_ROOT.name}"})
+    async def put(evt: dict) -> None:
+        try:
+            queue.put_nowait(evt)
+        except asyncio.QueueFull:
+            try:
+                queue.get_nowait()
+                queue.put_nowait(evt)
+            except Exception:
+                pass
 
     cmd = [
         "claude", "-p",
@@ -1806,31 +1939,64 @@ async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
             stderr=asyncio.subprocess.PIPE,
         )
     except FileNotFoundError:
-        yield await emit({"type": "error", "message": "claude CLI not found on PATH"})
+        await put({"type": "error", "message": "claude CLI not found on PATH"})
+        await put({"__sentinel__": True})
         return
     except Exception as exc:
-        yield await emit({"type": "error", "message": f"Failed to spawn Claude: {exc}"})
+        await put({"type": "error", "message": f"Failed to spawn Claude: {exc}"})
+        await put({"__sentinel__": True})
         return
 
-    assert proc.stdout is not None
-    while True:
-        line_bytes = await proc.stdout.readline()
-        if not line_bytes:
-            break
-        line = line_bytes.decode("utf-8", errors="replace")
-        for evt in parse_claude_event(line):
-            yield await emit(evt)
+    _active_jobs.add(proc.pid)
+    try:
+        assert proc.stdout is not None
+        while True:
+            line_bytes = await proc.stdout.readline()
+            if not line_bytes:
+                break
+            _bump_heartbeat()
+            line = line_bytes.decode("utf-8", errors="replace")
+            for evt in parse_claude_event(line):
+                await put(evt)
 
-    rc = await proc.wait()
-    if rc != 0:
-        stderr = (await proc.stderr.read()).decode("utf-8", errors="replace") if proc.stderr else ""
-        yield await emit({"type": "error", "message": f"Claude exited {rc}. {stderr[:300]}"})
-    # Note: on rc == 0 we deliberately do NOT emit an unconditional `complete`.
-    # parse_claude_event's `result` branch already emits either `complete`
-    # (when ws_publish_project really returned a URL) or `incomplete`
-    # (when it didn't). Emitting an unconditional success here would let a
-    # Claude run that never published fall through to "Build complete · site
-    # published" in the UI feed — a fabricated outcome message.
+        rc = await proc.wait()
+        if rc != 0:
+            stderr_b = (await proc.stderr.read()) if proc.stderr else b""
+            stderr = stderr_b.decode("utf-8", errors="replace")
+            await put({"type": "error", "message": f"Claude exited {rc}. {stderr[:300]}"})
+        # On rc == 0 the parse_claude_event `result` branch already emitted
+        # either `complete` or `incomplete`.
+    finally:
+        _active_jobs.discard(proc.pid)
+        await put({"__sentinel__": True})
+
+
+async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
+    global _active_streams
+    reset_run_state()
+    _bump_heartbeat()
+
+    async def emit(obj: dict) -> bytes:
+        return f"data: {json.dumps(obj)}\n\n".encode()
+
+    yield await emit({"type": "phase", "label": "Setup"})
+    yield await emit({"type": "note", "label": f"Working from {TOOLKIT_ROOT.name}"})
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=512)
+    runner = asyncio.create_task(_build_runner(prompt, queue))
+    _active_streams += 1
+    try:
+        while True:
+            evt = await queue.get()
+            if isinstance(evt, dict) and evt.get("__sentinel__"):
+                break
+            yield await emit(evt)
+    finally:
+        _active_streams -= 1
+        # Intentionally do NOT cancel runner — let the build run to completion
+        # even if the browser tab closed. PID stays in _active_jobs so the
+        # idle watcher protects the bridge until Claude finishes.
+        del runner
 
 
 @app.post("/api/build")
@@ -1874,9 +2040,9 @@ async def preview_prompt(request: Request):
 
 @app.post("/api/shutdown")
 async def shutdown(request: Request):
-    """Graceful shutdown — called by welcome.html on tab close or Stop button."""
-    import os
-    import signal
+    """Manual stop — only called by the explicit 'Stop Mission Control' button.
+    Tab close does NOT trigger this anymore (see welcome.html). Idle-shutdown
+    handles unattended cleanup after IDLE_TIMEOUT_S of no signal."""
 
     async def _exit_soon():
         await asyncio.sleep(0.2)

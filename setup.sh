@@ -118,10 +118,71 @@ PLIST_EOF
             echo "  ⚠  $NAME LaunchAgent installed but failed to load"
     }
 
+    # Helper for the always-on supervisor (KeepAlive=true so welcome.html can
+    # always reach it). It's the one process that lingers after a workshop
+    # session — ~15 MB, zero CPU when idle. Wakes bridges on demand via
+    # launchctl when their idle-shutdown has reaped them.
+    install_supervisor_agent() {
+        local NAME="supervisor"
+        local PORT="8764"
+        local LABEL="com.searchatlas.amm-$NAME"
+        local PLIST="$LAUNCH_AGENTS_DIR/$LABEL.plist"
+        local RUN_SH="$SCRIPT_DIR/tools/$NAME/run.sh"
+
+        if [ ! -f "$RUN_SH" ]; then
+            echo "  ⚠  $RUN_SH not found — skipping supervisor"
+            return
+        fi
+
+        launchctl unload "$PLIST" 2>/dev/null || true
+
+        cat > "$PLIST" <<PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>$LABEL</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$RUN_SH</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PORT</key>
+        <string>$PORT</string>
+        <key>PATH</key>
+        <string>$USER_PATH</string>
+        <key>HOME</key>
+        <string>$HOME</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/amm-$NAME.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/amm-$NAME.err</string>
+</dict>
+</plist>
+PLIST_EOF
+
+        launchctl load "$PLIST" 2>/dev/null && \
+            echo "  ✓  supervisor running on port $PORT (always-on, ~15 MB)" || \
+            echo "  ⚠  supervisor LaunchAgent installed but failed to load"
+    }
+
     echo "Installing Mission Control bridges..."
-    install_bridge_agent "command-center" "8765"
-    install_bridge_agent "website-build" "8766"
-    install_bridge_agent "website-rebuild" "8767"
+    # Supervisor first — bridges idle-shutdown after 5 min and the supervisor
+    # is what welcome.html calls to bring them back without manual scripts.
+    install_supervisor_agent
+    install_bridge_agent "command-center" "8865"
+    install_bridge_agent "website-build" "8866"
+    install_bridge_agent "website-rebuild" "8867"
     echo ""
 fi
 
@@ -213,9 +274,10 @@ restart_one() {
     return 1
 }
 
-restart_one command-center 8765 || ANY_FAIL=1
-restart_one website-build 8766 || ANY_FAIL=1
-restart_one website-rebuild 8767 || ANY_FAIL=1
+restart_one supervisor       8764 || ANY_FAIL=1
+restart_one command-center   8865 || ANY_FAIL=1
+restart_one website-build    8866 || ANY_FAIL=1
+restart_one website-rebuild  8867 || ANY_FAIL=1
 
 echo
 if [ \$ANY_FAIL -eq 0 ]; then

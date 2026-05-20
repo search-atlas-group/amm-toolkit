@@ -31,6 +31,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -44,6 +45,52 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 HERE = Path(__file__).resolve().parent
 AUDIT_LOG = Path("/tmp/amm-website-rebuild-audit.log")
+
+
+# ── Lifecycle: heartbeat + PID-aware idle shutdown ───────────────────────────
+# See command-center/server.py for the full design.
+IDLE_TIMEOUT_S = 300
+IDLE_CHECK_INTERVAL_S = 30
+_last_heartbeat: float = time.monotonic()
+_active_jobs: set[int] = set()
+_active_streams: int = 0
+
+
+def _bump_heartbeat() -> None:
+    global _last_heartbeat
+    _last_heartbeat = time.monotonic()
+
+
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _reap_dead_jobs() -> None:
+    dead = [pid for pid in _active_jobs if not _pid_alive(pid)]
+    for pid in dead:
+        _active_jobs.discard(pid)
+
+
+async def _idle_watcher() -> None:
+    while True:
+        await asyncio.sleep(IDLE_CHECK_INTERVAL_S)
+        _reap_dead_jobs()
+        idle_age = time.monotonic() - _last_heartbeat
+        if (
+            idle_age > IDLE_TIMEOUT_S
+            and not _active_jobs
+            and _active_streams == 0
+        ):
+            print(
+                f"[idle-shutdown] no activity for {idle_age:.0f}s — exiting",
+                flush=True,
+            )
+            os.kill(os.getpid(), signal.SIGTERM)
+            return
 
 
 def find_toolkit_root(start: Path) -> Path:
@@ -230,7 +277,7 @@ def audit(action: str, payload: dict | None = None) -> None:
 # ── App ──────────────────────────────────────────────────────────────────────
 
 
-app = FastAPI(title="Website Rebuild Wizard", version="2.0")
+app = FastAPI(title="Website Rebuild Wizard", version="2.1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -239,9 +286,36 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def _start_idle_watcher() -> None:
+    _bump_heartbeat()
+    asyncio.create_task(_idle_watcher())
+
+
 @app.get("/")
 async def root():
     return FileResponse(HERE / "index.html")
+
+
+@app.post("/api/heartbeat")
+async def heartbeat():
+    """Browser tab pings this every ~60s while welcome.html / a wizard is open.
+    Bridge stays alive while heartbeats land or a job is in flight."""
+    _bump_heartbeat()
+    return {
+        "ok": True,
+        "active_jobs": len(_active_jobs),
+        "active_streams": _active_streams,
+        "idle_timeout_s": IDLE_TIMEOUT_S,
+    }
+
+
+@app.get("/api/ping")
+async def ping():
+    """Cheap liveness probe — /api/health blocks on `claude mcp list` for up to
+    30 s on cold start. welcome.html uses this instead for fast UP detection."""
+    _bump_heartbeat()
+    return {"ok": True, "bridge": "website-rebuild"}
 
 
 # ── Health (cached, slow first call) ─────────────────────────────────────────
@@ -394,6 +468,8 @@ async def run_claude_session(
             "auth_error": False, "timed_out": False,
         }
 
+    _active_jobs.add(proc.pid)
+    _bump_heartbeat()
     tool_calls: list[dict] = []
     pending_by_id: dict[str, dict] = {}
     assistant_text_parts: list[str] = []
@@ -466,6 +542,8 @@ async def run_claude_session(
         except Exception:
             pass
         rc = -1
+    finally:
+        _active_jobs.discard(proc.pid)
 
     stderr = ""
     try:
@@ -1288,6 +1366,11 @@ async def new_page_evidence(request: Request):
             yield await emit({"type": "error", "message": f"spawn failed: {exc}"})
             return
 
+        _active_jobs.add(proc.pid)
+        global _active_streams
+        _active_streams += 1
+        _bump_heartbeat()
+
         assistant_text_parts: list[str] = []
         tool_call_count = 0
         sa_call_count = 0
@@ -1350,6 +1433,9 @@ async def new_page_evidence(request: Request):
         except Exception as exc:
             yield await emit({"type": "error", "message": f"stream error: {exc}"})
             return
+        finally:
+            _active_jobs.discard(proc.pid)
+            _active_streams -= 1
 
         if auth_error_seen:
             audit("new-page-evidence.auth_error", {"domain": domain})
@@ -1840,14 +1926,20 @@ def parse_claude_event(raw_line: str) -> list[dict]:
     return events
 
 
-async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
-    reset_run_state()
+async def _rebuild_runner(prompt: str, queue: asyncio.Queue) -> None:
+    """Detached subprocess runner — survives browser disconnect so a 10–20 min
+    rebuild can complete even if the operator closes the wizard tab. PID is
+    held in _active_jobs so the idle watcher can't kill the bridge mid-job."""
 
-    async def emit(obj: dict) -> bytes:
-        return f"data: {json.dumps(obj)}\n\n".encode()
-
-    yield await emit({"type": "phase", "label": "Setup"})
-    yield await emit({"type": "note", "label": f"Working from {TOOLKIT_ROOT.name}"})
+    async def put(evt: dict) -> None:
+        try:
+            queue.put_nowait(evt)
+        except asyncio.QueueFull:
+            try:
+                queue.get_nowait()
+                queue.put_nowait(evt)
+            except Exception:
+                pass
 
     cmd = [
         "claude", "-p",
@@ -1863,25 +1955,62 @@ async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
             stderr=asyncio.subprocess.PIPE,
         )
     except FileNotFoundError:
-        yield await emit({"type": "error", "message": "claude CLI not found on PATH"})
+        await put({"type": "error", "message": "claude CLI not found on PATH"})
+        await put({"__sentinel__": True})
         return
     except Exception as exc:
-        yield await emit({"type": "error", "message": f"Failed to spawn Claude: {exc}"})
+        await put({"type": "error", "message": f"Failed to spawn Claude: {exc}"})
+        await put({"__sentinel__": True})
         return
 
-    assert proc.stdout is not None
-    while True:
-        line_bytes = await proc.stdout.readline()
-        if not line_bytes:
-            break
-        line = line_bytes.decode("utf-8", errors="replace")
-        for evt in parse_claude_event(line):
-            yield await emit(evt)
+    _active_jobs.add(proc.pid)
+    try:
+        assert proc.stdout is not None
+        while True:
+            line_bytes = await proc.stdout.readline()
+            if not line_bytes:
+                break
+            _bump_heartbeat()
+            line = line_bytes.decode("utf-8", errors="replace")
+            for evt in parse_claude_event(line):
+                await put(evt)
 
-    rc = await proc.wait()
-    if rc != 0:
-        stderr = (await proc.stderr.read()).decode("utf-8", errors="replace") if proc.stderr else ""
-        yield await emit({"type": "error", "message": f"Claude exited {rc}. {stderr[:300]}"})
+        rc = await proc.wait()
+        if rc != 0:
+            stderr_b = (await proc.stderr.read()) if proc.stderr else b""
+            stderr = stderr_b.decode("utf-8", errors="replace")
+            await put({"type": "error", "message": f"Claude exited {rc}. {stderr[:300]}"})
+    finally:
+        _active_jobs.discard(proc.pid)
+        await put({"__sentinel__": True})
+
+
+async def stream_claude(prompt: str) -> AsyncIterator[bytes]:
+    global _active_streams
+    reset_run_state()
+    _bump_heartbeat()
+
+    async def emit(obj: dict) -> bytes:
+        return f"data: {json.dumps(obj)}\n\n".encode()
+
+    yield await emit({"type": "phase", "label": "Setup"})
+    yield await emit({"type": "note", "label": f"Working from {TOOLKIT_ROOT.name}"})
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=512)
+    runner = asyncio.create_task(_rebuild_runner(prompt, queue))
+    _active_streams += 1
+    try:
+        while True:
+            evt = await queue.get()
+            if isinstance(evt, dict) and evt.get("__sentinel__"):
+                break
+            yield await emit(evt)
+    finally:
+        _active_streams -= 1
+        # Intentionally do NOT cancel runner — rebuild keeps going to completion
+        # even if the wizard tab was closed. The PID stays in _active_jobs so
+        # the idle watcher protects the bridge.
+        del runner
     # Note: on rc == 0 we deliberately do NOT emit an unconditional `complete`.
     # parse_claude_event's `result` branch already emits either `complete`
     # (when ws_publish_project really returned a URL, or when no publish was
@@ -1915,8 +2044,9 @@ async def preview_prompt(request: Request):
 
 @app.post("/api/shutdown")
 async def shutdown(request: Request):
-    import os
-    import signal
+    """Manual stop — only the explicit 'Stop Mission Control' button calls this.
+    Tab close does NOT trigger shutdown anymore; idle-shutdown handles
+    unattended cleanup after IDLE_TIMEOUT_S of no signal."""
 
     async def _exit_soon():
         await asyncio.sleep(0.2)

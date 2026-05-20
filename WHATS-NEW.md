@@ -6,6 +6,25 @@ Latest additions and updates to the Agentic Marketing Mastermind toolkit.
 
 <!-- AMM Guardian adds entries here automatically. Newest at top. -->
 
+## 2026-05-20 — Self-healing Mission Control bridges
+
+The three wizard bridges (command-center, website-build, website-rebuild) no longer have to be manually restarted when they crash or get killed by a browser refresh.
+
+### What changed
+
+- **A tiny "supervisor" daemon** now ships at `tools/supervisor/`. It runs always-on (KeepAlive=true, ~15 MB RAM, zero CPU when idle) and listens on port `8764`. When you click a wizard card in `welcome.html` and the target bridge is asleep, the supervisor wakes it via `launchctl` — no double-clicking `.command` files required.
+- **Bridges idle-shutdown after 5 minutes** of inactivity. As long as `welcome.html` is open, a heartbeat ping every 60 s keeps them alive. When you walk away, they exit cleanly. No more "did I leave servers running forever?"
+- **Long jobs survive browser disconnects.** The `/api/build` and `/api/rebuild` endpoints now spawn Claude in a detached task. If you accidentally close the wizard tab mid-build, Claude keeps running to completion — your files land in `clients/{slug}/` regardless. The bridge stays alive until Claude finishes, then idle-shuts down.
+- **Bridges moved off colliding ports.** The defaults are now `8865` (command-center), `8866` (website-build), `8867` (website-rebuild), `8764` (supervisor). The old `8765–8767` range collided with other local dev tools on some machines.
+
+### What this means for you
+
+- **Fresh install:** `bash setup.sh` installs all four LaunchAgents automatically. Open `docs/welcome.html`, click any card. That's it.
+- **Existing install:** `git pull && bash setup.sh` to reinstall plists with the new ports + supervisor.
+- **Tab close is safe.** Refresh, close, reopen — bridges no longer die from a `beforeunload` shutdown. The previous behaviour was a bug where every page refresh killed all three bridges.
+
+---
+
 ## 2026-05-14 — Command Center: web UI for `/onboard-client`
 
 A local web UI now ships with the toolkit so members can onboard clients without typing the slash command. Same playbooks, same SearchAtlas sync underneath.
