@@ -17,6 +17,13 @@
 !/.env.example
 !/Start*Bridges.*
 
+# ── Ship the project-level Claude Code settings (incl. SessionStart hooks) ──
+# settings.json is the shared config that propagates to every clone.
+# settings.local.json stays ignored — per-user overrides never get committed.
+!/.claude/
+/.claude/*
+!/.claude/settings.json
+
 # ── Never commit macOS Finder metadata ───────────────────────────────────────
 .DS_Store
 **/.DS_Store

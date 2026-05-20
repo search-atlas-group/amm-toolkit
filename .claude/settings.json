@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nREPO: amm-toolkit (PUBLIC KNOWLEDGE HUB)\\nDEPLOYS TO: amm.labs.searchatlas.com\\nHARBOR IMAGE: dashboards/amm-sa-dashboard\\nARGOCD APP: dash-amm-sa-dashboard\\n\\nNOT for: AMM Internal Dashboard (amm-dashboard.labs.searchatlas.com)\\nTHAT lives in: search-atlas-group/product-managers/dashboards/amm-sa-dashboard\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\"}'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash Scripts/auto-update-hook.sh",
+            "timeout": 8
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PROMPT=$(jq -r '.user_prompt // \"\"'); if echo \"$PROMPT\" | grep -qiE 'dashboard\\.labs|internal.dashboard|amm-sa-dashboard repo|amm-dashboard repo|internal.*deploy|deploy.*internal|dashboard.*deploy'; then echo '{\"systemMessage\": \"REPO BOUNDARY WARNING: You may be describing work for the AMM Internal Dashboard, which lives in a separate repo (product-managers/dashboards/amm-sa-dashboard). This repo (amm-toolkit) only deploys to amm.labs.searchatlas.com.\"}'; else echo '{}'; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

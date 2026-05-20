@@ -191,6 +191,26 @@ The directory is gitignored — your client data never accidentally enters the t
 
 ---
 
+## Auto-update on session start
+
+The toolkit ships with a SessionStart hook ([`Scripts/auto-update-hook.sh`](Scripts/auto-update-hook.sh), wired in [`.claude/settings.json`](.claude/settings.json)) that runs `git fetch && git pull --ff-only` whenever you start a Claude Code session inside the toolkit folder.
+
+It's deliberately conservative:
+
+| Condition | Behavior |
+|---|---|
+| Already up to date | Silent. No chat noise. |
+| New commits available, fast-forward possible | Pulls. Shows `📦 amm-toolkit auto-updated: N new commits → <sha>`. |
+| Working tree is dirty | Silent skip. Won't disturb in-progress edits. |
+| You're on a feature branch (not `main`) | Silent skip. Won't yank you off your branch. |
+| Local has diverged from `origin/main` | Surfaces a warning banner — resolve manually. |
+| No network / fetch times out (3 s cap) | Silent skip. Tries again next session. |
+| Not a git checkout (e.g., tarball install) | Silent skip. |
+
+To disable temporarily: remove the second `command` entry under `SessionStart` in `.claude/settings.json`. To re-enable: `git checkout .claude/settings.json`.
+
+---
+
 ## Multi-machine note
 
 MCP connections are machine-specific. Your files sync via Dropbox/iCloud/git, but the MCP config in `~/.claude.json` (and `claude_desktop_config.json` for Desktop) lives only on the machine where you ran the installer. Set up each machine separately — re-run the installer, re-authorize OAuth.
