@@ -161,7 +161,7 @@ Write-Host ""
 Write-Hr
 
 # ── Step 1: Execution Policy ──────────────────────────────────────────────────
-Write-Step "1/5" "PowerShell execution policy"
+Write-Step "1/7" "PowerShell execution policy"
 
 $policy = Get-ExecutionPolicy -Scope CurrentUser
 if ($policy -eq "Restricted" -or $policy -eq "AllSigned") {
@@ -171,7 +171,7 @@ if ($policy -eq "Restricted" -or $policy -eq "AllSigned") {
 Write-Ok "Execution policy: $(Get-ExecutionPolicy -Scope CurrentUser)"
 
 # ── Step 2: winget ────────────────────────────────────────────────────────────
-Write-Step "2/5" "winget (Windows Package Manager)"
+Write-Step "2/7" "winget (Windows Package Manager)"
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
   Write-Host ""
@@ -216,7 +216,7 @@ function Test-JavaOk {
 }
 
 # ── Step 3: Git + Node.js ─────────────────────────────────────────────────────
-Write-Step "3/6" "Git + Node.js"
+Write-Step "3/7" "Git + Node.js"
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
   Write-Warn "Git not found — installing..."
@@ -241,7 +241,7 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 Write-Ok "Node $(node --version) - npm $(npm --version)"
 
 # ── Step 4: Java ─────────────────────────────────────────────────────────────
-Write-Step "4/6" "Java (JDK $MIN_JAVA_MAJOR+ required)"
+Write-Step "4/7" "Java (JDK $MIN_JAVA_MAJOR+ required)"
 
 if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
   Write-Warn "Not found — installing Microsoft OpenJDK 21..."
@@ -260,7 +260,7 @@ if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
 }
 
 # ── Step 5: Claude Code ───────────────────────────────────────────────────────
-Write-Step "5/6" "Claude Code"
+Write-Step "5/7" "Claude Code"
 
 if (Get-Command claude -ErrorAction SilentlyContinue) {
   Write-Ok "Already installed"
@@ -271,8 +271,22 @@ if (Get-Command claude -ErrorAction SilentlyContinue) {
   Write-Ok "Installed"
 }
 
+# ── Step 5b: Python (for Mission Control bridges) ────────────────────────────
+Write-Step "5b/7" "Python (Mission Control bridges)"
+
+if (-not (Get-Command python -ErrorAction SilentlyContinue) -and
+    -not (Get-Command python3 -ErrorAction SilentlyContinue)) {
+  Write-Warn "Python not found — installing 3.11..."
+  winget install -e --id Python.Python.3.11 --accept-source-agreements --accept-package-agreements
+  Update-SessionPath
+  Write-Ok "Python installed"
+} else {
+  $pyver = (python --version 2>&1) -replace 'Python ',''
+  Write-Ok "Python $pyver — ready"
+}
+
 # ── Step 6: Workspace + amm-toolkit Toolkit ───────────────────────────────────────
-Write-Step "6/6" "Creating workspace + installing toolkit"
+Write-Step "6/7" "Creating workspace + installing toolkit"
 
 New-Item -ItemType Directory -Force -Path "$WORKSPACE_DIR\clients" | Out-Null
 New-Item -ItemType Directory -Force -Path "$WORKSPACE_DIR\memory"  | Out-Null
@@ -428,6 +442,17 @@ if (Test-Path $GIT_BASH) {
   Write-Warn "Open Git Bash (search 'Git Bash' in Start) and run:"
   Write-Host "    cd '$REPO_DIR'" -ForegroundColor White
   Write-Host "    bash setup.sh" -ForegroundColor White
+}
+
+# ── Step 7: Register Mission Control bridges (Task Scheduler) ────────────────
+Write-Step "7/7" "Mission Control bridges"
+
+$REGISTER_SCRIPT = "$REPO_DIR\Scripts\register-bridges-windows.ps1"
+if (Test-Path $REGISTER_SCRIPT) {
+  Write-Info "Registering bridges to auto-start on login..."
+  & powershell -ExecutionPolicy Bypass -File $REGISTER_SCRIPT -ToolkitPath $REPO_DIR
+} else {
+  Write-Warn "register-bridges-windows.ps1 not found — skipping bridge auto-start"
 }
 
 # ── Done ─────────────────────────────────────────────────────────────────────

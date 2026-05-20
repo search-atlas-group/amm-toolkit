@@ -14,7 +14,7 @@
 !/WHATS-NEW.md
 !/setup.sh
 !/.env.example
-!/Start*Bridges.command
+!/Start*Bridges.*
 
 # ── Never commit macOS Finder metadata ───────────────────────────────────────
 .DS_Store
