@@ -71,11 +71,26 @@ Three browser-based wizards back the most common workflows. They live at `docs/w
 | **Build a website** | 8866 | 11-step greenfield site build, ends with a live Website Studio URL. |
 | **Rebuild a website** | 8867 | Page-by-page redesign of an existing site, link-equity preserved, pre-launch baseline captured. |
 
-A fourth service — the **supervisor** on port 8764 — stays running always (~15 MB RAM, idle). When you click a wizard card and its bridge has idle-shutdown, the supervisor wakes it via `launchctl` so you don't have to think about it. Bridges idle-shutdown after 5 minutes of inactivity; the welcome page sends a heartbeat every 60 s to keep them alive while you have it open.
+A fourth service — the **supervisor** on port 8764 — stays running always (~15 MB RAM, idle). When you click a wizard card and its bridge has idle-shutdown, the supervisor wakes it (via `launchctl` on macOS, Task Scheduler on Windows) so you don't have to think about it. Bridges idle-shutdown after 5 minutes of inactivity; the welcome page sends a heartbeat every 60 s to keep them alive while you have it open.
 
 **Tab close is safe.** The bridges spawn Claude as a detached process. Close the wizard tab mid-build and Claude keeps running — files land in `clients/<slug>/` regardless. Reopen `welcome.html` later to check status.
 
-**If something gets stuck:** double-click `SearchAtlas Mission Control.command` on your Desktop (installed by setup). It re-loads any dead LaunchAgent and falls back to direct `nohup` launch if launchd is uncooperative.
+**If something gets stuck — manual restart helper:**
+
+| Platform | File on your Desktop | What it does |
+|---|---|---|
+| macOS | `SearchAtlas Mission Control.command` (double-click) | Reloads any dead LaunchAgent; falls back to direct `nohup` if launchd is uncooperative |
+| Windows | `SearchAtlas Mission Control.bat` (double-click) | Runs `schtasks /End` then `/Run` on each registered task (supervisor + 3 bridges) |
+
+**Platform implementation:**
+
+| | macOS | Windows |
+|---|---|---|
+| Service manager | launchd (LaunchAgents) | Task Scheduler (schtasks) |
+| Install script | [`setup.sh`](setup.sh) writes plists to `~/Library/LaunchAgents/` | [`Scripts/register-bridges-windows.ps1`](Scripts/register-bridges-windows.ps1) creates `SearchAtlasAMM-*` tasks |
+| Always-on supervisor | `KeepAlive=true` in plist | `RestartCount 999` + 1-min `RestartInterval` |
+| Idle-shutdown bridges | `KeepAlive=false` | `RestartCount 0` |
+| Bridges run via | Direct `bash run.sh` | Git Bash invokes `run.sh` (requires Git for Windows) |
 
 For the supervisor architecture, see the [`tools/supervisor/server.py`](tools/supervisor/server.py) header comment.
 
@@ -190,17 +205,79 @@ Re-run the installer. It refreshes `~/.claude/commands/` every time. If still mi
 **Mission Control wizard spins forever on first click**
 Bridge cold-start can take ~50 s the first time (deps install, MCP probe). Subsequent clicks are instant.
 
-**Wizard hangs mid-build**
-`tail /tmp/amm-website-build-audit.log` shows what tool is in flight. Long MCP calls (`cg_create_topical_map`, `ws_publish_project`) can take 1–10 min. Refresh the tab — the build keeps running.
+**Wizard hangs mid-build — find what tool is in flight**
 
-**Bridge port collision** (errno 48 in `/tmp/amm-<name>.err`)
+<details>
+<summary><b>macOS / Linux</b></summary>
+
+```bash
+tail -f /tmp/amm-website-build-audit.log
+```
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+```powershell
+# Bridges launched via schtasks don't capture stdout by default. Run the
+# bridge manually to see live output:
+& "C:\Program Files\Git\bin\bash.exe" -c "PORT=8866 bash /c/Users/<you>/.../amm-toolkit/tools/website-build/run.sh"
+```
+Or check Task Scheduler → SearchAtlasAMM-website-build → History.
+</details>
+
+Long MCP calls (`cg_create_topical_map`, `ws_publish_project`) can take 1–10 min. Refresh the tab — the build keeps running.
+
+**Bridge port collision** — another local process owns the port
+
+<details>
+<summary><b>macOS / Linux</b></summary>
+
 ```bash
 lsof -nP -iTCP:<port> -sTCP:LISTEN     # find what's squatting on the port
 kill -9 <pid>                          # then re-run setup.sh
 ```
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+```powershell
+netstat -ano | findstr :<port>          # last column is PID
+taskkill /F /PID <pid>                  # then re-run register-bridges-windows.ps1
+```
+</details>
 
 **OAuth keeps failing**
-`claude mcp remove searchatlas && claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp` — re-adds cleanly. Restart Claude Code.
+```
+claude mcp remove searchatlas
+claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+```
+Restart Claude Code (or Claude Desktop) afterwards.
+
+**Health check — all four services**
+
+<details>
+<summary><b>macOS / Linux</b></summary>
+
+```bash
+for P in 8764 8865 8866 8867; do
+  printf "  %s -> " "$P"
+  curl -s --max-time 2 http://localhost:$P/api/health || echo " (no response)"
+done
+```
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+```powershell
+foreach ($p in 8764, 8865, 8866, 8867) {
+  try { Write-Host "  $p -> $((Invoke-WebRequest -Uri "http://localhost:$p/api/health" -TimeoutSec 2).Content)" }
+  catch { Write-Host "  $p -> (no response)" }
+}
+```
+</details>
 
 For the complete error matrix (60+ failure modes with file:line citations) ask your support contact — it's kept internally with the workshop materials.
 

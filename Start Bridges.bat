@@ -1,22 +1,32 @@
 @echo off
-REM Double-click to restart the Mission Control bridges.
+REM Double-click ONLY if welcome.html reports the supervisor is unreachable.
 REM
-REM This stops the existing scheduled tasks and restarts them.
+REM Normal flow: welcome.html auto-wakes bridges via the supervisor on 8764.
+REM This is the fallback for when even the supervisor isn't running.
+REM
+REM Stops then restarts each scheduled task. Idempotent.
 
 setlocal
 
-for %%N in (command-center website-build website-rebuild) do (
+set ANY_FAIL=0
+
+for %%N in (supervisor command-center website-build website-rebuild) do (
   schtasks /End /TN "SearchAtlasAMM-%%N" >nul 2>&1
   schtasks /Run /TN "SearchAtlasAMM-%%N" >nul 2>&1
   if errorlevel 1 (
-    echo   [X]  %%N bridge failed to restart
+    echo   [X]  %%N failed to restart
+    set ANY_FAIL=1
   ) else (
-    echo   [OK] %%N bridge restarted
+    echo   [OK] %%N restarted
   )
 )
 
 echo.
-echo Bridges restarted. Open welcome.html and click any wizard card.
+if "%ANY_FAIL%"=="0" (
+  echo All services restarted. Refresh welcome.html, then click any wizard card.
+) else (
+  echo Some services failed to restart. Re-run quickstart-windows.ps1 to repair scheduled tasks.
+)
 echo.
 pause
 endlocal
