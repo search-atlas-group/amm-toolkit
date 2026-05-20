@@ -60,7 +60,7 @@ source .env
 bash integrations/google/export-to-sheet.sh \
   --sheet-id  "YOUR_SPREADSHEET_ID" \
   --tab       "SEO Report" \
-  --data      '[["Client","Domain","Score","Date"],["Coastal Dental","coastaldental.com","87","2026-04-23"]]'
+  --data      '[["Client","Domain","Score","Date"],["Apple","apple.com","87","2026-04-23"]]'
 ```
 
 The `--data` argument is a JSON array of rows. Each row is an array of cell values.

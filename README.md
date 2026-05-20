@@ -1,6 +1,6 @@
 # Agentic Marketing Mastermind
 
-The SearchAtlas MCP gives Claude direct access to **620+ tools** for SEO, content, GBP, PPC, authority building, and AI visibility. This repo wires it into Claude Code (as slash commands) and Claude Desktop (as ready-to-paste prompts).
+The SearchAtlas MCP gives Claude direct access to **620+ tools** for SEO, content, GBP, PPC, authority building, and AI visibility. This repo gives you everything you need to use them — custom commands, ready-to-paste prompts, and a per-client filesystem convention.
 
 You'll be running a real SearchAtlas workflow from Claude in about 10 minutes.
 
@@ -12,57 +12,72 @@ You'll be running a real SearchAtlas workflow from Claude in about 10 minutes.
 
 ---
 
-## Get started — one command
+## Step 1 — Clone the repo
 
-Paste into Terminal (macOS) or PowerShell-as-Admin (Windows):
-
-**macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
+git clone https://github.com/search-atlas-group/amm-toolkit.git
+cd amm-toolkit
 ```
 
-**Windows:**
-```powershell
-irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex
-```
-
-The installer detects what you have (Claude Code, Claude Desktop, Cursor, Windsurf) and wires up each automatically. If Claude Code is installed, it also drops every slash command into `~/.claude/commands/` so they work the first time you open Claude.
+You now have every command, prompt, and doc on your machine.
 
 ---
 
-## First run — authorize SearchAtlas
+## Step 2 — Connect SearchAtlas to your Claude client
 
-Open your client (Claude Code or Claude Desktop) and ask:
+Pick whichever client you use. You only need one. Both end up with the same MCP wired in.
 
-> "List my SearchAtlas projects"
+### Option A — Claude Desktop
 
-A browser tab opens for OAuth. Sign in, click **Authorize**. That's it — your token refreshes automatically from here.
+1. Open the Claude Desktop config file:
+   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+2. Add this entry (merge with anything already there):
+   ```json
+   {
+     "mcpServers": {
+       "searchatlas": {
+         "type": "http",
+         "url": "https://mcp.searchatlas.com/mcp"
+       }
+     }
+   }
+   ```
+3. Restart Claude Desktop.
+4. In a new chat, ask: *"List my SearchAtlas projects."* The first request opens a browser tab — sign into SearchAtlas, click **Authorize**. Token refresh is automatic from there.
 
-If the OAuth tab doesn't open: see [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
+### Option B — Claude Code (terminal CLI)
+
+```bash
+claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+```
+
+Then to make the slash commands work, drop them into Claude Code's commands folder:
+
+```bash
+mkdir -p ~/.claude/commands
+cp commands/*.md ~/.claude/commands/
+```
+
+First time you run a SearchAtlas tool in chat, a browser tab opens for OAuth. Sign in, approve, done.
 
 ---
 
-## Your first workflow
+## Step 3 — Run your first workflow
 
-### If you have Claude Code (terminal CLI)
+### Claude Desktop
 
-Type a slash command in chat:
+Open [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md), find the prompt you want (we'd start with `/my-account` or `/scout`), copy it, paste into a new Claude Desktop chat, fill in `{domain}` with any domain you have access to in SearchAtlas (e.g. `apple.com`), send.
+
+### Claude Code
 
 ```
 /my-account
-/scout coastaldental.com
-/business-report coastaldental.com
+/scout apple.com
+/business-report apple.com
 ```
 
-Every command is real — it calls SA tools, returns real data, saves real files to `clients/<slug>/`. See the full list: [docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md).
-
-### If you have Claude Desktop only (no slash commands)
-
-Slash commands aren't a Desktop feature — but every workflow has a copy-paste prompt that does the same thing:
-
-→ [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md)
-
-Open the doc, find the workflow you want (`/scout`, `/business-report`, `/run-seo`, etc.), copy the prompt, paste it into a new Claude Desktop chat, fill in your client's domain, send.
+Every command is real — it calls SA tools, returns real data, saves real files to `clients/<slug>/`. Full command catalog: [docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md).
 
 ---
 
@@ -70,23 +85,18 @@ Open the doc, find the workflow you want (`/scout`, `/business-report`, `/run-se
 
 | | |
 |---|---|
-| **20+ slash commands** | Account overview, diagnostic scout, deep dives, full workflows for SEO / GBP / PPC / content / PR / LLM visibility |
-| **Claude Desktop prompts** | Copy-paste equivalents for every slash command, output-faithful |
-| **Workflow templates** | YAML pipelines you can run unattended ([docs/WORKFLOWS.md](docs/WORKFLOWS.md)) |
-| **Send integrations** | Post results to Slack, Discord, email (Resend), or Circle |
-| **Mission Control wizards** | Optional web UI for onboarding clients and building/rebuilding websites — see [POWER-USER.md](POWER-USER.md) |
+| **20+ custom commands** | Account overview, diagnostic scout, deep dives, full workflows for SEO / GBP / PPC / content / PR / LLM visibility — see [docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md) |
+| **Claude Desktop prompts** | Copy-paste equivalents for every command — see [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md) |
+| **Per-client filesystem** | `clients/<slug>/` holds each client's `CLAUDE.md` (lean session context) and `brand-profile.md` (full profile, two-way synced with SA) |
+| **Workflow templates** | YAML pipelines you can run unattended — see [docs/WORKFLOWS.md](docs/WORKFLOWS.md) |
 
 ---
 
 ## Going further
 
-For agencies and operators who want the full stack — web wizards, background builds, workflow automation, send integrations, the 19 Summit-shot plays, supervisor architecture — read:
+Once you're comfortable with the basics, the toolkit has heavier machinery for agency-scale operation — a Mission Control web UI with three wizards (onboarding, build a site, rebuild a site), send-integrations for Slack / Discord / email / Circle, the 19 Summit-shot plays, and a per-client filesystem convention.
 
-→ **[POWER-USER.md](POWER-USER.md)**
-
-For everything you can call from chat:
-
-→ **[docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md)**
+→ **[POWER-USER.md](POWER-USER.md)** has the full walkthrough, including an automated installer that sets all of it up for you.
 
 ---
 
@@ -105,11 +115,20 @@ For everything you can call from chat:
 
 ## Updating
 
+To pull the latest commands, prompts, and docs:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
+cd amm-toolkit
+git pull origin main
 ```
 
-The installer is idempotent — re-running it updates your commands and MCP config to the latest.
+If you're a Claude Code user, also refresh your installed commands:
+
+```bash
+cp commands/*.md ~/.claude/commands/
+```
+
+(Power users: see [POWER-USER.md](POWER-USER.md) — there's a SessionStart hook that does this automatically.)
 
 ---
 

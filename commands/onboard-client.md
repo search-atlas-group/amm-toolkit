@@ -47,12 +47,12 @@ Show the full confirmation block (see A4 format). Member types "yes" or specifie
 Here's everything I pulled from your SearchAtlas brand vault:
 
 ━━ Business ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏢  Name           Coastal Dental Group
-🌐  Domain         coastaldentalgroup.com
+🏢  Name           Apple Group
+🌐  Domain         apple.com
 🏷️  Industry       Dental Clinic
 📝  Description    [first 120 chars...]
 📞  Phone          (305) 555-0182
-✉️  Email          hello@coastaldentalgroup.com
+✉️  Email          hello@apple.com
 📍  Address        123 Ocean Blvd, Miami, FL 33101
 🕐  Hours          Mon–Fri 8AM–5PM, Sat 9AM–1PM
 

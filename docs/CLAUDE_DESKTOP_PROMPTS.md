@@ -64,7 +64,7 @@ Render exactly in this format (replace placeholders with real data):
 Run a read-only SearchAtlas diagnostic on {domain}. Do NOT engage projects, do NOT create brand vaults, do NOT deploy schemas. Diagnose only. The only writes allowed are: (a) a SearchAtlas Report Builder report (client-shareable) and (b) a self-contained HTML I'll save myself.
 
 PHASE 1 — Identify target
-- Capture the domain and propose a client_slug (e.g. coastaldental.com → coastal-dental).
+- Capture the domain and propose a client_slug (e.g. apple.com → apple).
 
 PHASE 2 — Existence check (do not create anything)
 For {domain}, look up:

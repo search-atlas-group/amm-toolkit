@@ -330,7 +330,7 @@ Never work from the system home directory or any folder outside this workspace.
 ## My Clients
 <!-- One line per client once onboarded — e.g.:
 - Acme Roofing (acme-roofing/) — local SEO, GBP, monthly retainer
-- Coastal Dental (coastal-dental/) — PPC + content, active campaign
+- Apple (apple/) — PPC + content, active campaign
 -->
 
 ## My Integrations

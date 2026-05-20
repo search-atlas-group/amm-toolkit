@@ -16,7 +16,7 @@
 #   bash integrations/google/export-to-sheet.sh \
 #     --sheet-id  "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" \
 #     --tab       "SEO Report" \
-#     --data      '[["Client","Domain","Score"],["Coastal Dental","coastaldental.com","87"]]'
+#     --data      '[["Client","Domain","Score"],["Apple","apple.com","87"]]'
 
 set -e
 

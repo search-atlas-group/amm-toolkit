@@ -21,7 +21,7 @@ If they type `list`:
 - `project_management` → `list_otto_projects` (empty params)
 - Display as numbered menu, member picks a number
 
-Capture: `domain`, `client_slug` (suggest from domain — e.g., `coastaldental.com` → `coastal-dental`), and `project_id` if one already exists.
+Capture: `domain`, `client_slug` (suggest from domain — e.g., `apple.com` → `apple`), and `project_id` if one already exists.
 
 ### Phase 2: Existence Check (no creation)
 

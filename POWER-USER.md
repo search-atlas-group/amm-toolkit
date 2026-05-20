@@ -125,7 +125,7 @@ The toolkit can post results to Slack, Discord, email, and Circle. One-time setu
 That wizard asks for webhook URLs and API keys, writes them to your workspace's `.env`. Once configured, any workflow output can be piped:
 
 ```
-/scout coastaldental.com
+/scout apple.com
 /send-slack
 ```
 
