@@ -337,6 +337,20 @@ echo "Bridges restarted. Open welcome.html and click any wizard card."
 read -p "Press Enter to close..."
 STARTCMD
   chmod +x "$start_cmd"
+
+  # Drop a copy on the Desktop where users can actually find it. The toolkit
+  # install lives in a hidden ~/.searchatlas/ dir; Desktop is the one place
+  # every user knows how to reach. Use cp (not symlink) so the Desktop copy
+  # survives even if the user nukes ~/.searchatlas/. Idempotent: re-running
+  # the installer just overwrites the Desktop copy.
+  local desktop_dir="$HOME_DIR/Desktop"
+  if [ -d "$desktop_dir" ]; then
+    local desktop_cmd="$desktop_dir/SearchAtlas Mission Control.command"
+    if cp "$start_cmd" "$desktop_cmd" 2>/dev/null; then
+      chmod +x "$desktop_cmd" 2>/dev/null || true
+      ok "Restart helper on Desktop: SearchAtlas Mission Control.command"
+    fi
+  fi
 }
 
 main() {

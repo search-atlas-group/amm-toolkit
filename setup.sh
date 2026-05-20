@@ -153,6 +153,16 @@ fi
 START_EOF
 chmod +x "$START_CMD"
 
+# ── 2f. Drop the restart helper on Desktop so users can find it ──────────────
+# The cloned-repo install may live deep in a workspace folder; Desktop is the
+# one place every operator can reach. Idempotent — overwrites if re-run.
+DESKTOP_CMD="$HOME/Desktop/SearchAtlas Mission Control.command"
+if [ -d "$HOME/Desktop" ]; then
+    if cp "$START_CMD" "$DESKTOP_CMD" 2>/dev/null; then
+        chmod +x "$DESKTOP_CMD" 2>/dev/null || true
+        echo "  ✓  Restart helper on Desktop: SearchAtlas Mission Control.command"
+    fi
+fi
 
 
 # ── 5. Configure SearchAtlas MCP ─────────────────────────────────────────────

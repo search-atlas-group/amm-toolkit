@@ -68,6 +68,18 @@ foreach ($bridge in $bridges) {
   Write-Host "  [OK] $($bridge.Name) bridge registered (port $($bridge.Port))"
 }
 
+# Copy the .bat to Desktop so users can find it without spelunking into
+# their workspace folder. Equivalent to the macOS Desktop copy in setup.sh.
+# Idempotent: re-running the script just overwrites.
+$desktopBat = [Environment]::GetFolderPath("Desktop") + "\SearchAtlas Mission Control.bat"
+$sourceBat = "$ToolkitPath\Start Bridges.bat"
+if (Test-Path $sourceBat) {
+  Copy-Item -Path $sourceBat -Destination $desktopBat -Force -ErrorAction SilentlyContinue
+  if (Test-Path $desktopBat) {
+    Write-Host "  [OK] Restart helper on Desktop: SearchAtlas Mission Control.bat"
+  }
+}
+
 Write-Host ""
 Write-Host "  Mission Control bridges are running."
 Write-Host "  Open welcome.html and click any wizard card to use them."
