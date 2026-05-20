@@ -251,6 +251,15 @@ install_mission_control_bridges() {
   local agents_dir="$HOME_DIR/Library/LaunchAgents"
   mkdir -p "$agents_dir"
 
+  # Capture the user's actual PATH so LaunchAgents can find tools installed
+  # via nvm (~/.nvm/versions/node/.../bin), pyenv, asdf, custom locations, etc.
+  # Append the standard system locations as a fallback safety net so the
+  # plist always has the basics even if the user's shell PATH is minimal.
+  local user_path="${PATH}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+  # XML-escape any & or < that might appear in PATH (rare but possible)
+  user_path="${user_path//&/&amp;}"
+  user_path="${user_path//</&lt;}"
+
   local installed=0
   for entry in "command-center:8765" "website-build:8766" "website-rebuild:8767"; do
     local name="${entry%%:*}"
@@ -284,7 +293,9 @@ install_mission_control_bridges() {
         <key>PORT</key>
         <string>$port</string>
         <key>PATH</key>
-        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <string>$user_path</string>
+        <key>HOME</key>
+        <string>$HOME_DIR</string>
     </dict>
     <key>RunAtLoad</key>
     <true/>

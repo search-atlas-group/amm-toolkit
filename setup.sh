@@ -54,6 +54,13 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
     mkdir -p "$LAUNCH_AGENTS_DIR"
 
+    # Capture the user's actual PATH so LaunchAgents can find tools
+    # installed via nvm, pyenv, asdf, custom locations, etc. Standard
+    # system locations appended as a safety net.
+    USER_PATH="${PATH}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+    USER_PATH="${USER_PATH//&/&amp;}"
+    USER_PATH="${USER_PATH//</&lt;}"
+
     # Helper function to install one bridge as a LaunchAgent
     install_bridge_agent() {
         local NAME="$1"      # e.g. "command-center"
@@ -90,7 +97,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
         <key>PORT</key>
         <string>$PORT</string>
         <key>PATH</key>
-        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+        <string>$USER_PATH</string>
+        <key>HOME</key>
+        <string>$HOME</string>
     </dict>
     <key>RunAtLoad</key>
     <true/>
