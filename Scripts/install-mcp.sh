@@ -46,6 +46,13 @@ warn() { printf "  %s %s\n" "$(c_yellow '!')" "$1"; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Track which clients we configured so we can print accurate next-step
+# instructions at the end (each client's auth UX differs).
+HAS_CLAUDE_CODE=0
+HAS_CLAUDE_DESKTOP=0
+HAS_CURSOR=0
+HAS_WINDSURF=0
+
 # ---- Claude Code (CLI) ----
 install_claude_code() {
   if ! have claude; then
@@ -57,6 +64,7 @@ install_claude_code() {
   else
     ok "Claude Code — already configured"
   fi
+  HAS_CLAUDE_CODE=1
 }
 
 # ---- Claude Desktop ----
@@ -102,19 +110,19 @@ write_mcp_config() {
 install_claude_desktop() {
   local p; p="$(claude_desktop_config_path)"
   [ -n "$p" ] && [ -d "$(dirname "$p")" ] || { info "Claude Desktop — not detected, skipped"; return 1; }
-  if write_mcp_config "$p" "http"; then ok "Claude Desktop — added SearchAtlas"; fi
+  if write_mcp_config "$p" "http"; then ok "Claude Desktop — added SearchAtlas"; HAS_CLAUDE_DESKTOP=1; fi
 }
 
 install_cursor() {
   local p="$HOME_DIR/.cursor/mcp.json"
   [ -d "$HOME_DIR/.cursor" ] || { info "Cursor — not detected, skipped"; return 1; }
-  if write_mcp_config "$p" "url-only"; then ok "Cursor — added SearchAtlas"; fi
+  if write_mcp_config "$p" "url-only"; then ok "Cursor — added SearchAtlas"; HAS_CURSOR=1; fi
 }
 
 install_windsurf() {
   local p="$HOME_DIR/.codeium/windsurf/mcp_config.json"
   [ -d "$HOME_DIR/.codeium/windsurf" ] || { info "Windsurf — not detected, skipped"; return 1; }
-  if write_mcp_config "$p" "serverUrl"; then ok "Windsurf — added SearchAtlas"; fi
+  if write_mcp_config "$p" "serverUrl"; then ok "Windsurf — added SearchAtlas"; HAS_WINDSURF=1; fi
 }
 
 open_url() {
@@ -171,10 +179,28 @@ main() {
 
   echo "  $(c_bold 'You are wired up.')"
   open_welcome
+  # Pre-warm the SearchAtlas browser session so the per-client OAuth
+  # "Authorize?" step that comes next is a silent one-click instead of
+  # a sign-in prompt. If they're already signed in, this is a no-op tab.
+  open_url "https://dashboard.searchatlas.com" || true
+
   echo
-  info "Open Claude Code, Claude Desktop, Cursor, or Windsurf and ask anything —"
-  info "the first SearchAtlas tool call will sign you in automatically. If you"
-  info "are already signed into SearchAtlas in your browser, it is one click."
+  echo "  $(c_bold 'Last step — authorize each client (one-time, ~5 seconds each):')"
+  echo
+  if [ "$HAS_CLAUDE_CODE" -eq 1 ]; then
+    info "$(c_bold 'Claude Code:') run '$(c_cyan 'claude')', then type $(c_cyan '/mcp'), highlight $(c_bold 'searchatlas'), select $(c_bold 'Authenticate'), and click $(c_bold 'Authorize') in the browser tab that opens."
+  fi
+  if [ "$HAS_CLAUDE_DESKTOP" -eq 1 ]; then
+    info "$(c_bold 'Claude Desktop:') quit and relaunch the app. On first use of a SearchAtlas tool it will prompt for $(c_bold 'Authorize') — one click."
+  fi
+  if [ "$HAS_CURSOR" -eq 1 ]; then
+    info "$(c_bold 'Cursor:') open Settings → MCP, find $(c_bold 'searchatlas'), click $(c_bold 'Connect / Authorize')."
+  fi
+  if [ "$HAS_WINDSURF" -eq 1 ]; then
+    info "$(c_bold 'Windsurf:') open Cascade → MCP, find $(c_bold 'searchatlas'), click $(c_bold 'Authorize')."
+  fi
+  echo
+  info "We opened $(c_cyan 'dashboard.searchatlas.com') in your browser so the Authorize step above is just one click."
   echo
   echo "  $(c_dim 'Re-run anytime with: curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash')"
   echo
