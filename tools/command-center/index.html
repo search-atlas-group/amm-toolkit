@@ -1214,10 +1214,6 @@ Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Ow
     retryBtn.textContent = "Retry";
     if (!$("#connDot").classList.contains("bad")) hideAuthModal();
   });
-  const openMcpBtn = $("#authOpenMcpBtn");
-  if (openMcpBtn) openMcpBtn.addEventListener("click", () => {
-    window.open("https://claude.ai/new", "_blank", "noopener");
-  });
 })();
 </script>
 
@@ -1228,15 +1224,18 @@ Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Ow
       <span style="font-size:22px;">🔒</span>
       <h2 style="margin:0; font-size:18px; font-weight:600;">Search Atlas MCP not configured</h2>
     </div>
-    <p style="font-size:14px; line-height:1.55; opacity:0.85; margin:0 0 16px;">
-      Auth probe did not invoke the Search Atlas MCP. Open Claude.ai → <code>/mcp</code> and connect the SearchAtlas connector.
+    <p style="font-size:14px; line-height:1.55; opacity:0.85; margin:0 0 14px;">
+      The auth probe couldn't reach the Search Atlas MCP. Open the MCP client where you installed it — Claude Code, Claude Desktop, Cursor, or Windsurf — and confirm the SearchAtlas connector is authenticated.
     </p>
+    <ul style="font-size:13px; line-height:1.7; opacity:0.78; padding-left:18px; margin:0 0 18px;">
+      <li><strong>Claude Code (CLI)</strong>: run <code>/mcp</code> and complete OAuth for SearchAtlas</li>
+      <li><strong>Claude Desktop / Cursor / Windsurf</strong>: open settings, find the SearchAtlas server, complete OAuth</li>
+    </ul>
     <p style="font-size:13px; line-height:1.55; opacity:0.7; margin:0 0 18px;">
-      If you already connected it, click Retry.
+      Once authenticated, click Retry below.
     </p>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
-      <button id="authRetryBtn" type="button" style="background:rgba(255,255,255,0.08); color:#f4f3fb; border:1px solid rgba(255,255,255,0.18); padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer;">Retry</button>
-      <button id="authOpenMcpBtn" type="button" style="background:#6D00DA; color:#fff; border:none; padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; font-weight:600;">Open Claude.ai → /mcp</button>
+      <button id="authRetryBtn" type="button" style="background:#6D00DA; color:#fff; border:none; padding:9px 22px; border-radius:8px; font-size:13px; cursor:pointer; font-weight:600;">Retry</button>
     </div>
   </div>
 </div>

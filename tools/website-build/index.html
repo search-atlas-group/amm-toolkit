@@ -754,12 +754,16 @@ textarea { resize: vertical; min-height: 60px; }
     <p id="auth-modal-msg" style="font-size:14px; line-height:1.55; color:var(--muted); margin:0 0 16px;">
       We tried to call SearchAtlas just now and got an auth error. Connect the MCP server before continuing — nothing in this wizard runs without it.
     </p>
-    <ol style="font-size:13px; line-height:1.7; color:var(--text); padding-left:20px; margin:0 0 18px;">
-      <li>Open <a href="https://claude.ai/new" target="_blank" rel="noopener" style="color:var(--purple); font-weight:600;">claude.ai</a> in a new tab.</li>
-      <li>Run <code>/mcp</code> in the chat input.</li>
-      <li>Click the <strong>SearchAtlas</strong> connector and complete the OAuth flow.</li>
-      <li>Come back here and hit <strong>Retry</strong>.</li>
-    </ol>
+    <p style="font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 8px;">
+      Open the MCP client where you installed it and confirm the SearchAtlas connector is authenticated:
+    </p>
+    <ul style="font-size:13px; line-height:1.7; color:var(--text); padding-left:20px; margin:0 0 14px;">
+      <li><strong>Claude Code (CLI)</strong>: run <code>/mcp</code> and complete OAuth for SearchAtlas.</li>
+      <li><strong>Claude Desktop / Cursor / Windsurf</strong>: open the app's MCP settings, find SearchAtlas, complete OAuth.</li>
+    </ul>
+    <p style="font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 18px;">
+      Once authenticated, click <strong>Retry</strong>.
+    </p>
     <div id="auth-modal-error" style="display:none; background:var(--red-bg); border-left:3px solid var(--red); padding:8px 12px; border-radius:6px; font-size:12.5px; color:#7f1d1d; margin-bottom:12px; word-break:break-word;"></div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn btn-secondary" id="auth-modal-cancel" onclick="hideAuthModal()">Dismiss</button>
