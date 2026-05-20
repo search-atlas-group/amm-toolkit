@@ -238,9 +238,11 @@ install_toolkit_commands() {
   fi
 }
 
-# Install LaunchAgents for the 3 Mission Control bridges so they auto-start
-# on login. RunAtLoad=true so they boot immediately; KeepAlive=false so a
-# manual kill stays killed until next login (or Start Bridges.command).
+# Install LaunchAgents for the supervisor + 3 Mission Control bridges. The
+# supervisor is always-on (KeepAlive=true, ~15 MB, zero CPU when idle) and
+# wakes bridges on demand from welcome.html. The bridges idle-shutdown after
+# ~5 min of inactivity (KeepAlive=false) — welcome.html keeps them alive
+# with a 60 s heartbeat while a wizard tab is open.
 install_mission_control_bridges() {
   if [[ "$OS" != "Darwin" ]]; then
     info "Mission Control bridges skipped (LaunchAgents are macOS-only)"
@@ -261,9 +263,17 @@ install_mission_control_bridges() {
   user_path="${user_path//</&lt;}"
 
   local installed=0
-  for entry in "command-center:8765" "website-build:8766" "website-rebuild:8767"; do
+  # name:port:keepalive — supervisor stays up always so welcome.html can
+  # always reach it on 8764; bridges idle-shutdown.
+  for entry in \
+      "supervisor:8764:true" \
+      "command-center:8865:false" \
+      "website-build:8866:false" \
+      "website-rebuild:8867:false"; do
     local name="${entry%%:*}"
-    local port="${entry##*:}"
+    local rest="${entry#*:}"
+    local port="${rest%:*}"
+    local keepalive="${rest##*:}"
     local label="com.searchatlas.amm-$name"
     local plist="$agents_dir/$label.plist"
     local run_sh="$toolkit/tools/$name/run.sh"
@@ -300,7 +310,7 @@ install_mission_control_bridges() {
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
-    <false/>
+    <$keepalive/>
     <key>StandardOutPath</key>
     <string>/tmp/amm-$name.log</string>
     <key>StandardErrorPath</key>
@@ -315,7 +325,7 @@ PLIST
   done
 
   if [ "$installed" -gt 0 ]; then
-    ok "Mission Control bridges running (Onboard:8765, Build:8766, Rebuild:8767)"
+    ok "Mission Control running (Supervisor:8764, Onboard:8865, Build:8866, Rebuild:8867)"
   fi
 
   # Drop the manual-restart helper. We can't trust `launchctl load`'s exit
@@ -406,9 +416,10 @@ restart_one() {
     return 1
 }
 
-restart_one command-center 8765 || ANY_FAIL=1
-restart_one website-build 8766 || ANY_FAIL=1
-restart_one website-rebuild 8767 || ANY_FAIL=1
+restart_one supervisor       8764 || ANY_FAIL=1
+restart_one command-center   8865 || ANY_FAIL=1
+restart_one website-build    8866 || ANY_FAIL=1
+restart_one website-rebuild  8867 || ANY_FAIL=1
 
 echo
 if [ $ANY_FAIL -eq 0 ]; then
