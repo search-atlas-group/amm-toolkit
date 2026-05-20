@@ -50,7 +50,7 @@ Read-only audit across all seven SearchAtlas pillars in parallel. Returns a prio
 
 ### `/summit-shot {N}` — atomic playbook executor
 
-Pick one of 19 plays from the May Summit. Each play is intentionally bounded — 1 article, 1 PR, drafts by default — so the toolkit stays valuable without crossing into full DFY territory.
+Pick one of 19 plays from the curriculum. Each play is intentionally bounded — 1 article, 1 PR, drafts by default — so a single run is fast, reviewable, and easy to repeat.
 
 - **Day 1 — Foundation:** Brand Vault Setup · OTTO Engage · First PR · LLM Visibility Setup
 - **Day 2 — Content & Local:** Topical Map · Trophy Content · Blog Article · GBP Optimize

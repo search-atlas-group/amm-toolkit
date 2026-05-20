@@ -18,18 +18,13 @@ This means:
 - Other commands (`/run-content`, `/run-pr`, `/run-seo`) all read the same BV downstream
 
 **Design principles:** copy-before-design, theme-first approval, small-chunks iteration, page-type tiering, industry aesthetic library.
-**Planning skill upstream:** Arman Advani's `launch-website` (Phase 0 + 0.5 + brief generation).
-**5/19 design additions:** Pre-Build HITL gate (Arman), budget input (Arman), multi-format intake (JD), BV auto-crawl when missing (JD), Website Studio MCP for build/publish (JD).
+**Workflow gates:** Pre-Build HITL gate, budget input, multi-format intake, BV auto-crawl when missing, Website Studio MCP for build/publish.
 
 ## Prerequisites
 
 - `searchatlas` MCP server connected. If missing, stop and tell the user to add it.
 - Clean project directory.
 - Operator has client consent if working on a client domain.
-
-## Spec reference
-
-Source of truth: `_brain/projects/amm-mastermind/specs/website-build-spec.md`. This command implements that spec.
 
 ---
 
@@ -565,8 +560,7 @@ The 8 fields the operator fills in. Everything else is auto-generated:
 
 ## Related skills + commands
 
-- `launch-website` (Arman) — upstream planning skill; this command can consume its `plan.md` output as a richer Phase 2 seed
+- `launch-website` — upstream planning skill; this command can consume its `plan.md` output as a richer Phase 2 seed
 - `/onboard-client` — client setup; usually precedes this command
 - `/rebuild-website` — for redesigning existing sites
 - `/run-seo` — picks up once the site is live and crawled; provisions OTTO/LLMV/PPC and runs the ongoing cadence (cloud stacks, PRs, articles, DPR) sized by `budget-tier.json`
-- Spec: `_brain/projects/amm-mastermind/specs/website-build-spec.md`
