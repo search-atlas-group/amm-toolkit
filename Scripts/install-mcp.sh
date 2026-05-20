@@ -14,13 +14,16 @@ set -euo pipefail
 SERVER_NAME="searchatlas"
 ENDPOINT="https://mcp.searchatlas.com/mcp"
 OAUTH_URL="https://app.searchatlas.com/mcp/authorize?client=installer"
-# Served via htmlpreview.github.io (proxy that fetches the welcome HTML
-# from GitHub and serves it with Content-Type: text/html). jsdelivr and
-# raw.githubusercontent.com both serve raw .html as text/plain for
-# anti-abuse, which makes browsers display the source instead of
-# rendering the page. GitHub Pages would be cleaner but org admins
-# have it disabled on this account.
-WELCOME_URL="https://htmlpreview.github.io/?https://github.com/search-atlas-group/amm-toolkit/blob/main/docs/welcome.html"
+# The welcome page is fetched from the raw GitHub URL and written to a
+# local file, then opened with file://. This sidesteps every HTML-hosting
+# headache (raw.githubusercontent.com and jsdelivr both serve .html as
+# text/plain for anti-abuse; GitHub Pages is org-disabled). The local
+# file is fully self-contained — no external assets, no JS bundles —
+# so it renders the same on every machine without network access at
+# view time.
+WELCOME_RAW_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/docs/welcome.html"
+WELCOME_LOCAL_DIR="${HOME}/.searchatlas"
+WELCOME_LOCAL_FILE="${WELCOME_LOCAL_DIR}/welcome.html"
 HOME_DIR="${HOME}"
 OS="$(uname -s)"
 
@@ -116,14 +119,31 @@ open_url() {
   esac
 }
 
+# Download the welcome page to disk, then open the local file in the
+# browser as a background tab — so the user has it as the visual payoff
+# after OAuth. Opening via file:// renders correctly regardless of
+# remote content-type quirks. Falls back gracefully if download fails.
+fetch_welcome() {
+  if ! command -v curl >/dev/null 2>&1; then
+    return 1
+  fi
+  mkdir -p "$WELCOME_LOCAL_DIR" 2>/dev/null || return 1
+  if curl -fsSL "$WELCOME_RAW_URL" -o "$WELCOME_LOCAL_FILE" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 # Open the welcome page first so it loads in a background tab, then open
 # OAuth in a second tab. The OAuth tab gets focus (most recently opened),
 # user finishes authorization, then naturally returns to the welcome tab
 # as the visual payoff. Works for Claude Code, Claude Desktop, Cursor,
 # and Windsurf installs — the welcome tab is the same.
 open_browser() {
-  if ! open_url "$WELCOME_URL"; then
-    warn "Open this URL when you're done: $WELCOME_URL"
+  if fetch_welcome; then
+    open_url "file://${WELCOME_LOCAL_FILE}" || warn "Open this file when you're done: ${WELCOME_LOCAL_FILE}"
+  else
+    info "Welcome page download skipped (offline or curl unavailable)"
   fi
   # Tiny gap so the welcome tab is created first and OAuth lands on top.
   sleep 1
