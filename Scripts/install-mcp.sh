@@ -349,18 +349,37 @@ restart_one() {
     local plist="$HOME/Library/LaunchAgents/$label.plist"
     local run_sh="$TOOLKIT/tools/$name/run.sh"
 
-    # 1) Tear down whatever is currently bound to this slot.
+    # 1) Idempotency: if a bridge is already serving traffic on the port,
+    # leave it alone. The user's restart click should be a no-op when the
+    # bridges are already up — racing them just creates the address-in-use
+    # crash we used to see.
+    if curl -s -o /dev/null -m 1 "http://localhost:$port/api/health" 2>/dev/null; then
+        echo "  ✓  $name already running on port $port"
+        return 0
+    fi
+
+    # 2) Tear down launchd-managed instances + any stray pids on the port.
     launchctl bootout "gui/$UID_NUM/$label" 2>/dev/null || \
         launchctl unload "$plist" 2>/dev/null || true
-    # Kill any stray process holding the port (orphaned from a prior crash).
     local pids
     pids=$(lsof -t -iTCP:$port -sTCP:LISTEN 2>/dev/null)
     if [ -n "$pids" ]; then
         echo "$pids" | xargs kill -9 2>/dev/null || true
     fi
-    sleep 0.3
 
-    # 2) Boot via launchd (preferred — survives login).
+    # 3) Actively wait for the port to be free before bootstrapping a new
+    # instance — kill -9 returns instantly but the kernel takes a moment
+    # to release the port (TIME_WAIT). Without this, launchctl bootstrap
+    # fires while the old socket is still bound and the new uvicorn dies
+    # with "address already in use".
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if ! lsof -i TCP:$port -sTCP:LISTEN >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.5
+    done
+
+    # 4) Boot via launchd (preferred — survives login).
     if [ -f "$plist" ]; then
         launchctl bootstrap "gui/$UID_NUM" "$plist" 2>/dev/null || \
             launchctl load "$plist" 2>/dev/null || true
@@ -370,10 +389,10 @@ restart_one() {
         return 0
     fi
 
-    # 3) Fallback: launchd didn't give us a listening port. Run the bridge
+    # 5) Fallback: launchd didn't give us a listening port. Run the bridge
     # directly via nohup so the user gets a working session even if their
     # launchd PATH is missing claude or python deps.
-    if [ -x "$run_sh" ] || [ -f "$run_sh" ]; then
+    if [ -f "$run_sh" ]; then
         echo "  …  $name launchd boot failed, falling back to direct launch"
         ( NO_BROWSER=1 PORT=$port nohup bash "$run_sh" \
             > "/tmp/amm-$name.log" 2> "/tmp/amm-$name.err" < /dev/null & )

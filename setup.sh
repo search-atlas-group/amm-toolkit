@@ -166,6 +166,13 @@ restart_one() {
     local plist="\$HOME/Library/LaunchAgents/\$label.plist"
     local run_sh="\$TOOLKIT/tools/\$name/run.sh"
 
+    # If a bridge is already serving traffic, leave it alone — racing it
+    # just causes "address already in use" crashes.
+    if curl -s -o /dev/null -m 1 "http://localhost:\$port/api/health" 2>/dev/null; then
+        echo "  ✓  \$name already running on port \$port"
+        return 0
+    fi
+
     launchctl bootout "gui/\$UID_NUM/\$label" 2>/dev/null || \\
         launchctl unload "\$plist" 2>/dev/null || true
     local pids
@@ -173,7 +180,15 @@ restart_one() {
     if [ -n "\$pids" ]; then
         echo "\$pids" | xargs kill -9 2>/dev/null || true
     fi
-    sleep 0.3
+
+    # Wait for the port to actually free up before bootstrapping a new
+    # instance, otherwise the new uvicorn races the old socket release.
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if ! lsof -i TCP:\$port -sTCP:LISTEN >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.5
+    done
 
     if [ -f "\$plist" ]; then
         launchctl bootstrap "gui/\$UID_NUM" "\$plist" 2>/dev/null || \\
