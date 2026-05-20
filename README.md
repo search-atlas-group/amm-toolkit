@@ -1,199 +1,117 @@
 # Agentic Marketing Mastermind
 
-AI-powered digital marketing toolkit for [SearchAtlas](https://searchatlas.com) agencies. Run SEO, GBP, PPC, content, and LLM visibility workflows — all from your terminal with Claude Code.
+The SearchAtlas MCP gives Claude direct access to **620+ tools** for SEO, content, GBP, PPC, authority building, and AI visibility. This repo wires it into Claude Code (as slash commands) and Claude Desktop (as ready-to-paste prompts).
 
-## Setup (~5–10 minutes)
+You'll be running a real SearchAtlas workflow from Claude in about 10 minutes.
 
-One command. It will ask you two questions — your workspace name and which IDE you use — then handle everything else automatically.
+---
 
-**macOS** — paste into Terminal:
+## What is MCP?
+
+[Model Context Protocol](https://modelcontextprotocol.io/) is the standard that lets Claude call external tools directly. The SearchAtlas MCP is a hosted service at `mcp.searchatlas.com` — your laptop talks to it, it talks to the SearchAtlas platform. You don't run anything yourself; you just authorize it once.
+
+---
+
+## Get started — one command
+
+Paste into Terminal (macOS) or PowerShell-as-Admin (Windows):
+
+**macOS / Linux:**
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"
+curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
 ```
 
-**Windows** — paste into PowerShell (run as Administrator):
+**Windows:**
 ```powershell
 irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex
 ```
 
-The setup will:
-1. Create your agency workspace folder (you choose the name)
-2. Ask which IDE you use — Cursor, Warp, VS Code, Windsurf, etc.
-3. Install Git and Node.js if not already present
-4. Install Claude Code via npm (`npm install -g @anthropic-ai/claude-code`)
-5. Clone this toolkit into `~/YourWorkspace/amm-toolkit/`
-6. Connect the SearchAtlas MCP (OAuth — no API key needed)
-7. Install all slash commands
-8. Open your workspace in your chosen IDE
+The installer detects what you have (Claude Code, Claude Desktop, Cursor, Windsurf) and wires up each automatically. If Claude Code is installed, it also drops every slash command into `~/.claude/commands/` so they work the first time you open Claude.
 
-Your workspace will look like this:
-```
-~/YourWorkspace/
-├── amm-toolkit/                   ← this toolkit (do not edit)
-│   ├── commands/                  ← slash commands (/run-seo, /business-report, etc.)
-│   ├── workflows/                 ← YAML workflow templates
-│   ├── integrations/              ← Slack, Discord, email, Circle scripts
-│   ├── tools/
-│   │   ├── security/              ← repo security scanner (UI + server)
-│   │   ├── guardian/              ← AMM guardian dashboard
-│   │   └── command-center/        ← web UI for /onboard-client (4-step wizard)
-│   ├── guides/                    ← how-to guides (security, Windows setup, etc.)
-│   ├── docs/                      ← MCP setup, tool reference, golden rules
-│   ├── Scripts/                   ← quickstart + setup scripts (mac/windows)
-│   ├── CLAUDE.md                  ← toolkit context for Claude Code
-│   └── WHATS-NEW.md               ← changelog
-└── clients/                       ← one folder per client (created by /onboard-client)
-    └── your-client/
-        ├── CLAUDE.md              ← client session context (IDs, brand voice)
-        └── brand-profile.md       ← brand data synced with SearchAtlas
-```
+---
 
-**First use:** Open your workspace in Claude Code (`claude` in terminal), then run `/my-account`. Claude will prompt you to authorize your SearchAtlas account — one-time OAuth flow.
+## First run — authorize SearchAtlas
 
-## Commands
+Open your client (Claude Code or Claude Desktop) and ask:
 
-### Account & Clients
-```
-/my-account          # All businesses, projects, campaigns, GBP locations
-/business-report     # Deep dive on a single business
-/scout               # Read-only diagnostic across all pillars + prioritized action plan
-/summit-shot         # Atomic single-play executor (19 plays from the May Summit)
-/onboard-client      # Guided new client setup (brand vault pull or manual)
-/sync-client         # Two-way sync: local brand-profile.md ↔ SA brand vault
-```
+> "List my SearchAtlas projects"
 
-Prefer a web UI for `/onboard-client`? `cd tools/command-center && bash run.sh` opens a four-step wizard at `http://localhost:8765`.
+A browser tab opens for OAuth. Sign in, click **Authorize**. That's it — your token refreshes automatically from here.
 
-### Execute Workflows
-```
-/run-seo             # SEO onboarding or monthly maintenance
-/run-gbp             # Google Business Profile optimization
-/run-ppc             # PPC campaign build and launch
-/run-content         # Article generation from topical maps
-/run-pr              # Press releases + cloud stacks + digital PR
-/run-visibility      # LLM visibility and sentiment monitoring
-```
+If the OAuth tab doesn't open: see [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
 
-### Share Results
-```
-/send-slack          # Post to Slack (supports multiple channels)
-/send-discord        # Post to Discord via webhook
-/send-email          # Send an email via Resend API
-/send-circle         # Post to a Circle community space
-```
+---
 
-### Security
-```
-/security-scan <url> # Scan any GitHub repo for threats before cloning or running it
-```
+## Your first workflow
 
-## All Commands
+### If you have Claude Code (terminal CLI)
 
-| Command | Description |
-|---------|-------------|
-| `/my-account` | Show all businesses, projects, campaigns, and GBP locations |
-| `/scout` | Read-only diagnostic across all pillars; returns a prioritized action plan |
-| `/summit-shot` | Atomic single-play executor — 19 plays from the May Summit |
-| `/onboard-client` | Guided client onboarding — pull from brand vault or enter manually |
-| `/sync-client` | Two-way sync between local brand-profile.md and SearchAtlas brand vault |
-| `/business-report` | Deep dive report on a single business |
-| `/run-seo` | SEO onboarding or monthly maintenance workflow |
-| `/run-gbp` | Optimize a Google Business Profile |
-| `/run-ppc` | Build and launch a PPC campaign |
-| `/run-content` | Generate articles, topical maps, content briefs |
-| `/run-pr` | Create and distribute press releases |
-| `/run-visibility` | Run LLM visibility and sentiment analysis |
-| `/send-slack` | Post to Slack (supports multiple channels) |
-| `/send-discord` | Post to Discord via webhook |
-| `/send-email` | Send an email via Resend API |
-| `/send-circle` | Post to a Circle community space |
-| `/security-scan` | Scan any GitHub repo for threats before cloning or running it |
-| `/help` | List all available commands |
-
-## Automate with Workflow Templates
-
-Templates in `workflows/` define step-by-step tool chains for recurring tasks:
-
-| Template | Use case |
-|----------|----------|
-| `seo-onboarding.yaml` | Full new client SEO setup |
-| `monthly-seo.yaml` | Monthly maintenance: suggestions, schema, indexing |
-| `gbp-optimization.yaml` | GBP cleanup: recommendations, categories, services |
-| `gbp-monthly.yaml` | GBP maintenance: reviews, posts, automation |
-| `ppc-launch.yaml` | PPC campaign: business, products, keywords, campaigns |
-| `authority-building.yaml` | PR and link building: press, cloud stacks, outreach |
-| `llm-visibility.yaml` | AI search: visibility, sentiment, SERP analysis |
-
-## Security Scanner
-
-Every installation includes a built-in repo security scanner. Before cloning any third-party tool or library, scan it first:
+Type a slash command in chat:
 
 ```
-/security-scan https://github.com/owner/repo
+/my-account
+/scout coastaldental.com
+/business-report coastaldental.com
 ```
 
-Claude runs a 4-tier analysis — GitHub metadata, secrets detection, CVE checks, SAST rules, and an optional behavioral sandbox — and gives you a plain-English verdict before you touch any code.
+Every command is real — it calls SA tools, returns real data, saves real files to `clients/<slug>/`. See the full list: [docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md).
 
-**Three ways to scan:**
+### If you have Claude Desktop only (no slash commands)
 
-| Option | How | Best for |
-|--------|-----|----------|
-| Browser quick check | Paste URL into `tools/security/` UI | Fast first look, no setup |
-| Full local scan | `python3 tools/security/server.py` then open the UI | Thorough pre-clone analysis |
-| Claude Code | `/security-scan <url>` in Claude Code chat | Deep AI review with full report |
+Slash commands aren't a Desktop feature — but every workflow has a copy-paste prompt that does the same thing:
 
-See [guides/security-scan-guide.md](guides/security-scan-guide.md) for full details.
+→ [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md)
 
-## Prerequisites
+Open the doc, find the workflow you want (`/scout`, `/business-report`, `/run-seo`, etc.), copy the prompt, paste it into a new Claude Desktop chat, fill in your client's domain, send.
 
-- [Claude Code](https://claude.ai/code) installed
-- A [SearchAtlas](https://searchatlas.com) account
+---
 
-## Manual MCP Setup
+## What's in the box
 
-Want SearchAtlas MCP + all the slash commands without cloning the repo? One command:
+| | |
+|---|---|
+| **20+ slash commands** | Account overview, diagnostic scout, deep dives, full workflows for SEO / GBP / PPC / content / PR / LLM visibility |
+| **Claude Desktop prompts** | Copy-paste equivalents for every slash command, output-faithful |
+| **Workflow templates** | YAML pipelines you can run unattended ([docs/WORKFLOWS.md](docs/WORKFLOWS.md)) |
+| **Send integrations** | Post results to Slack, Discord, email (Resend), or Circle |
+| **Mission Control wizards** | Optional web UI for onboarding clients and building/rebuilding websites — see [POWER-USER.md](POWER-USER.md) |
+
+---
+
+## Going further
+
+For agencies and operators who want the full stack — web wizards, background builds, workflow automation, send integrations, the 19 Summit-shot plays, supervisor architecture — read:
+
+→ **[POWER-USER.md](POWER-USER.md)**
+
+For everything you can call from chat:
+
+→ **[docs/SLASH_COMMANDS.md](docs/SLASH_COMMANDS.md)**
+
+---
+
+## Need help?
+
+| Problem | Where to look |
+|---|---|
+| OAuth tab didn't open / "Unauthorized" errors | [docs/MCP_SETUP.md](docs/MCP_SETUP.md) |
+| Don't know which tool to call for a given task | [docs/INTENT_MAPPING.md](docs/INTENT_MAPPING.md) |
+| Windows-specific issues (WSL, networking) | [guides/windows-claude-code-setup.md](guides/windows-claude-code-setup.md) |
+| Want to understand best practices for the MCP | [docs/GOLDEN_RULES.md](docs/GOLDEN_RULES.md) |
+| Want a guided tour of every SA tool | [docs/TOOL_REFERENCE.md](docs/TOOL_REFERENCE.md) |
+| Just want to scan a repo before running it | `/security-scan <github-url>` — see [guides/security-scan-guide.md](guides/security-scan-guide.md) |
+
+---
+
+## Updating
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
 ```
 
-What it does:
-- Detects Claude Code, Claude Desktop, Cursor, and Windsurf — writes the SearchAtlas MCP server config into each
-- Downloads the lightweight slash-command pack (~400 KB) into `~/.searchatlas/toolkit/` and installs all 19 commands into `~/.claude/commands/` (path-patched, ready to run)
-- Opens the welcome page
+The installer is idempotent — re-running it updates your commands and MCP config to the latest.
 
-You get `/my-account`, `/scout`, `/business-report`, `/onboard-client`, `/run-seo`, `/run-gbp`, `/run-ppc`, `/run-content`, `/run-pr`, `/run-visibility`, `/summit-shot`, `/send-slack`, `/send-discord`, `/send-email`, `/send-circle`, `/security-scan`, `/setup-integrations`, `/sync-client`, and `/help` ready to use the first time you launch Claude.
-
-The toolkit's `tools/` directory (security scanner UI, command-center web UI, ~37 MB) is *not* included — for that, run the full `quickstart-mac.sh` above instead.
-
-Or, if you only want Claude Code wired up manually:
-
-```bash
-claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
-```
-
-See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for full details and troubleshooting.
-
-## Verify Setup
-
-```bash
-bash scripts/verify-setup.sh
-```
-
-## Documentation
-
-- [MCP Setup Guide](docs/MCP_SETUP.md) — Connect to the SearchAtlas MCP
-- [Tool Reference](docs/TOOL_REFERENCE.md) — Tool groups and operations
-- [Golden Rules](docs/GOLDEN_RULES.md) — Best practices for reliable tool usage
-- [Workflows Guide](docs/WORKFLOWS.md) — How workflow templates work
-- [Intent Mapping](docs/INTENT_MAPPING.md) — Keyword-to-tool routing reference
-
-## Updating
-
-```bash
-git pull origin main
-bash setup.sh
-```
+---
 
 ## License
 

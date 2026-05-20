@@ -2,21 +2,21 @@
 
 Slash commands are a Claude Code feature. Claude Desktop doesn't have them — but it has the same SearchAtlas MCP, so the same workflows are one paste away.
 
-Every prompt below is **output-faithful** with its slash command: same tool calls, same chat render, same deliverables (HTML reports, brand-profile files, SA Report Builder reports). Where the slash command writes files, the Desktop prompt asks for the same content rendered as a code block or artifact you can copy and save manually (or, if you have a Filesystem MCP wired up, written directly).
+Every prompt below is **output-faithful** with its slash command: same tool calls, same chat render, same deliverables (HTML reports, brand-profile files, SA Report Builder reports). Where the slash command writes files, the Desktop prompt asks for the same content rendered as a code block you can copy and save manually.
 
 **How to use:** copy a prompt, paste it into Claude Desktop, fill in the placeholders (`{domain}`, `{client_slug}`, etc.), and send.
 
 ---
 
-## Setup
+## Setup — one command
 
-Run the universal installer once. It auto-detects Claude Desktop and writes the MCP config to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+The universal installer auto-detects Claude Desktop and writes the MCP config to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
 ```
 
-Restart Claude Desktop. First tool call triggers OAuth — sign into SearchAtlas, approve, done.
+Restart Claude Desktop. First tool call triggers OAuth — sign into SearchAtlas, approve, done. No second MCP to install.
 
 ---
 
@@ -507,7 +507,7 @@ For Resend email: ask Claude to call the Resend HTTP API directly with your `RES
 - **Authorize once.** First tool call opens a browser tab. Approve. Token stays alive until you sign out of SearchAtlas.
 - **Schema discovery still works.** Not sure what a tool needs? Ask: *"Call `project_management` with empty params and show me the schema."*
 - **Save your favorite prompts.** Drop them into a Claude Desktop Project's instructions for reuse.
-- **Filesystem MCP turns code blocks into files.** If you install the Filesystem MCP server, Claude can write the HTML / CLAUDE.md / brand-profile.md outputs directly to your local `clients/{slug}/` folder instead of asking you to copy from a code block.
+- **Outputs come as code blocks.** Where the slash command would write a file, the Desktop version returns the same content fenced in a ```html or ```markdown block. Copy, save it locally yourself — or just keep it in the chat.
 
 ---
 

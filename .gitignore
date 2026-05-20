@@ -11,6 +11,7 @@
 !/CLAUDE.md
 !/LICENSE
 !/README.md
+!/POWER-USER.md
 !/WHATS-NEW.md
 !/setup.sh
 !/.env.example
@@ -51,8 +52,7 @@ docs/.*
 !docs/MCP_SETUP.md
 !docs/TOOL_REFERENCE.md
 !docs/WORKFLOWS.md
-!docs/MCP-DAY-AGENDA.md
-!docs/MCP-DAY-AGENDA.html
+!docs/SLASH_COMMANDS.md
 !docs/CLAUDE_DESKTOP_PROMPTS.md
 !docs/welcome.html
 !docs/install.html
