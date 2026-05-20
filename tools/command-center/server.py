@@ -758,9 +758,48 @@ async def shutdown(request: Request):
 # ── Entrypoint ───────────────────────────────────────────────────────────────
 
 
+def _check_port_or_die(port: int, service: str) -> None:
+    """Probe-bind 0.0.0.0:port before uvicorn starts. Probing the wildcard
+    address catches the macOS quirk where *:port and localhost:port can both
+    bind successfully — load-balancing requests across the two listeners and
+    producing intermittent /api/health failures that look like the bridge is
+    down. Fail loud here so an MCP Day attendee gets a clear next step
+    instead of a confused traceback in the launchd stderr log."""
+    import socket as _socket, subprocess as _sp, sys as _sys
+    probe = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+    probe.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+    try:
+        probe.bind(("0.0.0.0", port))
+        return
+    except OSError:
+        pass
+    finally:
+        probe.close()
+    holder = ""
+    lsof = shutil.which("lsof")
+    if lsof:
+        try:
+            out = _sp.run([lsof, "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
+                          capture_output=True, text=True, timeout=2)
+            for line in out.stdout.splitlines():
+                if line and not line.startswith("COMMAND"):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        holder = f"{parts[0]} (PID {parts[1]})"
+                        break
+        except Exception:
+            pass
+    _sys.stderr.write(f"\n  ✗  {service} cannot bind port {port}\n")
+    if holder:
+        _sys.stderr.write(f"      Held by: {holder}\n")
+    _sys.stderr.write(f"      Free it:  lsof -ti:{port} | xargs kill\n\n")
+    _sys.exit(1)
+
+
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8765))
+    port = int(os.environ.get("PORT", 8865))
+    _check_port_or_die(port, "AMM Command Center")
     print(f"\n  AMM Command Center")
     print(f"  → http://localhost:{port}\n")
     print(f"  Toolkit root: {TOOLKIT_ROOT}")

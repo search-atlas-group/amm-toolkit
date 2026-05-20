@@ -12,7 +12,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PORT="${PORT:-8765}"
+PORT="${PORT:-8865}"
 
 echo ""
 echo -e "  ${GREEN}AMM Command Center${NC}"
