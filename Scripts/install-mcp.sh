@@ -13,14 +13,21 @@ set -euo pipefail
 
 SERVER_NAME="searchatlas"
 ENDPOINT="https://mcp.searchatlas.com/mcp"
-OAUTH_URL="https://app.searchatlas.com/mcp/authorize?client=installer"
+# Note: we deliberately do NOT pre-open an OAuth URL here. MCP OAuth uses
+# dynamic PKCE state + a localhost callback that only the MCP client can
+# generate (Claude Code, Desktop, Cursor, Windsurf each handle it on
+# first tool use). Any static OAuth URL we open from a terminal script
+# would be a no-op and misleading. The real flow: this installer writes
+# configs, the user opens their MCP client, the client triggers OAuth
+# with its own dynamic params and a one-click "Authorize" if the user
+# is already signed into SearchAtlas.
+#
 # The welcome page is fetched from the raw GitHub URL and written to a
 # local file, then opened with file://. This sidesteps every HTML-hosting
 # headache (raw.githubusercontent.com and jsdelivr both serve .html as
-# text/plain for anti-abuse; GitHub Pages is org-disabled). The local
-# file is fully self-contained — no external assets, no JS bundles —
-# so it renders the same on every machine without network access at
-# view time.
+# text/plain for anti-abuse; GitHub Pages is org-disabled). Opening from
+# disk lets the page's bundler script run normally without proxy
+# interference.
 WELCOME_RAW_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/docs/welcome.html"
 WELCOME_LOCAL_DIR="${HOME}/.searchatlas"
 WELCOME_LOCAL_FILE="${WELCOME_LOCAL_DIR}/welcome.html"
@@ -120,9 +127,8 @@ open_url() {
 }
 
 # Download the welcome page to disk, then open the local file in the
-# browser as a background tab — so the user has it as the visual payoff
-# after OAuth. Opening via file:// renders correctly regardless of
-# remote content-type quirks. Falls back gracefully if download fails.
+# browser — celebrates the install and points the user at the next
+# step (open their MCP client, which handles its own OAuth).
 fetch_welcome() {
   if ! command -v curl >/dev/null 2>&1; then
     return 1
@@ -134,21 +140,11 @@ fetch_welcome() {
   return 1
 }
 
-# Open the welcome page first so it loads in a background tab, then open
-# OAuth in a second tab. The OAuth tab gets focus (most recently opened),
-# user finishes authorization, then naturally returns to the welcome tab
-# as the visual payoff. Works for Claude Code, Claude Desktop, Cursor,
-# and Windsurf installs — the welcome tab is the same.
-open_browser() {
+open_welcome() {
   if fetch_welcome; then
-    open_url "file://${WELCOME_LOCAL_FILE}" || warn "Open this file when you're done: ${WELCOME_LOCAL_FILE}"
+    open_url "file://${WELCOME_LOCAL_FILE}" || warn "Open this file when you're ready: ${WELCOME_LOCAL_FILE}"
   else
     info "Welcome page download skipped (offline or curl unavailable)"
-  fi
-  # Tiny gap so the welcome tab is created first and OAuth lands on top.
-  sleep 1
-  if ! open_url "$OAUTH_URL"; then
-    warn "Open this URL to authorize: $OAUTH_URL"
   fi
 }
 
@@ -173,10 +169,12 @@ main() {
     exit 1
   fi
 
-  echo "  $(c_bold 'Opening SearchAtlas welcome + login…')"
-  open_browser
-  ok "Two browser tabs opened: welcome page + SearchAtlas authorization"
-  info "Finish OAuth in the front tab; the welcome page is waiting behind it"
+  echo "  $(c_bold 'You are wired up.')"
+  open_welcome
+  echo
+  info "Open Claude Code, Claude Desktop, Cursor, or Windsurf and ask anything —"
+  info "the first SearchAtlas tool call will sign you in automatically. If you"
+  info "are already signed into SearchAtlas in your browser, it is one click."
   echo
   echo "  $(c_dim 'Re-run anytime with: curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash')"
   echo
