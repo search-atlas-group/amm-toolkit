@@ -452,12 +452,15 @@ async def run_claude_session(
     cmd = [claude_path, "-p", "--output-format", "stream-json", "--verbose"]
     if allowed_tools:
         cmd += ["--allowedTools", ",".join(allowed_tools)]
-    cmd.append(prompt)
+    # Pipe the prompt via stdin. commander.js treats `--allowedTools` as
+    # variadic (`<tools...>`), so a positional prompt after it gets swallowed
+    # into the tools list and the CLI dies with "Input must be provided".
 
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             cwd=str(TOOLKIT_ROOT),
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -467,6 +470,15 @@ async def run_claude_session(
             "tool_calls": [], "assistant_text": "",
             "auth_error": False, "timed_out": False,
         }
+
+    if proc.stdin is not None:
+        try:
+            proc.stdin.write(prompt.encode("utf-8"))
+            await proc.stdin.drain()
+        except Exception:
+            pass
+        finally:
+            proc.stdin.close()
 
     _active_jobs.add(proc.pid)
     _bump_heartbeat()
