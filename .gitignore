@@ -52,6 +52,7 @@ docs/.*
 !docs/TOOL_REFERENCE.md
 !docs/WORKFLOWS.md
 !docs/MCP-DAY-AGENDA.md
+!docs/MCP-DAY-AGENDA.html
 !docs/CLAUDE_DESKTOP_PROMPTS.md
 !docs/welcome.html
 !docs/install.html

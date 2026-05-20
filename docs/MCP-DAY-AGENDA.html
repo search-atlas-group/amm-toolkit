@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCP Day · Workshop Runbook</title>
+<style>
+  :root {
+    --bg: #06050e;
+    --bg-2: #0c0a1c;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-2: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --text: #f4f3fb;
+    --text-dim: rgba(244, 243, 251, 0.62);
+    --text-faint: rgba(244, 243, 251, 0.38);
+    --purple: #926BD9;
+    --purple-bright: #c8b6ee;
+    --cyan: #00FFD4;
+    --green: #4ade80;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --mono: ui-monospace, "SF Mono", "Menlo", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  body { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  nav.toc {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    background: var(--bg-2); border-right: 1px solid var(--border);
+    padding: 24px 18px; font-size: 13px;
+  }
+  nav.toc .brand {
+    font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
+    margin-bottom: 4px; color: var(--text);
+  }
+  nav.toc .date { color: var(--text-faint); font-size: 12px; margin-bottom: 22px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { margin-bottom: 2px; counter-increment: toc; }
+  nav.toc a {
+    display: block; padding: 6px 10px; color: var(--text-dim); text-decoration: none;
+    border-radius: 6px; transition: background 120ms, color 120ms;
+  }
+  nav.toc a:hover { background: var(--surface); color: var(--text); }
+  nav.toc a::before { content: counter(toc) ". "; color: var(--text-faint); }
+  nav.toc .group { margin-top: 22px; margin-bottom: 6px; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  nav.toc .group + ol { counter-reset: subc; }
+  nav.toc .group + ol li { counter-increment: subc; }
+  nav.toc .group + ol a::before { content: ""; }
+
+  main { padding: 36px 48px 96px; max-width: 1100px; }
+
+  h1 { font-size: 32px; letter-spacing: -0.02em; margin: 0 0 4px; }
+  h1 .accent { color: var(--purple-bright); }
+  .hero-sub { color: var(--text-dim); margin-bottom: 32px; font-size: 15px; }
+
+  h2 { font-size: 22px; letter-spacing: -0.01em; margin: 48px 0 12px; padding-top: 20px; border-top: 1px solid var(--border); }
+  h2:first-of-type { border-top: none; padding-top: 0; }
+  h2 .duration { color: var(--cyan); font-size: 13px; font-weight: 500; margin-left: 10px; vertical-align: middle; }
+
+  h3 { font-size: 16px; margin: 22px 0 8px; color: var(--text); font-weight: 600; }
+
+  p { margin: 0 0 12px; color: var(--text-dim); }
+  p strong { color: var(--text); font-weight: 600; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; color: var(--text-dim); }
+  ul li, ol li { margin-bottom: 4px; }
+  ul li strong, ol li strong { color: var(--text); }
+
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); padding: 1px 6px; border-radius: 4px; color: var(--purple-bright); }
+  pre {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5;
+    color: var(--text);
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  a { color: var(--purple-bright); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--purple); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 22px; margin: 16px 0;
+  }
+  .card.warn { border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.06); }
+  .card.tip { border-color: rgba(0, 255, 212, 0.3); background: rgba(0, 255, 212, 0.04); }
+  .card .label {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px;
+  }
+  .card.warn .label { background: var(--amber); color: #1a1300; }
+  .card.tip .label { background: var(--cyan); color: #00251c; }
+
+  .resource-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px; margin: 14px 0;
+  }
+  .resource-grid a {
+    display: block; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 13px; transition: border-color 120ms, background 120ms;
+    border-bottom: 1px solid var(--border);
+  }
+  .resource-grid a:hover { border-color: var(--purple); background: var(--surface-2); border-bottom: 1px solid var(--purple); }
+  .resource-grid a .ico { color: var(--purple-bright); margin-right: 6px; }
+  .resource-grid a .meta { display: block; color: var(--text-faint); font-size: 11px; margin-top: 3px; }
+
+  .demo-frame {
+    margin: 16px 0 24px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: var(--bg-2);
+  }
+  .demo-frame iframe { display: block; width: 100%; height: 580px; border: 0; background: var(--bg); }
+  .demo-frame .demo-bar {
+    padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; font-size: 13px;
+  }
+  .demo-frame .demo-bar .title { color: var(--text); font-weight: 500; }
+  .demo-frame .demo-bar .ext { color: var(--purple-bright); font-size: 12px; }
+  .demo-fallback {
+    padding: 24px; text-align: center; color: var(--text-faint); font-size: 13px;
+    border-radius: 8px;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+  th { color: var(--text); font-weight: 600; background: var(--surface); }
+  td code { font-size: 12px; }
+
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 100px; background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); }
+  .pill.purple { background: rgba(146, 107, 217, 0.12); color: var(--purple-bright); border-color: rgba(146, 107, 217, 0.3); }
+  .pill.cyan { background: rgba(0, 255, 212, 0.1); color: var(--cyan); border-color: rgba(0, 255, 212, 0.25); }
+  .pill.amber { background: rgba(251, 191, 36, 0.1); color: var(--amber); border-color: rgba(251, 191, 36, 0.25); }
+
+  .talking-points { padding-left: 0; list-style: none; }
+  .talking-points li {
+    padding: 6px 0 6px 22px; position: relative; color: var(--text-dim);
+  }
+  .talking-points li::before {
+    content: "→"; position: absolute; left: 0; color: var(--purple); font-weight: 700;
+  }
+
+  @media (max-width: 880px) {
+    body { grid-template-columns: 1fr; }
+    nav.toc { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+    main { padding: 24px 22px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <div class="brand">MCP Day</div>
+  <div class="date">2026-05-20 · Workshop runbook</div>
+
+  <div class="group">Setup</div>
+  <ol>
+    <li><a href="#preflight">Pre-flight install</a></li>
+    <li><a href="#auth">Authenticate SA</a></li>
+  </ol>
+
+  <div class="group">Agenda blocks</div>
+  <ol>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#install">Install live</a></li>
+    <li><a href="#onboard">Onboard wizard</a></li>
+    <li><a href="#build">Build wizard</a></li>
+    <li><a href="#rebuild">Rebuild wizard</a></li>
+    <li><a href="#qa">Q&amp;A + slash tour</a></li>
+  </ol>
+
+  <div class="group">Operator</div>
+  <ol>
+    <li><a href="#resources">Resources</a></li>
+    <li><a href="#contingencies">Contingencies</a></li>
+    <li><a href="#support">Support team</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<h1>MCP Day <span class="accent">·</span> Workshop Runbook</h1>
+<p class="hero-sub">
+  Operator-facing runbook. Click into each block for talking points, the autoplay demo to drive, and the resources to send.
+  Designed to be opened locally next to the live session — every demo plays inline, every resource is one click away.
+</p>
+
+<div class="card tip">
+  <span class="label">Quick links</span>
+  <div class="resource-grid">
+    <a href="welcome.html" target="_blank"><span class="ico">●</span> Open welcome.html<span class="meta">The page attendees will see</span></a>
+    <a href="../README.md" target="_blank"><span class="ico">●</span> README<span class="meta">Install + command list</span></a>
+    <a href="../WHATS-NEW.md" target="_blank"><span class="ico">●</span> WHATS-NEW<span class="meta">Latest changes</span></a>
+    <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank"><span class="ico">●</span> Troubleshooting cheat sheet<span class="meta">Internal — full error matrix</span></a>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="preflight">Pre-flight install <span class="duration">~5 min, before session</span></h2>
+
+<p>Run during the call's intro so attendees aren't waiting on <code>npm install</code> mid-demo. Two paths:</p>
+
+<h3>Full Claude Code install (recommended)</h3>
+<p>One-liner. Installs Node, Claude Code, GSD, clones the repo, runs <code>setup.sh</code>, registers the supervisor + 3 bridges, opens welcome.html.</p>
+
+<p><strong>macOS</strong> — Terminal:</p>
+<pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"</code></pre>
+
+<p><strong>Windows</strong> — PowerShell as Administrator:</p>
+<pre><code>irm https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-windows.ps1 | iex</code></pre>
+
+<h3>MCP-only install (Claude Desktop / Cursor / Windsurf users)</h3>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash</code></pre>
+
+<p>Auto-detects every MCP-capable client on the machine, writes the right config for each, installs slash commands, installs the supervisor and bridges (Mac).</p>
+
+<div class="card warn">
+  <span class="label">If attendee cloned days ago</span>
+  Port numbers changed (8765–8767 → 8865–8867, supervisor added on 8764).
+  They must <code>git pull &amp;&amp; bash setup.sh</code> before the session.
+</div>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="auth">Authorize SearchAtlas <span class="duration">~1 min, first run only</span></h2>
+
+<p>Open Claude Code in their workspace, run:</p>
+<pre><code>/my-account</code></pre>
+
+<p>A browser tab opens with the SearchAtlas OAuth consent screen. Approve once — token refresh is automatic from here.</p>
+
+<p>The auth probe in each wizard accepts five SA registration shapes (URL match, <code>searchatlas</code>, <code>search atlas</code>, <code>search-atlas</code>, <code>search_atlas</code>) so claude.ai-connector users work alongside <code>claude mcp add</code> users.</p>
+
+<p><a href="MCP_SETUP.md" target="_blank">Full OAuth walkthrough →</a></p>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="intro">1 · Intro <span class="duration">5 min</span></h2>
+
+<ul class="talking-points">
+  <li><strong>Why this exists.</strong> Agencies want SA workflows runnable from Claude Code without typing slash commands. Members get the result without the syntax tax.</li>
+  <li><strong>What they leave with.</strong> A working toolkit, 3 web wizards (Onboard, Build, Rebuild), 20+ slash commands, send-integrations for Slack / Discord / email / Circle.</li>
+  <li><strong>Architecture in one breath.</strong> 4 local services (supervisor 8764 always-on, three wizard bridges that idle-shutdown). Browser → supervisor → wakes a bridge → bridge spawns <code>claude -p</code> → Claude calls SA MCP. Same flow Mac and Windows.</li>
+</ul>
+
+<div class="card">
+  <strong>Embedded reference:</strong> the AMM stack carousel — show this if anyone wants the architectural picture.
+</div>
+<div class="demo-frame">
+  <div class="demo-bar">
+    <span class="title">AMM Stack Carousel</span>
+    <a class="ext" href="visuals/amm-stack-carousel.html" target="_blank">Open full-screen ↗</a>
+  </div>
+  <iframe src="visuals/amm-stack-carousel.html" title="AMM stack carousel"></iframe>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="install">2 · Install live <span class="duration">7 min</span></h2>
+
+<ul class="talking-points">
+  <li>Attendees paste the one-liner from the <a href="#preflight">pre-flight section</a> and clone + setup in parallel.</li>
+  <li>Support team in DMs catching install failures.</li>
+  <li>Most common failure: <strong>claude CLI not on PATH</strong> → tell them to install Claude Code first, restart terminal, re-run.</li>
+  <li>Second most common: <strong>port collision on 8865–8867</strong> → run <code>lsof -nP -iTCP:&lt;port&gt; -sTCP:LISTEN</code> to find the offending process.</li>
+</ul>
+
+<p><strong>While they wait, run the diagnostic:</strong></p>
+<pre><code>for P in 8764 8865 8866 8867; do
+  printf "  %s -&gt; " "$P"
+  curl -s --max-time 2 http://localhost:$P/api/health || echo " (no response)"
+done</code></pre>
+
+<p>Four JSON blobs with <code>claude_available:true</code> and <code>searchatlas_mcp_configured:true</code> = healthy.</p>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="onboard">3 · Onboard-client wizard <span class="duration">12 min</span></h2>
+
+<p>End-to-end demo: domain → brand voice → knowledge drop → services → fire.</p>
+
+<ul class="talking-points">
+  <li><strong>Heartbeat:</strong> browser pings <code>/api/heartbeat</code> every 60s — keeps bridges alive while the tab is open.</li>
+  <li><strong>Idle-shutdown:</strong> 5 min after the tab closes, bridges exit. Supervisor wakes them on next click.</li>
+  <li><strong>Tab-close safe:</strong> Claude subprocess is detached. Closing the tab mid-onboard doesn't kill the run — files land in <code>clients/&lt;slug&gt;/</code> regardless.</li>
+  <li><strong>First click is ~10 s warm-up.</strong> Subsequent clicks are instant. Tell attendees to expect this.</li>
+</ul>
+
+<div class="card">
+  <strong>Autoplay demo</strong> — run this in a second tab. Live narration plays automatically.
+</div>
+<div class="demo-frame">
+  <div class="demo-bar">
+    <span class="title">/onboard-client — autoplay</span>
+    <a class="ext" href="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay.html" target="_blank">Open externally ↗</a>
+  </div>
+  <iframe src="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay.html" title="onboard-client autoplay demo"></iframe>
+</div>
+<p style="font-size: 12px; color: var(--text-faint);">
+  Iframe path is the local file in <code>~/Desktop/amm/internal/initiatives/mcp-day-pitch/</code>. If the iframe is empty, open the &quot;Open externally&quot; link or copy the file into <code>docs/visuals/</code> alongside <code>scout-demo.html</code>.
+</p>
+
+<h3>What to say</h3>
+<ol>
+  <li>Open <a href="welcome.html" target="_blank">welcome.html</a> in a second tab. Click <em>Onboard a client</em>. Note the supervisor wake (~10 s).</li>
+  <li>Paste a demo domain (we'll provide one). Walk through brand voice and knowledge drop steps — flag that the knowledge drop is what beats a plain website scrape.</li>
+  <li>Pick a service playbook. Hit fire. Show how the chat narration mirrors what Claude is doing.</li>
+</ol>
+
+<p><strong>Spec reference:</strong> <a href="../commands/onboard-client.md" target="_blank">commands/onboard-client.md</a> — full phase breakdown.</p>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="build">4 · Build-website wizard <span class="duration">12 min</span></h2>
+
+<p>11-step wizard, ends with a real Website Studio-hosted URL.</p>
+
+<ul class="talking-points">
+  <li>Each wizard step is a small, single-purpose <code>claude -p</code> subprocess. The Claude CLI here has permission only to call SA MCP tools — narrow blast radius.</li>
+  <li>The audit log (<code>/tmp/amm-website-build-audit.log</code>) records every tool call. Open it in a tab — proves the wizard is calling SA for real.</li>
+  <li>Namespace-tolerant: works with both <code>mcp__searchatlas__*</code> and <code>mcp__claude_ai_Search_Atlas__*</code> installs.</li>
+</ul>
+
+<div class="card">
+  <strong>Autoplay:</strong> the CLI flavour of the demo (operator running it from chat instead of UI).
+</div>
+<div class="demo-frame">
+  <div class="demo-bar">
+    <span class="title">/onboard-client CLI autoplay</span>
+    <a class="ext" href="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay-cli.html" target="_blank">Open externally ↗</a>
+  </div>
+  <iframe src="file:///Users/eillacs/Desktop/amm/internal/initiatives/mcp-day-pitch/onboard-client-autoplay-cli.html" title="onboard-client CLI autoplay"></iframe>
+</div>
+
+<p><strong>Spec reference:</strong> the build wizard front-end is at <a href="../tools/website-build/index.html" target="_blank">tools/website-build/index.html</a>, server at <a href="../tools/website-build/server.py" target="_blank">server.py</a>.</p>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="rebuild">5 · Rebuild-website wizard <span class="duration">10 min</span></h2>
+
+<p>Scout output → page-by-page action plan → rebuild + relaunch.</p>
+
+<ul class="talking-points">
+  <li>Highlight <strong>link-equity preservation</strong>: existing URLs map 1:1 unless explicitly merged or redirected. No silent 404s.</li>
+  <li>Highlight <strong>pre-launch baseline capture</strong>: KRT snapshot before publishing means we can show the lift after launch.</li>
+  <li>Tab close is safe (same detach pattern as build).</li>
+</ul>
+
+<div class="card">
+  <strong>Scout demo</strong> — shows the read-only diagnostic output a rebuild starts from.
+</div>
+<div class="demo-frame">
+  <div class="demo-bar">
+    <span class="title">/scout — autoplay</span>
+    <a class="ext" href="visuals/scout-demo.html" target="_blank">Open full-screen ↗</a>
+  </div>
+  <iframe src="visuals/scout-demo.html" title="scout autoplay"></iframe>
+</div>
+
+<div class="demo-frame">
+  <div class="demo-bar">
+    <span class="title">Scout → Summit-shot workflow</span>
+    <a class="ext" href="visuals/scout-summit-shot-workflow.html" target="_blank">Open full-screen ↗</a>
+  </div>
+  <iframe src="visuals/scout-summit-shot-workflow.html" title="scout summit-shot workflow"></iframe>
+</div>
+
+<p><strong>Spec reference:</strong> <a href="../commands/scout.md" target="_blank">commands/scout.md</a> (the 8-phase scout flow) and <a href="../tools/website-rebuild/index.html" target="_blank">tools/website-rebuild/index.html</a>.</p>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="qa">6 · Q&amp;A + slash-command tour <span class="duration">9 min</span></h2>
+
+<p>Hands-on time. Encourage attendees to try a slash command on a real client.</p>
+
+<table>
+  <thead><tr><th>Command</th><th>What it does</th><th>Best demo with</th></tr></thead>
+  <tbody>
+    <tr><td><code>/my-account</code></td><td>List every business, OTTO project, brand vault, GBP location</td><td>Attendee's own account</td></tr>
+    <tr><td><code>/scout {domain}</code></td><td>Read-only diagnostic + prioritized action plan + local HTML + SA Report Builder report</td><td>A client they know well</td></tr>
+    <tr><td><code>/business-report {domain}</code></td><td>Full deep-dive on one business across every pillar</td><td>Same</td></tr>
+    <tr><td><code>/run-seo</code></td><td>SEO monthly maintenance workflow</td><td>An existing OTTO project</td></tr>
+    <tr><td><code>/send-slack</code></td><td>Post any output to a Slack channel via webhook</td><td>Pair with /scout</td></tr>
+    <tr><td><code>/help</code></td><td>List every command</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Spec reference:</strong> <a href="../CLAUDE.md" target="_blank">CLAUDE.md</a> (intent routing rubric) and <a href="INTENT_MAPPING.md" target="_blank">INTENT_MAPPING.md</a>.</p>
+
+<div class="card tip">
+  <span class="label">Claude Desktop users</span>
+  No slash commands, but the SA MCP works identically. Send them
+  <a href="CLAUDE_DESKTOP_PROMPTS.md" target="_blank">CLAUDE_DESKTOP_PROMPTS.md</a>
+  — copy-paste prompts that map 1:1 to every slash command.
+</div>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="resources">Resources to send live</h2>
+
+<p>Drop these in the chat as they come up during the call.</p>
+
+<div class="resource-grid">
+  <a href="../README.md" target="_blank">📘 README<span class="meta">Install + every command listed</span></a>
+  <a href="../WHATS-NEW.md" target="_blank">🆕 WHATS-NEW<span class="meta">Latest changes, top entry is the new lifecycle</span></a>
+  <a href="MCP_SETUP.md" target="_blank">🔐 MCP setup<span class="meta">OAuth walkthrough</span></a>
+  <a href="TOOL_REFERENCE.md" target="_blank">📑 Tool reference<span class="meta">Every SA MCP tool + schema</span></a>
+  <a href="GOLDEN_RULES.md" target="_blank">⭐ Golden rules<span class="meta">Best practices for reliable tool usage</span></a>
+  <a href="WORKFLOWS.md" target="_blank">⚙️ Workflows<span class="meta">How YAML templates work</span></a>
+  <a href="INTENT_MAPPING.md" target="_blank">🧭 Intent mapping<span class="meta">User-words → tool routing</span></a>
+  <a href="CLAUDE_DESKTOP_PROMPTS.md" target="_blank">🖥️ Claude Desktop prompts<span class="meta">For non-CLI attendees</span></a>
+  <a href="../guides/windows-claude-code-setup.md" target="_blank">🪟 Windows specifics<span class="meta">WSL networking fix</span></a>
+  <a href="../guides/security-scan-guide.md" target="_blank">🛡️ Security scanner<span class="meta">/security-scan walkthrough</span></a>
+  <a href="../guides/copy-before-design-workflow.md" target="_blank">✍️ Copy-before-design<span class="meta">Quality workflow for site builds</span></a>
+  <a href="../guides/getting-consistent-design-output.md" target="_blank">🎨 Consistent design output<span class="meta">Why one prompt produces 3 different sites — fix</span></a>
+  <a href="welcome.html" target="_blank">🌐 welcome.html<span class="meta">What attendees see</span></a>
+  <a href="../tools/command-center/index.html" target="_blank">🤖 Onboard wizard UI<span class="meta">Source</span></a>
+  <a href="../tools/website-build/index.html" target="_blank">🏗️ Build wizard UI<span class="meta">Source</span></a>
+  <a href="../tools/website-rebuild/index.html" target="_blank">🔄 Rebuild wizard UI<span class="meta">Source</span></a>
+  <a href="visuals/amm-stack-carousel.html" target="_blank">🎠 Stack carousel<span class="meta">Architecture viz</span></a>
+  <a href="visuals/scout-demo.html" target="_blank">🎬 Scout autoplay<span class="meta">Public visual</span></a>
+  <a href="visuals/scout-summit-shot-workflow.html" target="_blank">🎬 Workflow autoplay<span class="meta">Public visual</span></a>
+</div>
+
+<h3>"Looks scary, isn't" talking points</h3>
+<ul>
+  <li><strong>"Will this drain my laptop?"</strong> One always-on ~15 MB Python process. Everything else idle-shutdowns after 5 min.</li>
+  <li><strong>"What if I close the tab mid-build?"</strong> The build keeps running. Files land in <code>clients/&lt;slug&gt;/</code>. Reopen welcome.html later to see status.</li>
+  <li><strong>"Does it cost API credits?"</strong> Slash commands run through their Claude Code session — uses their Claude subscription. SA MCP calls use their SA account quotas.</li>
+  <li><strong>"What if I don't trust local servers?"</strong> All four bind to <code>127.0.0.1</code> only — nothing exposed beyond the machine. Source in <code>tools/</code> if they want to audit.</li>
+</ul>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="contingencies">Contingencies + quick recovery</h2>
+
+<p>Full failure-mode catalog in
+<a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">SUPPORT-TROUBLESHOOTING.md</a>
+(internal). Top hits below.</p>
+
+<table>
+  <thead><tr><th>Risk</th><th>Likelihood</th><th>Mitigation</th></tr></thead>
+  <tbody>
+    <tr><td>Port collision on 8865-8867</td><td><span class="pill amber">Low</span></td><td><code>lsof -nP -iTCP:&lt;port&gt; -sTCP:LISTEN</code> → kill or move ports</td></tr>
+    <tr><td>First wizard click frozen 30-40s</td><td><span class="pill amber">High</span></td><td>Pre-announce. First click warms up — subsequent are instant. Have attendees click during intro.</td></tr>
+    <tr><td>claude.ai connector auth probe fails</td><td><span class="pill amber">Medium</span></td><td>Latest code is namespace-tolerant. If older clone: <code>git pull &amp;&amp; bash setup.sh</code></td></tr>
+    <tr><td>Supervisor stuck in xpcproxy</td><td><span class="pill amber">Low</span></td><td>nohup fallback from <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">troubleshooting doc</a>, §6</td></tr>
+    <tr><td>Windows attendee with WSL issues</td><td><span class="pill amber">?</span></td><td>Pair with support. Mac path is better-tested. Send <a href="../guides/windows-claude-code-setup.md" target="_blank">Windows guide</a>.</td></tr>
+    <tr><td>Wizard times out mid-build</td><td><span class="pill amber">Medium</span></td><td>Tab close is safe. Refresh; build continues.</td></tr>
+    <tr><td>Claude CLI not on launchd's PATH</td><td><span class="pill amber">Low</span></td><td>setup.sh captures <code>$PATH</code> into plist. If still fails: <code>launchctl getenv PATH</code></td></tr>
+  </tbody>
+</table>
+
+<h3>One-shot reset script</h3>
+<pre><code>TOOLKIT="$HOME/.searchatlas/toolkit"
+UID_NUM=$(id -u)
+for N in supervisor command-center website-build website-rebuild; do
+  launchctl bootout "gui/$UID_NUM/com.searchatlas.amm-$N" 2&gt;/dev/null
+done
+for P in 8764 8865 8866 8867; do
+  lsof -t -iTCP:$P -sTCP:LISTEN 2&gt;/dev/null | xargs kill -9 2&gt;/dev/null
+done
+sleep 2
+for N in supervisor command-center website-build website-rebuild; do
+  launchctl bootstrap "gui/$UID_NUM" \
+    "$HOME/Library/LaunchAgents/com.searchatlas.amm-$N.plist"
+done</code></pre>
+
+<!-- ─────────────────────────────────────── -->
+
+<h2 id="support">Support team</h2>
+
+<ul>
+  <li><strong>Primary channel:</strong> DM during the call — each attendee paired with a support person</li>
+  <li><strong>Engineering escalation:</strong> Jonathan — anything not in the troubleshooting doc, or repeated failures</li>
+  <li><strong>Shared scratchpad:</strong>
+    <a href="file:///Users/eillacs/Desktop/amm/workshop-support-2026-05-20/SUPPORT-TROUBLESHOOTING.md" target="_blank">SUPPORT-TROUBLESHOOTING.md</a>
+    — internal-only, every known failure mode + fix
+  </li>
+</ul>
+
+<h3>Post-workshop housekeeping (Jonathan)</h3>
+<ul>
+  <li>Capture every issue surfaced during the call → add to SUPPORT-TROUBLESHOOTING</li>
+  <li>If multiple attendees hit the same novel issue, hot-patch the repo + tell everyone to <code>git pull</code></li>
+  <li>Send follow-up DM with attendees' completed <code>clients/&lt;slug&gt;/</code> artifacts (privacy: don't share across attendees)</li>
+  <li>Within 24h: write a public <code>WHATS-NEW.md</code> entry covering anything new shipped during the workshop</li>
+</ul>
+
+<div class="card tip">
+  <span class="label">Done</span>
+  Close the call by sending attendees this same runbook (public URL), the
+  <a href="../README.md" target="_blank">README</a>, and the
+  <a href="MCP_SETUP.md" target="_blank">MCP setup guide</a> as their post-workshop kit.
+</div>
+
+</main>
+
+</body>
+</html>
