@@ -242,7 +242,19 @@ async def _check_sa_mcp_configured(claude_path: str) -> bool:
         )
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
         text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        ok = "searchatlas" in text
+        # SA can be registered under several names — match any reasonable form:
+        # - claude.ai connector → "claude.ai Search Atlas" (with space) → lowercase "search atlas"
+        # - manually added via `claude mcp add searchatlas …` → "searchatlas"
+        # - other variants (search-atlas, search_atlas) seen in older installs
+        # The URL `mcp.searchatlas.com` is the most reliable signal because
+        # it appears in EVERY registration regardless of the display name.
+        ok = (
+            "mcp.searchatlas.com" in text
+            or "searchatlas" in text
+            or "search atlas" in text
+            or "search-atlas" in text
+            or "search_atlas" in text
+        )
     except Exception:
         ok = False
     _mcp_cache["checked_at"] = now

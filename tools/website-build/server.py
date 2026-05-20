@@ -273,7 +273,13 @@ async def _check_sa_mcp_configured(claude_path: str) -> bool:
         )
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
         text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        ok = "searchatlas" in text or "search_atlas" in text or "search-atlas" in text
+        ok = (
+            "mcp.searchatlas.com" in text
+            or "searchatlas" in text
+            or "search atlas" in text
+            or "search-atlas" in text
+            or "search_atlas" in text
+        )
     except Exception:
         ok = False
     _mcp_cache["checked_at"] = now

@@ -265,7 +265,13 @@ async def _check_sa_mcp_configured(claude_path: str) -> bool:
         text = (stdout or b"").decode("utf-8", errors="replace").lower()
         # The local install may expose the SA MCP under any of these names —
         # all should count as "configured".
-        ok = ("searchatlas" in text) or ("search atlas" in text) or ("search_atlas" in text)
+        ok = (
+            ("mcp.searchatlas.com" in text)
+            or ("searchatlas" in text)
+            or ("search atlas" in text)
+            or ("search-atlas" in text)
+            or ("search_atlas" in text)
+        )
     except Exception:
         ok = False
     _mcp_cache["checked_at"] = now

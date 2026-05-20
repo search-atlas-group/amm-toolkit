@@ -1177,7 +1177,69 @@ Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Ow
   updateProgress();
   checkConn();
   setInterval(checkConn, 30000);
+
+  // ────────────────────────────────────────────────────────────
+  // AUTH MODAL — mirrors the build/rebuild wizard pattern.
+  // Fires automatically the first time checkConn detects SA MCP
+  // is not configured, and stays open (blocking) until Retry
+  // succeeds OR the operator dismisses it.
+  // ────────────────────────────────────────────────────────────
+  const showAuthModal = () => {
+    const m = $("#authModal");
+    if (m) m.style.display = "flex";
+  };
+  const hideAuthModal = () => {
+    const m = $("#authModal");
+    if (m) m.style.display = "none";
+  };
+  let _authShown = false;
+  const originalCheckConn = checkConn;
+  // wrap checkConn to surface the modal on first detection failure
+  window.checkConn = async () => {
+    await originalCheckConn();
+    const dotBad = $("#connDot").classList.contains("bad");
+    if (dotBad && !_authShown) {
+      _authShown = true;
+      showAuthModal();
+    }
+    if (!dotBad) _authShown = false;
+  };
+  const retryBtn = $("#authRetryBtn");
+  if (retryBtn) retryBtn.addEventListener("click", async () => {
+    retryBtn.disabled = true;
+    retryBtn.textContent = "Checking…";
+    // Bust the server cache by waiting a tick + re-probing.
+    await window.checkConn();
+    retryBtn.disabled = false;
+    retryBtn.textContent = "Retry";
+    if (!$("#connDot").classList.contains("bad")) hideAuthModal();
+  });
+  const openMcpBtn = $("#authOpenMcpBtn");
+  if (openMcpBtn) openMcpBtn.addEventListener("click", () => {
+    window.open("https://claude.ai/new", "_blank", "noopener");
+  });
 })();
 </script>
+
+<!-- AUTH MODAL — appears when SA MCP is not configured. Blocking. -->
+<div id="authModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.72); align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(8px);">
+  <div style="background:var(--surface-1, #0B0B0B); max-width:540px; width:100%; border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:28px; color:#f4f3fb;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <span style="font-size:22px;">🔒</span>
+      <h2 style="margin:0; font-size:18px; font-weight:600;">Search Atlas MCP not configured</h2>
+    </div>
+    <p style="font-size:14px; line-height:1.55; opacity:0.85; margin:0 0 16px;">
+      Auth probe did not invoke the Search Atlas MCP. Open Claude.ai → <code>/mcp</code> and connect the SearchAtlas connector.
+    </p>
+    <p style="font-size:13px; line-height:1.55; opacity:0.7; margin:0 0 18px;">
+      If you already connected it, click Retry.
+    </p>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="authRetryBtn" type="button" style="background:rgba(255,255,255,0.08); color:#f4f3fb; border:1px solid rgba(255,255,255,0.18); padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer;">Retry</button>
+      <button id="authOpenMcpBtn" type="button" style="background:#6D00DA; color:#fff; border:none; padding:9px 18px; border-radius:8px; font-size:13px; cursor:pointer; font-weight:600;">Open Claude.ai → /mcp</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
