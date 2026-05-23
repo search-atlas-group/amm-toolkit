@@ -27,24 +27,19 @@ You now have every command, prompt, and doc on your machine.
 
 Pick whichever client you use. You only need one. Both end up with the same MCP wired in.
 
-### Option A — Claude Desktop
+### Option A — Claude on the web (easiest)
 
-1. Open the Claude Desktop config file:
-   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-2. Add this entry (merge with anything already there):
-   ```json
-   {
-     "mcpServers": {
-       "searchatlas": {
-         "type": "http",
-         "url": "https://mcp.searchatlas.com/mcp"
-       }
-     }
-   }
-   ```
-3. Restart Claude Desktop.
-4. In a new chat, ask: *"List my SearchAtlas projects."* The first request opens a browser tab — sign into SearchAtlas, click **Authorize**. Token refresh is automatic from there.
+The fastest path. No config files, no Developer Mode, no restarts.
+
+1. Go to **[claude.ai/settings/connectors](https://claude.ai/settings/connectors)** (or **Settings → Connectors** from any chat).
+2. Click **Add custom connector**.
+3. Fill in:
+   - **Name:** `SearchAtlas`
+   - **Remote MCP server URL:** `https://mcp.searchatlas.com/mcp`
+4. Click **Add**. A browser tab opens — sign into SearchAtlas, click **Authorize**.
+5. Open a new chat, make sure the **SearchAtlas** connector is toggled on in the connector tray, then ask: *"List my SearchAtlas projects."*
+
+Token refresh is automatic from there. Works the same in Claude Desktop once you sign into the same account — the connector syncs across clients.
 
 ### Option B — Claude Code (terminal CLI)
 
@@ -65,9 +60,9 @@ First time you run a SearchAtlas tool in chat, a browser tab opens for OAuth. Si
 
 ## Step 3 — Run your first workflow
 
-### Claude Desktop
+### Claude on the web / Claude Desktop
 
-Open [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md), find the prompt you want (we'd start with `/my-account` or `/scout`), copy it, paste into a new Claude Desktop chat, fill in `{domain}` with any domain you have access to in SearchAtlas (e.g. `apple.com`), send.
+Open [docs/CLAUDE_DESKTOP_PROMPTS.md](docs/CLAUDE_DESKTOP_PROMPTS.md), find the prompt you want (we'd start with `/my-account` or `/scout`), copy it, paste into a new Claude chat, fill in `{domain}` with any domain you have access to in SearchAtlas (e.g. `apple.com`), send.
 
 ### Claude Code
 
