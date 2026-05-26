@@ -4,6 +4,17 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-05-26
+
+### Fixed
+- `.claude-plugin/marketplace.json` — `source` field now uses the object form (`{"source": "url", "url": "...", "ref": "..."}`) per Claude Code's schema validator; previously used `"source": "."` which failed validation
+- `.claude-plugin/marketplace.json` — added required `description` field
+- `.claude-plugin/plugin.json` — removed `agents` and `skills` field declarations (those directories are reserved but empty; declaring empty paths fails schema validation)
+- `hooks/hooks.json` — restructured to the nested form `{"hooks": {"SessionStart": [{"hooks": [{"type": "command", ...}]}]}}`; previously used an array which failed validation
+- `commands/sa-summit-shot.md` — quoted the YAML frontmatter `description` value (contained a colon-space sequence that broke YAML parsing)
+
+These four schema mismatches were caught by `claude plugin validate` and would have caused install failures. No functional changes to the plugin behavior.
+
 ## [1.0.0] — 2026-05-26
 
 ### Added

@@ -1,5 +1,6 @@
 {
   "name": "searchatlas",
+  "description": "Official SearchAtlas marketplace — Claude Code plugins for SEO, GBP, PPC, content, and AI visibility workflows powered by the SearchAtlas MCP.",
   "owner": {
     "name": "SearchAtlas",
     "email": "support@searchatlas.com"
@@ -8,8 +9,13 @@
     {
       "name": "searchatlas-toolkit",
       "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows.",
-      "source": ".",
-      "category": "marketing"
+      "source": {
+        "source": "url",
+        "url": "https://github.com/search-atlas-group/amm-toolkit.git",
+        "ref": "v1.0.1"
+      },
+      "category": "marketing",
+      "homepage": "https://github.com/search-atlas-group/amm-toolkit"
     }
   ]
 }

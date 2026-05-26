@@ -1,6 +1,6 @@
 ---
 name: sa-summit-shot
-description: Atomic single-play executor for the 19 plays taught at the SearchAtlas Summit. Intentionally bounded by default — 1 article draft, 1 PR draft, no auto-deploys. Use /sa-summit-shot {N} to run a specific play directly. Complements /sa-scout: scout says what to run, summit-shot runs it.
+description: "Atomic single-play executor for the 19 plays taught at the SearchAtlas Summit. Intentionally bounded by default — 1 article draft, 1 PR draft, no auto-deploys. Use /sa-summit-shot {N} to run a specific play directly. Complements /sa-scout — scout says what to run, summit-shot runs it."
 ---
 
 # /sa-summit-shot

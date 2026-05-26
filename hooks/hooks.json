@@ -1,9 +1,15 @@
 {
-  "hooks": [
-    {
-      "type": "SessionStart",
-      "command": "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-env.sh",
-      "timeout_ms": 2000
-    }
-  ]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-env.sh",
+            "timeout": 2000
+          }
+        ]
+      }
+    ]
+  }
 }
