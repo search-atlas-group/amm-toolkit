@@ -14,22 +14,30 @@
 
 ## Preconditions (Before Starting Task 1)
 
-The working tree at the start of this plan contains a massive in-progress refactor (~22k LoC deleted, ~25 file renames). **This plan assumes that refactor has been committed first.** Specifically:
+This plan reads source command files from their current TIERED locations and writes the converted `sa-*.md` versions to a flat `commands/` directory. No prior refactor required.
 
-- `commands/*.md` is FLAT (no `essentials/`, `advanced/`, `sharing/`, `workflows/`, `clients/` subdirectories)
-- 21 command files exist at `commands/{name}.md`: `build-website`, `business-report`, `help`, `my-account`, `onboard-client`, `rebuild-website`, `run-content`, `run-gbp`, `run-ppc`, `run-pr`, `run-seo`, `run-visibility`, `scout`, `security-scan`, `send-circle`, `send-discord`, `send-email`, `send-slack`, `setup-integrations`, `summit-shot`, `sync-client`
-- `mission-control/` is in its post-refactor state (the deletion of `mission-control/tools/{security,supervisor,website-build,website-rebuild,guardian}/` has landed)
-- `POWER-USER.md`, `docs/install.html`, `docs/welcome.html`, `commands/README.md`, `Scripts/auto-update-hook.sh`, `Scripts/install-mcp.sh`, `Scripts/register-bridges-windows.ps1` are deleted
+**Source Command Locations (read from these tiered paths):**
+
+| Tier | Path | Commands |
+|---|---|---|
+| `essentials` | `commands/essentials/` | `business-report.md`, `help.md`, `my-account.md`, `scout.md` |
+| `advanced` | `commands/advanced/` | `build-website.md`, `rebuild-website.md`, `security-scan.md`, `setup-integrations.md` |
+| `clients` | `commands/clients/` | `onboard-client.md`, `summit-shot.md`, `sync-client.md` |
+| `sharing` | `commands/sharing/` | `send-circle.md`, `send-discord.md`, `send-email.md`, `send-slack.md` |
+| `workflows` | `commands/workflows/` | `run-content.md`, `run-gbp.md`, `run-ppc.md`, `run-pr.md`, `run-seo.md`, `run-visibility.md` |
+
+**Destination:** all converted files land at `commands/sa-{name}.md` (flat).
+
+**Cleanup after conversion (covered in Task 24.5):** the tiered subdirectories (`commands/essentials/`, `commands/advanced/`, `commands/clients/`, `commands/sharing/`, `commands/workflows/`) get removed once all `sa-*.md` files are created and tests pass.
+
+**Mission-control caveat for Tasks 22 (build-website) and 23 (rebuild-website):** the existing `commands/advanced/build-website.md` and `commands/advanced/rebuild-website.md` may reference paths under `mission-control/tools/website-build/` and `mission-control/tools/website-rebuild/`. Per the locked-in design (spec §2), mission-control stays outside the plugin. These commands should be rewritten to either (a) work standalone via SearchAtlas MCP tools (preferred), or (b) detect whether mission-control is installed locally and degrade gracefully if not.
 
 Verify before starting:
 
 ```bash
-ls commands/ | head -25  # should show 21 .md files flat, plus README.md gone
-ls commands/essentials 2>&1 | grep -q "No such file" && echo "✓ flat layout"
-git status --short | head -5  # should be clean or only have your branch's new work
+ls commands/essentials commands/advanced commands/clients commands/sharing commands/workflows  # all present
+git status --short | head -5  # working tree should be reasonably clean
 ```
-
-If preconditions aren't met, STOP and ask the user to commit the in-progress refactor first.
 
 ---
 
@@ -325,13 +333,13 @@ git commit -m "feat(plugin): reserve skills/ and agents/ directories for future 
 
 **Files:**
 - Create: `commands/sa-scout.md`
-- Delete: `commands/scout.md` (only after sa-scout.md is verified)
+- Delete: `commands/essentials/scout.md` (only after sa-scout.md is verified)
 - Create: `tests/command-conversion.test.sh`
 
 - [ ] **Step 1: Inspect the source command**
 
 ```bash
-cat commands/scout.md | head -40
+cat commands/essentials/scout.md | head -40
 ```
 
 Note the existing frontmatter (if any) and the body. Look specifically for:
@@ -393,7 +401,7 @@ Expected: `FAIL: commands/sa-scout.md missing`
 
 - [ ] **Step 4: Create `commands/sa-scout.md`**
 
-Read `commands/scout.md` end-to-end. Create `commands/sa-scout.md` with:
+Read `commands/essentials/scout.md` end-to-end. Create `commands/sa-scout.md` with:
 
 a. Frontmatter at top:
 ```markdown
@@ -403,7 +411,7 @@ description: Read-only diagnostic across SEO, GBP, PPC, content, and AI visibili
 ---
 ```
 
-b. Body: copy from source `commands/scout.md`, applying these substitutions globally:
+b. Body: copy from source `commands/essentials/scout.md`, applying these substitutions globally:
 
 | Find | Replace |
 |---|---|
@@ -445,7 +453,7 @@ Expected: `PASS: commands/sa-scout.md converted correctly`
 - [ ] **Step 6: Delete original**
 
 ```bash
-git rm commands/scout.md
+git rm commands/essentials/scout.md
 ```
 
 - [ ] **Step 7: Commit**
@@ -484,144 +492,183 @@ Apply the same pattern as Task 4 to each of the remaining commands. Each follows
 | All others | Top level (canonical files — `brand-profile.md`, `notes.md`) or no file output |
 
 ### Task 5: `business-report` → `sa-business-report`
-- [ ] Step 1: Read `commands/business-report.md`
+- [ ] Step 1: Read `commands/essentials/business-report.md`
 - [ ] Step 2: Create `commands/sa-business-report.md` (frontmatter: description should name SA capabilities — OTTO project data, brand vault, Site Explorer, GBP, PPC, LLM visibility — and reports/ subfolder output)
 - [ ] Step 3: Run `bash tests/command-conversion.test.sh business-report` → PASS
-- [ ] Step 4: `git rm commands/business-report.md`
+- [ ] Step 4: `git rm commands/essentials/business-report.md`
 - [ ] Step 5: Commit `feat(plugin): convert /business-report to /sa-business-report`
 
 ### Task 6: `my-account` → `sa-my-account`
-- [ ] Step 1: Read `commands/my-account.md`
+- [ ] Step 1: Read `commands/essentials/my-account.md`
 - [ ] Step 2: Create `commands/sa-my-account.md` (description: pulls all OTTO projects, brand vaults, GBP locations, PPC campaigns, content, LLM visibility — overview of everything user has in SearchAtlas)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/my-account.md`
+- [ ] Step 4: `git rm commands/essentials/my-account.md`
 - [ ] Step 5: Commit `feat(plugin): convert /my-account to /sa-my-account`
 
 ### Task 7: `help` → `sa-help`
-- [ ] Step 1: Read `commands/help.md`
+- [ ] Step 1: Read `commands/essentials/help.md`
 - [ ] Step 2: Create `commands/sa-help.md`. The command list MUST list all 21 `sa-*` commands with one-line descriptions emphasizing the SA capability each one uses. Also document the `migrate-data` subcommand (used by users without a cloned repo who need to relocate legacy data — see Task 27 for what that script does).
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/help.md`
+- [ ] Step 4: `git rm commands/essentials/help.md`
 - [ ] Step 5: Commit `feat(plugin): convert /help to /sa-help with full plugin surface`
 
 ### Task 8: `onboard-client` → `sa-onboard-client`
-- [ ] Step 1: Read `commands/onboard-client.md`
+- [ ] Step 1: Read `commands/clients/onboard-client.md`
 - [ ] Step 2: Create `commands/sa-onboard-client.md` (description: guided wizard — pulls SearchAtlas brand vault if it exists, or builds one from manual input). Writes `brand-profile.md` at top level of `$SA_CLIENTS_DIR/$slug/`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/onboard-client.md`
+- [ ] Step 4: `git rm commands/clients/onboard-client.md`
 - [ ] Step 5: Commit `feat(plugin): convert /onboard-client to /sa-onboard-client`
 
 ### Task 9: `sync-client` → `sa-sync-client`
-- [ ] Step 1: Read `commands/sync-client.md`
+- [ ] Step 1: Read `commands/clients/sync-client.md`
 - [ ] Step 2: Create `commands/sa-sync-client.md` (description: two-way sync between local `brand-profile.md` and SearchAtlas brand vault — push local changes, pull remote updates)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/sync-client.md`
+- [ ] Step 4: `git rm commands/clients/sync-client.md`
 - [ ] Step 5: Commit `feat(plugin): convert /sync-client to /sa-sync-client`
 
 ### Task 10: `summit-shot` → `sa-summit-shot`
-- [ ] Step 1: Read `commands/summit-shot.md`
+- [ ] Step 1: Read `commands/clients/summit-shot.md`
 - [ ] Step 2: Create `commands/sa-summit-shot.md` (description: atomic single-play executor — 19 plays from the May Summit, bounded by default to 1 article / 1 PR drafts). Writes to `$SA_CLIENTS_DIR/$slug/shots/play-{NN}-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/summit-shot.md`
+- [ ] Step 4: `git rm commands/clients/summit-shot.md`
 - [ ] Step 5: Commit `feat(plugin): convert /summit-shot to /sa-summit-shot`
 
 ### Task 11: `run-seo` → `sa-run-seo`
-- [ ] Step 1: Read `commands/run-seo.md`
+- [ ] Step 1: Read `commands/workflows/run-seo.md`
 - [ ] Step 2: Create `commands/sa-run-seo.md` (description: monthly SEO workflow — holistic audit, OTTO recommendations, content health, indexing, keyword tracking). Writes log to `$SA_CLIENTS_DIR/$slug/workflows/seo-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-seo.md`
+- [ ] Step 4: `git rm commands/workflows/run-seo.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-seo to /sa-run-seo`
 
 ### Task 12: `run-gbp` → `sa-run-gbp`
-- [ ] Step 1: Read `commands/run-gbp.md`
+- [ ] Step 1: Read `commands/workflows/run-gbp.md`
 - [ ] Step 2: Create `commands/sa-run-gbp.md` (description: GBP optimization — location audit, posts, reviews automation, citations, photo management). Log to `workflows/gbp-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-gbp.md`
+- [ ] Step 4: `git rm commands/workflows/run-gbp.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-gbp to /sa-run-gbp`
 
 ### Task 13: `run-ppc` → `sa-run-ppc`
-- [ ] Step 1: Read `commands/run-ppc.md`
+- [ ] Step 1: Read `commands/workflows/run-ppc.md`
 - [ ] Step 2: Create `commands/sa-run-ppc.md` (description: PPC campaign setup/maintenance — Google Ads sync, keyword clusters, ad generation, performance review). Log to `workflows/ppc-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-ppc.md`
+- [ ] Step 4: `git rm commands/workflows/run-ppc.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-ppc to /sa-run-ppc`
 
 ### Task 14: `run-content` → `sa-run-content`
-- [ ] Step 1: Read `commands/run-content.md`
+- [ ] Step 1: Read `commands/workflows/run-content.md`
 - [ ] Step 2: Create `commands/sa-run-content.md` (description: content generation pipeline — topical maps, article drafting, brand-vault-driven voice, publication scheduling). Log to `workflows/content-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-content.md`
+- [ ] Step 4: `git rm commands/workflows/run-content.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-content to /sa-run-content`
 
 ### Task 15: `run-pr` → `sa-run-pr`
-- [ ] Step 1: Read `commands/run-pr.md`
+- [ ] Step 1: Read `commands/workflows/run-pr.md`
 - [ ] Step 2: Create `commands/sa-run-pr.md` (description: authority building — press release drafting and distribution via SearchAtlas Press platform). Log to `workflows/pr-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-pr.md`
+- [ ] Step 4: `git rm commands/workflows/run-pr.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-pr to /sa-run-pr`
 
 ### Task 16: `run-visibility` → `sa-run-visibility`
-- [ ] Step 1: Read `commands/run-visibility.md`
+- [ ] Step 1: Read `commands/workflows/run-visibility.md`
 - [ ] Step 2: Create `commands/sa-run-visibility.md` (description: AI visibility audit — brand mentions across ChatGPT, Claude, Gemini, Perplexity; sentiment, share of voice, citation tracking). Log to `workflows/visibility-{date}.md`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/run-visibility.md`
+- [ ] Step 4: `git rm commands/workflows/run-visibility.md`
 - [ ] Step 5: Commit `feat(plugin): convert /run-visibility to /sa-run-visibility`
 
 ### Task 17: `send-slack` → `sa-send-slack`
-- [ ] Step 1: Read `commands/send-slack.md`
+- [ ] Step 1: Read `commands/sharing/send-slack.md`
 - [ ] Step 2: Create `commands/sa-send-slack.md` (description: post results to Slack via Incoming Webhooks; supports multiple named channels via `SLACK_WEBHOOK_{NAME}` env vars). No subfolder output.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/send-slack.md`
+- [ ] Step 4: `git rm commands/sharing/send-slack.md`
 - [ ] Step 5: Commit `feat(plugin): convert /send-slack to /sa-send-slack`
 
 ### Task 18: `send-discord` → `sa-send-discord`
-- [ ] Step 1: Read `commands/send-discord.md`
+- [ ] Step 1: Read `commands/sharing/send-discord.md`
 - [ ] Step 2: Create `commands/sa-send-discord.md` (description: post results to Discord via webhook)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/send-discord.md`
+- [ ] Step 4: `git rm commands/sharing/send-discord.md`
 - [ ] Step 5: Commit `feat(plugin): convert /send-discord to /sa-send-discord`
 
 ### Task 19: `send-email` → `sa-send-email`
-- [ ] Step 1: Read `commands/send-email.md`
+- [ ] Step 1: Read `commands/sharing/send-email.md`
 - [ ] Step 2: Create `commands/sa-send-email.md` (description: email results via Resend API)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/send-email.md`
+- [ ] Step 4: `git rm commands/sharing/send-email.md`
 - [ ] Step 5: Commit `feat(plugin): convert /send-email to /sa-send-email`
 
 ### Task 20: `send-circle` → `sa-send-circle`
-- [ ] Step 1: Read `commands/send-circle.md`
+- [ ] Step 1: Read `commands/sharing/send-circle.md`
 - [ ] Step 2: Create `commands/sa-send-circle.md` (description: post to Circle space via API v2)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/send-circle.md`
+- [ ] Step 4: `git rm commands/sharing/send-circle.md`
 - [ ] Step 5: Commit `feat(plugin): convert /send-circle to /sa-send-circle`
 
 ### Task 21: `setup-integrations` → `sa-setup-integrations`
-- [ ] Step 1: Read `commands/setup-integrations.md`
+- [ ] Step 1: Read `commands/advanced/setup-integrations.md`
 - [ ] Step 2: Create `commands/sa-setup-integrations.md` (description: configure Slack, Discord, Email, Circle integrations — guides through `.env` setup)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/setup-integrations.md`
+- [ ] Step 4: `git rm commands/advanced/setup-integrations.md`
 - [ ] Step 5: Commit `feat(plugin): convert /setup-integrations to /sa-setup-integrations`
 
 ### Task 22: `build-website` → `sa-build-website`
-- [ ] Step 1: Read `commands/build-website.md`
+- [ ] Step 1: Read `commands/advanced/build-website.md`
 - [ ] Step 2: Create `commands/sa-build-website.md` (description: generate marketing site from brand vault data). Important: this command historically interacted with `mission-control/tools/website-build/` which has been DELETED in the precondition refactor — verify the command body no longer references those paths, or rewrite to use only SA Content Genius / WS tools via MCP.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/build-website.md`
+- [ ] Step 4: `git rm commands/advanced/build-website.md`
 - [ ] Step 5: Commit `feat(plugin): convert /build-website to /sa-build-website`
 
 ### Task 23: `rebuild-website` → `sa-rebuild-website`
-- [ ] Step 1: Read `commands/rebuild-website.md`
+- [ ] Step 1: Read `commands/advanced/rebuild-website.md`
 - [ ] Step 2: Create `commands/sa-rebuild-website.md` (similar caveat as Task 22 re: deleted `mission-control/tools/website-rebuild/`)
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/rebuild-website.md`
+- [ ] Step 4: `git rm commands/advanced/rebuild-website.md`
 - [ ] Step 5: Commit `feat(plugin): convert /rebuild-website to /sa-rebuild-website`
 
 ### Task 24: `security-scan` → `sa-security-scan`
-- [ ] Step 1: Read `commands/security-scan.md`
+- [ ] Step 1: Read `commands/advanced/security-scan.md`
 - [ ] Step 2: Create `commands/sa-security-scan.md` (description: scan the user's local toolkit setup for exposed secrets, misconfigured webhooks, etc.). Calls `Scripts/repo-security-scan.sh`.
 - [ ] Step 3: Test passes
-- [ ] Step 4: `git rm commands/security-scan.md`
+- [ ] Step 4: `git rm commands/advanced/security-scan.md`
 - [ ] Step 5: Commit `feat(plugin): convert /security-scan to /sa-security-scan`
+
+---
+
+### Task 24.5: Remove Empty Tiered Subdirectories
+
+**Files:**
+- Delete: `commands/essentials/`, `commands/advanced/`, `commands/clients/`, `commands/sharing/`, `commands/workflows/` (all now empty after Tasks 4-24)
+
+- [ ] **Step 1: Verify all subdirs are empty**
+
+```bash
+for dir in commands/essentials commands/advanced commands/clients commands/sharing commands/workflows; do
+  if [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+    echo "FAIL: $dir is not empty:"; ls -A "$dir"; exit 1
+  fi
+done
+echo "PASS: all tiered subdirs empty"
+```
+Expected: `PASS: all tiered subdirs empty`. If any subdir still has files, a command conversion was missed — investigate before proceeding.
+
+- [ ] **Step 2: Remove the empty subdirs**
+
+```bash
+rmdir commands/essentials commands/advanced commands/clients commands/sharing commands/workflows
+```
+
+- [ ] **Step 3: Verify commands/ is now flat (only sa-*.md files)**
+
+```bash
+ls commands/ | head -25
+```
+Expected: 21 `sa-*.md` files, no subdirectories.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add -A commands/
+git commit -m "chore(plugin): remove now-empty tiered command subdirectories"
+```
 
 ---
 
