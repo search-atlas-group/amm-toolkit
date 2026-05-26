@@ -203,14 +203,17 @@ Write `.claude-plugin/plugin.json`:
       "url": "https://mcp.searchatlas.com/mcp"
     }
   },
-  "hooks": "${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json",
-  "commands": "${CLAUDE_PLUGIN_ROOT}/commands",
-  "agents": "${CLAUDE_PLUGIN_ROOT}/agents",
-  "skills": "${CLAUDE_PLUGIN_ROOT}/skills"
+  "hooks": "./hooks/hooks.json",
+  "commands": "./commands",
+  "agents": "./agents",
+  "skills": "./skills"
 }
 ```
 
-**Note:** If Task 0 found different field names or env var, substitute them in this manifest.
+**Schema notes (verified Task 0):**
+- `mcpServers` is camelCase, inline object form is valid for HTTP-type MCPs
+- Asset paths use `./` prefix (relative to plugin root), NOT `${CLAUDE_PLUGIN_ROOT}` — that env var is only available inside hook scripts and MCP/LSP configs at runtime, not in manifest path fields
+- `commands`, `agents`, `skills`, `hooks` are all recognized fields
 
 - [ ] **Step 4: Run test, confirm pass**
 
@@ -268,18 +271,23 @@ Write `.claude-plugin/marketplace.json`:
   "name": "searchatlas",
   "owner": {
     "name": "SearchAtlas",
-    "url": "https://searchatlas.com"
+    "email": "support@searchatlas.com"
   },
   "plugins": [
     {
       "name": "searchatlas-toolkit",
-      "description": "Official SearchAtlas command-line toolkit",
+      "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows.",
       "source": ".",
       "category": "marketing"
     }
   ]
 }
 ```
+
+**Schema notes (verified Task 0):**
+- Owner accepts `name` (required) and `email` (optional). `url` is not a recognized owner field — drop it.
+- `source: "."` is the canonical form for "this plugin lives in the same repo as the marketplace manifest"
+- Plugin entry recognizes: `name`, `source`, `description`, `version`, `author`, `category`, `tags`, `strict`
 
 - [ ] **Step 4: Run test, confirm pass**
 
@@ -938,18 +946,20 @@ jq -e '.hooks // [] | map(select(.command | tostring | contains("auto-update-hoo
   "$FAKE_HOME/.claude/settings.json" >/dev/null \
   || { echo "FAIL: auto-update hook still in settings.json"; rm -rf "$SANDBOX"; exit 1; }
 
-# Assertion 5: extraKnownMarketplaces added
-jq -e '.extraKnownMarketplaces | length >= 1' "$FAKE_HOME/.claude/settings.json" >/dev/null \
-  || { echo "FAIL: extraKnownMarketplaces not added"; rm -rf "$SANDBOX"; exit 1; }
+# Assertion 5: extraKnownMarketplaces.searchatlas added (object, keyed by marketplace name)
+jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "searchatlas/amm-toolkit"' \
+  "$FAKE_HOME/.claude/settings.json" >/dev/null \
+  || { echo "FAIL: extraKnownMarketplaces.searchatlas not set correctly"; rm -rf "$SANDBOX"; exit 1; }
 
-# Assertion 6: enabledPlugins includes searchatlas-toolkit
-jq -e '.enabledPlugins | index("searchatlas-toolkit")' "$FAKE_HOME/.claude/settings.json" >/dev/null \
-  || { echo "FAIL: searchatlas-toolkit not in enabledPlugins"; rm -rf "$SANDBOX"; exit 1; }
+# Assertion 6: enabledPlugins["searchatlas-toolkit@searchatlas"] is true
+jq -e '.enabledPlugins["searchatlas-toolkit@searchatlas"] == true' \
+  "$FAKE_HOME/.claude/settings.json" >/dev/null \
+  || { echo "FAIL: searchatlas-toolkit@searchatlas not enabled"; rm -rf "$SANDBOX"; exit 1; }
 
 # Assertion 7: re-running is idempotent (does not corrupt state)
 HOME="$FAKE_HOME" SA_TOOLKIT_TEST_MODE=1 bash "$FAKE_REPO/scripts/migrate-to-plugin.sh" >/dev/null 2>&1
 jq -e '.enabledPlugins | length == 1' "$FAKE_HOME/.claude/settings.json" >/dev/null \
-  || { echo "FAIL: re-running duplicates enabledPlugins"; rm -rf "$SANDBOX"; exit 1; }
+  || { echo "FAIL: re-running corrupted enabledPlugins"; rm -rf "$SANDBOX"; exit 1; }
 
 rm -rf "$SANDBOX"
 echo "PASS: migration script behaves correctly"
@@ -1088,21 +1098,29 @@ if [ -f "$SETTINGS" ]; then
 fi
 
 # ---------- Step 5: Add extraKnownMarketplaces + enabledPlugins ----------
+# Schema (per Task 0 verification):
+#   extraKnownMarketplaces is an OBJECT, keyed by marketplace name:
+#     { "searchatlas": { "source": { "source": "github", "repo": "..." } } }
+#   enabledPlugins is an OBJECT, keyed by "plugin-name@marketplace-name":
+#     { "searchatlas-toolkit@searchatlas": true }
 echo "→ Registering plugin in $SETTINGS..."
 [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
 TMP=$(mktemp)
 jq '
   .extraKnownMarketplaces = (
-    (.extraKnownMarketplaces // [])
-    | if any(.repo == "searchatlas/amm-toolkit") then .
-      else . + [{ "source": "github", "repo": "searchatlas/amm-toolkit" }]
-      end
+    (.extraKnownMarketplaces // {})
+    + {
+      "searchatlas": {
+        "source": {
+          "source": "github",
+          "repo": "searchatlas/amm-toolkit"
+        }
+      }
+    }
   )
   | .enabledPlugins = (
-    (.enabledPlugins // [])
-    | if index("searchatlas-toolkit") then .
-      else . + ["searchatlas-toolkit"]
-      end
+    (.enabledPlugins // {})
+    + { "searchatlas-toolkit@searchatlas": true }
   )
 ' "$SETTINGS" > "$TMP" && mv "$TMP" "$SETTINGS"
 
