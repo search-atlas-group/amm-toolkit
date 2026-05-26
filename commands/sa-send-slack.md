@@ -1,4 +1,9 @@
-# /send-slack
+---
+name: sa-send-slack
+description: Post results to Slack via Incoming Webhooks. Supports multiple named channels via SLACK_WEBHOOK_{NAME} env vars (e.g., SLACK_WEBHOOK_SEO, SLACK_WEBHOOK_PPC). Default channel uses SLACK_WEBHOOK_URL.
+---
+
+# /sa-send-slack
 
 Post a message to Slack via an Incoming Webhook. Supports multiple named channels.
 
@@ -65,7 +70,7 @@ Use the `integrations/slack/send-message.sh` script:
 ```bash
 source .env
 # Use the webhook URL from the selected channel (default: SLACK_WEBHOOK_URL)
-bash integrations/slack/send-message.sh "$SELECTED_WEBHOOK_URL" "Your formatted message here"
+bash "$CLAUDE_PLUGIN_ROOT/integrations/slack/send-message.sh" "$SELECTED_WEBHOOK_URL" "Your formatted message here"
 ```
 
 Or send directly via curl:
