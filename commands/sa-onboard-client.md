@@ -1,4 +1,9 @@
-# /onboard-client
+---
+name: sa-onboard-client
+description: Guided wizard to onboard a new client into SearchAtlas. Supports two paths — pulling full brand data automatically from an existing SearchAtlas brand vault, or building one from manual input. Sets up the client's local working directory with a canonical brand-profile.md and CLAUDE.md, and keeps local files and SearchAtlas in sync from day one.
+---
+
+# /sa-onboard-client
 
 Guided wizard to onboard a new client into SearchAtlas. Supports two paths: pulling full brand data automatically from an existing SearchAtlas brand vault, or setting up a brand new client from scratch.
 
@@ -150,7 +155,7 @@ Show progress as each step completes. Confirm SA write succeeded before moving o
 
 ## Sync Map — Field → Update Tool
 
-Use this mapping whenever pushing local changes back to SA (Path A edits, Path B creation, or `/sync-client`):
+Use this mapping whenever pushing local changes back to SA (Path A edits, Path B creation, or `/sa-sync-client`):
 
 | `brand-profile.md` Section | Fields | SA Tool | Params |
 |----------------------------|--------|---------|--------|
@@ -178,16 +183,16 @@ Which services does this client need?
 
 ## Phase 3: Create Client Files
 
-Create two files in `clients/{client-slug}/`:
+Create two files at the top level of `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client-slug}/`:
 
-**`CLAUDE.md`** — copy from `clients/_template/CLAUDE.md` and fill in all fields:
+**`CLAUDE.md`** — copy from the template and fill in all fields:
 - Replace all `[Client business name]`, `[example.com]`, etc. with real values
 - Fill in all SearchAtlas IDs (Brand Vault ID, OTTO Project ID, GBP Location ID, PPC Business ID)
 - Mark active services checkboxes
 - Fill in Brand Context (voice + one-line description)
 - **Critical:** The Auto-Sync section at the bottom references `Brand Vault ID` and `Domain` — these must be filled in with the real values so the auto-sync runs correctly at every session start/end
 
-**`brand-profile.md`** — copy from `clients/_template/brand-profile.md` and populate all sections with data pulled or collected. Fill in the Sync section:
+**`brand-profile.md`** — canonical client file at the top level of `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client-slug}/brand-profile.md`. Populate all sections with data pulled or collected. Fill in the Sync section:
 ```
 ## Sync
 - Last pulled from SA: [current ISO datetime]
@@ -196,7 +201,7 @@ Create two files in `clients/{client-slug}/`:
 - Hostname:            [real domain]
 ```
 
-Also create `clients/{client-slug}/plans/`
+Also create `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client-slug}/plans/`
 
 ## Phase 4: Execute Setup
 
@@ -212,8 +217,8 @@ Also create `clients/{client-slug}/plans/`
 ```
 ✅ {Client Name} — Onboarding Complete · Synced with SearchAtlas
 
-📁  CLAUDE.md         clients/{slug}/CLAUDE.md
-📋  Brand Profile     clients/{slug}/brand-profile.md
+📁  CLAUDE.md         ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/CLAUDE.md
+📋  Brand Profile     ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/brand-profile.md
 🔗  Brand Vault       {brand_vault_uuid} ✓ synced
 🚀  OTTO Project      {project_id}
 📍  GBP Location      {location_id}
@@ -221,7 +226,7 @@ Also create `clients/{client-slug}/plans/`
 {emoji} {Product}  {result summary}  [View →](url)
 ...
 
-To sync changes later: /sync-client {client-slug}
+To sync changes later: /sa-sync-client {client-slug}
 ```
 
 ## Golden Rules
@@ -229,7 +234,7 @@ To sync changes later: /sync-client {client-slug}
 - **Always offer both paths** — never assume; ask first
 - **Two-way sync always** — any data collected or edited gets pushed back to SA immediately
 - **Pull everything on Path A** — all 4 parallel calls, not just business info
-- **Two files per client** — CLAUDE.md (lean) + brand-profile.md (full)
+- **Two files per client** — CLAUDE.md (lean) + brand-profile.md (full, at top level of client folder)
 - **Use the sync map** — always know which SA tool handles which field
 - **Schema discovery** — call tools with `{}` before first use
 - **Never hardcode IDs** — discover all IDs via API
