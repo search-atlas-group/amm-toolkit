@@ -1,4 +1,9 @@
-# /run-visibility
+---
+name: sa-run-visibility
+description: AI visibility audit — brand mentions across ChatGPT, Claude, Gemini, Perplexity; sentiment, share of voice, and citation tracking via SearchAtlas's LLM Visibility tool.
+---
+
+# /sa-run-visibility
 
 Run an LLM visibility and sentiment audit — track how a brand appears in AI-generated responses.
 
@@ -14,8 +19,6 @@ Ask the user for:
 5. **Topics to track** — sentiment categories (e.g., "pricing", "quality", "customer service")
 
 ### Step 2: Execute Workflow
-
-Load `workflows/llm-visibility.yaml` and execute:
 
 1. **Brand overview** — `visibility` → `get_brand_overview` with brand + domain
 2. **Visibility trend** — `visibility` → `get_visibility_trend`
@@ -33,6 +36,24 @@ Based on the data, provide 3–5 actionable recommendations:
 - Content opportunities from SERP analysis
 - Keywords where competitors outrank
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/visibility-{YYYY-MM-DD}.md`
+
+The log should include:
+- Brand name, domain, and client slug
+- Date/time of run
+- AI visibility score and rank vs competitors
+- Share of voice breakdown (brand vs each competitor)
+- Sentiment summary (positive / neutral / negative percentages)
+- Prompt simulation results (mentions in N/M prompts)
+- Top 3–5 recommendations
+- Steps failed with error details
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 ```
@@ -49,6 +70,8 @@ Based on the data, provide 3–5 actionable recommendations:
 1. {recommendation}
 2. {recommendation}
 3. {recommendation}
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/visibility-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
