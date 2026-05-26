@@ -4,6 +4,11 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — 2026-05-26
+
+### Added
+- Branded SessionStart splash — a figlet `SEARCH ATLAS` wordmark + line-art Voodoo + tagline, shown on first run via the hook's `systemMessage`; a compact one-liner (`✦ SearchAtlas · 21 commands · /searchatlas:help`) on subsequent sessions. Art lives in `hooks/banner.txt` (kept separate from the script to dodge a bash 3.2 heredoc/paren bug). MCP-auth and legacy-data notices fold into the same banner.
+
 ## [2.1.1] — 2026-05-26
 
 ### Fixed
