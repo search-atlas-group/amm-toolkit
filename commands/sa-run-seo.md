@@ -1,4 +1,9 @@
-# /run-seo
+---
+name: sa-run-seo
+description: Monthly SEO workflow using SearchAtlas's holistic SEO scoring, OTTO recommendations, content health checks, indexer status, and keyword tracking — covers both new client onboarding and ongoing monthly maintenance.
+---
+
+# /sa-run-seo
 
 Execute an SEO workflow — either new client onboarding or monthly maintenance.
 
@@ -38,6 +43,23 @@ Load `workflows/monthly-seo.yaml` and execute:
 
 Ask the user for: OTTO project ID (or domain to look it up), monthly keyword, articles to generate, articles to grade.
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/seo-{YYYY-MM-DD}.md`
+
+The log should include:
+- Mode (onboarding or monthly maintenance)
+- Domain and client slug
+- Date/time of run
+- Steps completed with results (counts, links where available)
+- Steps failed with error details
+- Articles generated (titles, content project IDs)
+- Next recommended action
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 ```
@@ -47,6 +69,8 @@ Ask the user for: OTTO project ID (or domain to look it up), monthly keyword, ar
 ...
 
 {total} actions completed · {failed} failed
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/seo-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
