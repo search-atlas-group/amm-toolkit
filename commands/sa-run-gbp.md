@@ -1,4 +1,9 @@
-# /run-gbp
+---
+name: sa-run-gbp
+description: GBP optimization workflow using SearchAtlas's GBP suite — covers location audit, AI-powered recommendations, posts generation, reviews automation, citations, and photo management for both first-time setup and monthly maintenance.
+---
+
+# /sa-run-gbp
 
 Execute a GBP workflow — either first-time profile optimization or monthly maintenance.
 
@@ -35,6 +40,24 @@ Load `workflows/gbp-monthly.yaml` and execute:
 
 Ask the user for: GBP location ID, number of posts to generate (default: 8), post type, whether to enable auto-posting.
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/gbp-{YYYY-MM-DD}.md`
+
+The log should include:
+- Mode (first-time optimization or monthly maintenance)
+- Location name, ID, and client slug
+- Date/time of run
+- Steps completed with results (counts, links where available)
+- Steps failed with error details
+- Posts generated (titles, post IDs)
+- Reviews replied (review IDs, rating, reply snippet)
+- Next recommended action
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 **Optimization:**
@@ -47,6 +70,8 @@ Ask the user for: GBP location ID, number of posts to generate (default: 8), pos
 🛎️ Services        {N} services added/updated              View →
 ✅ Attributes      {N} missing attributes added            View →
 📝 Description     AI description generated + deployed     View →
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/gbp-{YYYY-MM-DD}.md
 ```
 
 **Monthly:**
@@ -57,6 +82,8 @@ Ask the user for: GBP location ID, number of posts to generate (default: 8), pos
 📢 Posts           {N} posts generated + published         View →
 🤖 Auto-posting    enabled · {frequency}                   View →
 📊 Performance     {views} views · {clicks} clicks         View →
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/gbp-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
