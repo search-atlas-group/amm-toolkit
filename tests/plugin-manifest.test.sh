@@ -32,10 +32,10 @@ jq -e '.owner.name == "SearchAtlas"' "$MARKETPLACE" >/dev/null \
 jq -e '.plugins[0].name == "searchatlas-toolkit"' "$MARKETPLACE" >/dev/null \
   || { echo "FAIL: marketplace plugin name wrong"; exit 1; }
 
-jq -e '.plugins[0].source.source == "url"' "$MARKETPLACE" >/dev/null \
-  || { echo "FAIL: marketplace plugin source.source must be \"url\""; exit 1; }
+jq -e '.plugins[0].source.source == "github"' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace plugin source.source must be \"github\""; exit 1; }
 
-jq -e '.plugins[0].source.url | test("github.com/search-atlas-group/amm-toolkit")' "$MARKETPLACE" >/dev/null \
-  || { echo "FAIL: marketplace plugin source.url must point to search-atlas-group/amm-toolkit"; exit 1; }
+jq -e '.plugins[0].source.repo == "search-atlas-group/amm-toolkit"' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace plugin source.repo must be search-atlas-group/amm-toolkit"; exit 1; }
 
 echo "PASS: marketplace manifest valid"

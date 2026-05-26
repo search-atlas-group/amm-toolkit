@@ -10,12 +10,14 @@
       "name": "searchatlas-toolkit",
       "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows.",
       "source": {
-        "source": "url",
-        "url": "https://github.com/search-atlas-group/amm-toolkit.git",
-        "ref": "v1.0.1"
+        "source": "github",
+        "repo": "search-atlas-group/amm-toolkit",
+        "ref": "v1.0.2"
       },
       "category": "marketing",
-      "homepage": "https://github.com/search-atlas-group/amm-toolkit"
+      "tags": ["seo", "gbp", "ppc", "content", "ai-visibility", "marketing"],
+      "homepage": "https://github.com/search-atlas-group/amm-toolkit",
+      "repository": "https://github.com/search-atlas-group/amm-toolkit"
     }
   ]
 }
