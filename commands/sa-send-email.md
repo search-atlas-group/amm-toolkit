@@ -1,4 +1,9 @@
-# /send-email
+---
+name: sa-send-email
+description: Email results via the Resend REST API. Free tier 100/day. API key from RESEND_API_KEY, sender from EMAIL_FROM.
+---
+
+# /sa-send-email
 
 Send an email via the Resend API.
 
@@ -43,7 +48,7 @@ Use the `integrations/email/send-email.sh` script:
 
 ```bash
 source .env
-bash integrations/email/send-email.sh "$RESEND_API_KEY" "$EMAIL_FROM" "client@example.com" "Subject" "<html body>"
+bash "$CLAUDE_PLUGIN_ROOT/integrations/email/send-email.sh" "$RESEND_API_KEY" "$EMAIL_FROM" "client@example.com" "Subject" "<html body>"
 ```
 
 ### Step 4: Confirm
