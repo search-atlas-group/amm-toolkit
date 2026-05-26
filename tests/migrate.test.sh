@@ -65,9 +65,9 @@ jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "search-atlas-group/am
   || { echo "FAIL: extraKnownMarketplaces.searchatlas not set correctly"; rm -rf "$SANDBOX"; exit 1; }
 
 # Assertion 6: enabledPlugins object includes plugin@marketplace key
-jq -e '.enabledPlugins["searchatlas-toolkit@searchatlas"] == true' \
+jq -e '.enabledPlugins["searchatlas@searchatlas"] == true' \
   "$FAKE_HOME/.claude/settings.json" >/dev/null \
-  || { echo "FAIL: searchatlas-toolkit@searchatlas not enabled"; rm -rf "$SANDBOX"; exit 1; }
+  || { echo "FAIL: searchatlas@searchatlas not enabled"; rm -rf "$SANDBOX"; exit 1; }
 
 # Assertion 7: re-running is idempotent
 HOME="$FAKE_HOME" SA_TOOLKIT_TEST_MODE=1 bash "$FAKE_REPO/Scripts/migrate-to-plugin.sh" >/dev/null 2>&1

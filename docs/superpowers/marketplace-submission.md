@@ -1,6 +1,6 @@
 # SearchAtlas Toolkit — Marketplace Submission Guide
 
-> Two paths to discoverability for `searchatlas-toolkit`. Path 1 (community) is concrete and can ship in days. Path 2 (official) is relationship-driven and runs in parallel.
+> Two paths to discoverability for `searchatlas`. Path 1 (community) is concrete and can ship in days. Path 2 (official) is relationship-driven and runs in parallel.
 
 ---
 
@@ -14,7 +14,7 @@ Both marketplace paths require the plugin to already exist as a working public r
 - [ ] README's quickstart commands work end-to-end:
   ```
   /plugin marketplace add search-atlas-group/amm-toolkit
-  /plugin install searchatlas-toolkit
+  /plugin install searchatlas
   ```
 - [ ] At least one `sa-*` command runs successfully against the real MCP after OAuth
 - [ ] `CHANGELOG.md` v1.0.0 entry matches what shipped
@@ -38,7 +38,7 @@ Both marketplace paths require the plugin to already exist as a working public r
 
 | Field | Value |
 |---|---|
-| **Plugin name** | `searchatlas-toolkit` |
+| **Plugin name** | `searchatlas` |
 | **Repository URL** | `https://github.com/search-atlas-group/amm-toolkit` |
 | **Short description** | Official SearchAtlas toolkit — SEO, GBP, PPC, content, and AI visibility workflows. |
 | **Long description** | Official SearchAtlas command-line toolkit. 21 slash commands covering the full SearchAtlas surface: SEO audits, Google Business Profile optimization, Google Ads campaign management, content generation via Content Genius, press release distribution, AI visibility tracking across ChatGPT/Claude/Gemini/Perplexity, and more. For anyone using SearchAtlas to manage SEO and digital marketing — solo operators, in-house teams, and agencies alike. Powered by the SearchAtlas MCP, which is auto-registered when the plugin installs (no separate setup). |
@@ -62,7 +62,7 @@ Both marketplace paths require the plugin to already exist as a working public r
 
 - MCP endpoint unreachable from Anthropic's validators → confirm `mcp.searchatlas.com` is publicly reachable, returns valid JSON-RPC 2.0 responses
 - Plugin manifest missing required fields → our `tests/plugin-manifest.test.sh` catches this; run it before submitting
-- Name collision → unlikely (`searchatlas-toolkit` is specific), but verify by browsing the existing community marketplace before submitting
+- Name collision → unlikely (`searchatlas` is specific), but verify by browsing the existing community marketplace before submitting
 - Security concerns about the MCP (e.g., asks for excessive scopes) → SearchAtlas's OAuth scope should be documented at submission time
 
 ---
@@ -108,7 +108,7 @@ Use this comparable analysis to anchor the conversation:
 >
 > Hi [name],
 >
-> SearchAtlas published `searchatlas-toolkit` to the Claude Code plugin marketplace [date]. We've seen [X installs / Y MCP calls / Z active users] in [period], and the response from agencies and in-house SEO teams using Claude Code has been strong.
+> SearchAtlas published `searchatlas` to the Claude Code plugin marketplace [date]. We've seen [X installs / Y MCP calls / Z active users] in [period], and the response from agencies and in-house SEO teams using Claude Code has been strong.
 >
 > We'd love to discuss inclusion in `claude-plugins-official` as a verified partner alongside Vercel, Figma, Stripe, and others. A few reasons we'd fit:
 >

@@ -1,9 +1,9 @@
 ---
-name: sa-run-ppc
+name: run-ppc
 description: PPC campaign setup and maintenance using SearchAtlas's PPC tools — syncs with Google Ads, builds keyword clusters, generates ad content, launches Smart Ads campaigns, and reviews performance metrics.
 ---
 
-# /sa-run-ppc
+# /searchatlas:run-ppc
 
 Build and launch a Google Ads PPC campaign using Smart Ads (OTTO PPC).
 

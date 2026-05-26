@@ -1,9 +1,9 @@
 ---
-name: sa-send-email
+name: send-email
 description: Email results via the Resend REST API. Free tier 100/day. API key from RESEND_API_KEY, sender from EMAIL_FROM.
 ---
 
-# /sa-send-email
+# /searchatlas:send-email
 
 Send an email via the Resend API.
 

@@ -1,9 +1,9 @@
 ---
-name: sa-send-slack
+name: send-slack
 description: Post results to Slack via Incoming Webhooks. Supports multiple named channels via SLACK_WEBHOOK_{NAME} env vars (e.g., SLACK_WEBHOOK_SEO, SLACK_WEBHOOK_PPC). Default channel uses SLACK_WEBHOOK_URL.
 ---
 
-# /sa-send-slack
+# /searchatlas:send-slack
 
 Post a message to Slack via an Incoming Webhook. Supports multiple named channels.
 

@@ -4,23 +4,44 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-05-26
+
+### Changed (breaking)
+- **Plugin renamed** `searchatlas-toolkit` → `searchatlas`. Install is now `/plugin install searchatlas`. The human-readable name "SearchAtlas Toolkit" is preserved via the `displayName` field.
+- **Command prefix dropped.** Commands are no longer named `sa-scout`, `sa-run-seo`, etc. — they're now `scout`, `run-seo`, etc. Because Claude Code namespaces plugin commands by plugin name, the user-facing invocation changes from `/searchatlas-toolkit:sa-scout` to **`/searchatlas:scout`** — the brand is carried once, by the namespace, instead of stuttering.
+
+### Why
+The `sa-` prefix was chosen for brand reinforcement, but plugin commands are always invoked through the mandatory `searchatlas:` namespace, which already brands every invocation with the full name. The prefix was redundant (`searchatlas-toolkit:sa-scout`). This release finalizes the naming before any marketplace adoption.
+
+### Migration
+Anyone who installed v1.x: uninstall (`/plugin uninstall searchatlas-toolkit`) and reinstall (`/plugin install searchatlas`). Commands change from `/searchatlas-toolkit:sa-<name>` to `/searchatlas:<name>`.
+
+## [1.0.2] — 2026-05-26
+
+### Changed
+- `.claude-plugin/marketplace.json` — `source` now uses the canonical GitHub form (`{"source": "github", "repo": "...", "ref": "..."}`) per the docs, replacing the `{"source": "url", ...}` form
+- `.claude-plugin/plugin.json` — added `displayName`, `keywords` for discoverability
+- `.claude-plugin/marketplace.json` — added per-plugin `tags` and `repository` fields
+
 ## [1.0.1] — 2026-05-26
 
 ### Fixed
-- `.claude-plugin/marketplace.json` — `source` field now uses the object form (`{"source": "url", "url": "...", "ref": "..."}`) per Claude Code's schema validator; previously used `"source": "."` which failed validation
+- `.claude-plugin/marketplace.json` — `source` field uses the object form per the schema validator; previously `"source": "."` which failed validation
 - `.claude-plugin/marketplace.json` — added required `description` field
-- `.claude-plugin/plugin.json` — removed `agents` and `skills` field declarations (those directories are reserved but empty; declaring empty paths fails schema validation)
-- `hooks/hooks.json` — restructured to the nested form `{"hooks": {"SessionStart": [{"hooks": [{"type": "command", ...}]}]}}`; previously used an array which failed validation
-- `commands/sa-summit-shot.md` — quoted the YAML frontmatter `description` value (contained a colon-space sequence that broke YAML parsing)
+- `.claude-plugin/plugin.json` — removed `agents` and `skills` field declarations (empty reserved dirs fail schema validation; `.gitkeep` files retained)
+- `hooks/hooks.json` — restructured to the nested form `{"hooks": {"SessionStart": [{"hooks": [{"type": "command", ...}]}]}}`
+- `commands/sa-summit-shot.md` — quoted the YAML frontmatter `description` (an unquoted colon-space broke parsing)
 
-These four schema mismatches were caught by `claude plugin validate` and would have caused install failures. No functional changes to the plugin behavior.
+These were schema mismatches caught by `claude plugin validate` that would have caused install failures.
 
 ## [1.0.0] — 2026-05-26
 
+Initial plugin release (shipped as `searchatlas-toolkit` with `sa-*` prefixed commands; both changed in 2.0.0).
+
 ### Added
-- Plugin packaging — install via `/plugin marketplace add search-atlas-group/amm-toolkit` + `/plugin install searchatlas-toolkit`
+- Plugin packaging — converted the clone-and-script install into a Claude Code plugin
 - SearchAtlas MCP server auto-registered on install (no separate `claude mcp add` step)
-- 21 slash commands prefixed `sa-*` (e.g., `/sa-scout`, `/sa-run-seo`, `/sa-business-report`)
+- 21 slash commands covering SEO, GBP, PPC, content, AI visibility, sharing, and setup
 - Plugin-scoped instructions in `AGENTS.md` (intent routing, golden rules, parameter reference)
 - SessionStart hook for client data dir creation and MCP auth check (`hooks/ensure-env.sh`)
 - One-shot migration script for existing CLI users (`Scripts/migrate-to-plugin.sh`)
@@ -29,15 +50,14 @@ These four schema mismatches were caught by `claude plugin validate` and would h
 
 ### Changed
 - Client data location moved from `<repo>/clients/` to `~/.searchatlas/clients/` (env-overridable via `SA_CLIENTS_DIR`)
-- Per-client artifacts organized into `scouts/`, `reports/`, `workflows/`, `shots/` subfolders to keep the top level clean
-- Commands resolve plugin assets via `$CLAUDE_PLUGIN_ROOT` (set by Claude Code at runtime) and client data via `$SA_CLIENTS_DIR`
+- Per-client artifacts organized into `scouts/`, `reports/`, `workflows/`, `shots/` subfolders
+- Commands resolve plugin assets via `$CLAUDE_PLUGIN_ROOT` and client data via `$SA_CLIENTS_DIR`
 - Positioning: framed for anyone using SearchAtlas — solo SEOs, in-house teams, agencies — not exclusively agencies
 
 ### Removed
 - `setup.sh` (replaced by `/plugin install`)
 - SessionStart auto-update hook (plugins handle updates via `/plugin update`)
 - `POWER-USER.md`, `docs/install.html`, `docs/welcome.html`, `docs/CLAUDE_DESKTOP_PROMPTS.md`, `docs/SLASH_COMMANDS.md`, `commands/README.md` (folded into README + AGENTS.md)
-- Mission-control deletions of `tools/{security,supervisor,website-build,website-rebuild,guardian}/` (separate concern)
 
 ### Migration
-Existing users on the cloned-repo install: run `./Scripts/migrate-to-plugin.sh` from inside your clone. See README "Migrating from the cloned-repo toolkit." It moves your client data, removes legacy commands, and declares the plugin in your `~/.claude/settings.json` so Claude Code auto-prompts to install on next launch.
+Existing users on the cloned-repo install: run `./Scripts/migrate-to-plugin.sh` from inside your clone.

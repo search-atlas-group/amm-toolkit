@@ -1,9 +1,9 @@
 ---
-name: sa-sync-client
+name: sync-client
 description: Two-way sync between a client's local brand-profile.md and their SearchAtlas brand vault. Push local changes up to SearchAtlas, pull remote updates down to the local file, or run a full bidirectional sync. Modifies the existing brand-profile.md in place — no new output files are created.
 ---
 
-# /sa-sync-client [client-slug]
+# /searchatlas:sync-client [client-slug]
 
 Two-way sync between a client's local `brand-profile.md` and their SearchAtlas brand vault.
 

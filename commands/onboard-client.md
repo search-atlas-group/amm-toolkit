@@ -1,9 +1,9 @@
 ---
-name: sa-onboard-client
+name: onboard-client
 description: Guided wizard to onboard a new client into SearchAtlas. Supports two paths — pulling full brand data automatically from an existing SearchAtlas brand vault, or building one from manual input. Sets up the client's local working directory with a canonical brand-profile.md and CLAUDE.md, and keeps local files and SearchAtlas in sync from day one.
 ---
 
-# /sa-onboard-client
+# /searchatlas:onboard-client
 
 Guided wizard to onboard a new client into SearchAtlas. Supports two paths: pulling full brand data automatically from an existing SearchAtlas brand vault, or setting up a brand new client from scratch.
 
@@ -155,7 +155,7 @@ Show progress as each step completes. Confirm SA write succeeded before moving o
 
 ## Sync Map — Field → Update Tool
 
-Use this mapping whenever pushing local changes back to SA (Path A edits, Path B creation, or `/sa-sync-client`):
+Use this mapping whenever pushing local changes back to SA (Path A edits, Path B creation, or `/searchatlas:sync-client`):
 
 | `brand-profile.md` Section | Fields | SA Tool | Params |
 |----------------------------|--------|---------|--------|
@@ -226,7 +226,7 @@ Also create `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client-slug}/plans/`
 {emoji} {Product}  {result summary}  [View →](url)
 ...
 
-To sync changes later: /sa-sync-client {client-slug}
+To sync changes later: /searchatlas:sync-client {client-slug}
 ```
 
 ## Golden Rules

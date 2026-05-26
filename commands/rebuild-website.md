@@ -1,13 +1,13 @@
 ---
-name: sa-rebuild-website
+name: rebuild-website
 description: Refresh or regenerate an existing website via SearchAtlas Website Studio — consumes scout diagnostic output as source of truth, executes the redesign/migration layer, and publishes the rebuilt site via MCP.
 ---
 
-# /sa-rebuild-website
+# /searchatlas:rebuild-website
 
 End-to-end design execution workflow for **redesigning or replacing an existing website**. Consumes scout's diagnosis output as the source of truth for what exists. Focuses on the design + migration layer — skips re-diagnosing.
 
-> **For brand new sites with no prior presence, use `/sa-build-website` instead.** That command invents content from minimal seed input. This command transforms existing assets per operator-confirmed decisions.
+> **For brand new sites with no prior presence, use `/searchatlas:build-website` instead.** That command invents content from minimal seed input. This command transforms existing assets per operator-confirmed decisions.
 
 **Premise:** Scout already mapped the site. You have the inventory, OTTO pillar scores, keyword positions, content gaps, and issue list. This command takes that output as input and executes the rebuild.
 
@@ -61,7 +61,7 @@ If `scout_run_date` > 30 days old:
 ```
 Scout report is N days old. Two options:
   1. Rebuild against this snapshot (faster, but may miss recent changes)
-  2. Re-run /sa-scout first (recommended for accuracy)
+  2. Re-run /searchatlas:scout first (recommended for accuracy)
 
 Pick a number.
 ```
@@ -277,10 +277,10 @@ If operator picks the SAME style as the current site (detected from scout's bran
 You picked {style} — that's the same as the current site.
 
 Are you sure this is a rebuild, or are you actually after a content refresh?
-For content-only updates, /sa-run-content may be the right command instead.
+For content-only updates, /searchatlas:run-content may be the right command instead.
 
   1. Yes, this is a rebuild — same style, different execution
-  2. Switch to /sa-run-content
+  2. Switch to /searchatlas:run-content
   3. Pick a different style
 ```
 
@@ -363,7 +363,7 @@ Behavior:
 
 ## Phase 5 — Rebuild Execution
 
-Build loop similar to `/sa-build-website` Phase 5, with rebuild-specific paths.
+Build loop similar to `/searchatlas:build-website` Phase 5, with rebuild-specific paths.
 
 ### Per-page content source
 
@@ -382,7 +382,7 @@ For each row in new-page-queue.csv:
     - Generate consolidated brief
     - Generate new copy
   if action == "New":
-    - Standard greenfield generation (same as /sa-build-website)
+    - Standard greenfield generation (same as /searchatlas:build-website)
 ```
 
 ### Internal link remapping
@@ -396,7 +396,7 @@ Apply via the redirect map automatically during build.
 
 ### MCP touchpoints
 
-Same pattern as `/sa-build-website` Phase 5 — every new/rewritten/redesigned page lives in Website Studio from the moment it's generated.
+Same pattern as `/searchatlas:build-website` Phase 5 — every new/rewritten/redesigned page lives in Website Studio from the moment it's generated.
 
 | Tool | When |
 |---|---|
@@ -432,7 +432,7 @@ QA runs against the new Website Studio preview state (the old site stays live un
 
 ### Pre-launch baseline capture
 
-Post-launch ranking deltas can't be measured at T+0 — OTTO and KRT need crawl cycles. What we CAN do is lock a clean baseline against the OLD live site, so the operator's downstream `/sa-run-seo` first-run can compute the actual delta once OTTO re-audits.
+Post-launch ranking deltas can't be measured at T+0 — OTTO and KRT need crawl cycles. What we CAN do is lock a clean baseline against the OLD live site, so the operator's downstream `/searchatlas:run-seo` first-run can compute the actual delta once OTTO re-audits.
 
 | Tool | Purpose | Target |
 |---|---|---|
@@ -440,9 +440,9 @@ Post-launch ranking deltas can't be measured at T+0 — OTTO and KRT need crawl 
 | `mcp__searchatlas__gsc_get_keyword_performance` | GSC-confirmed KW baseline (impressions, clicks, CTR, position) | OLD live site |
 | `mcp__searchatlas__gsc_get_page_performance` | GSC-confirmed per-page baseline | OLD live site |
 
-> **Why no OTTO issues scan against the new WS preview?** The preview isn't part of the OTTO crawl perimeter at publish time — running an issues summary there would return empty or stale data. OTTO's pillar delta is `/sa-run-seo`'s job after the new site has had a 24–48h crawl cycle.
+> **Why no OTTO issues scan against the new WS preview?** The preview isn't part of the OTTO crawl perimeter at publish time — running an issues summary there would return empty or stale data. OTTO's pillar delta is `/searchatlas:run-seo`'s job after the new site has had a 24–48h crawl cycle.
 
-Output: `pre-launch-baseline.json` — baseline locked against the OLD site so the operator's downstream `/sa-run-seo` first-run computes the actual delta once OTTO re-audits.
+Output: `pre-launch-baseline.json` — baseline locked against the OLD site so the operator's downstream `/searchatlas:run-seo` first-run computes the actual delta once OTTO re-audits.
 
 ---
 
@@ -479,14 +479,14 @@ On `yes`:
 
 ### Two URLs at workflow end — both surfaced to the operator
 
-Same URL pattern as `/sa-build-website`: `ws_publish_project` returns the WS-hosted URL immediately. For rebuild specifically, if the EXISTING site was already on Website Studio, this is an in-place replacement — the custom domain stays live and just serves the new version. If the existing site was externally hosted, the operator must cut DNS over to WS just like in greenfield. Surface both URLs at workflow end with the right context.
+Same URL pattern as `/searchatlas:build-website`: `ws_publish_project` returns the WS-hosted URL immediately. For rebuild specifically, if the EXISTING site was already on Website Studio, this is an in-place replacement — the custom domain stays live and just serves the new version. If the existing site was externally hosted, the operator must cut DNS over to WS just like in greenfield. Surface both URLs at workflow end with the right context.
 
 - **In-place WS replacement (`hostingMode = 'ws'`):** custom domain stays the primary URL (resolves immediately on the new version). WS subdomain shown as a backup.
 - **External-hosting cutover (`hostingMode = 'external'`):** WS subdomain is the primary URL (resolves immediately). Custom domain shown with "Pending DNS cutover" until the operator points DNS at Website Studio.
 
 ### OTTO tracking script constraint
 
-OTTO tracking on the new site requires the OTTO script. Website Studio publish embeds the SA tracking script automatically for SA-hosted domains — flagged if not detected. For external hosting, operator must install the OTTO script before fresh pillar scores are measurable in `/sa-run-seo`.
+OTTO tracking on the new site requires the OTTO script. Website Studio publish embeds the SA tracking script automatically for SA-hosted domains — flagged if not detected. For external hosting, operator must install the OTTO script before fresh pillar scores are measurable in `/searchatlas:run-seo`.
 
 ---
 
@@ -512,7 +512,7 @@ Phase 7 synthesizes data we ALREADY GATHERED across Phases 0–6.5 into a Before
 
 ### Render the Before / After block
 
-Only claim what we can KNOW. Never claim "rankings improved" — that's `/sa-run-seo`'s job after OTTO re-audits.
+Only claim what we can KNOW. Never claim "rankings improved" — that's `/searchatlas:run-seo`'s job after OTTO re-audits.
 
 ```
 BEFORE                                AFTER
@@ -533,7 +533,7 @@ Top issues         N from scout             Most addressed by new design + schem
                                             link plan; schema deployed; thin
                                             content rewritten)
 
-Pillar baseline    Tech {N}  Content {N}    Re-audit in /sa-run-seo to see delta
+Pillar baseline    Tech {N}  Content {N}    Re-audit in /searchatlas:run-seo to see delta
                    Authority {N}  UX {N}    (OTTO needs 24-48h crawl cycle)
 
 Indexing           Standard Google crawl    Instant indexing ON
@@ -546,16 +546,16 @@ Tracked KWs        N tracked                Same KWs tracked — baseline locked
 
 ### Handoff
 
-> Workflow complete. `/sa-run-seo` picks up the monthly cadence from here, and computes the actual ranking delta once OTTO re-audits.
+> Workflow complete. `/searchatlas:run-seo` picks up the monthly cadence from here, and computes the actual ranking delta once OTTO re-audits.
 
-No MCP calls in this phase. Anything that needs T+24h+ (indexing verification, post-launch rank snapshots, OTTO auto-fix sweeps on the new site) lives in the operator's downstream `/sa-run-seo` first-run, not here.
+No MCP calls in this phase. Anything that needs T+24h+ (indexing verification, post-launch rank snapshots, OTTO auto-fix sweeps on the new site) lives in the operator's downstream `/searchatlas:run-seo` first-run, not here.
 
 ---
 
 ## What this command does NOT do
 
 - Re-diagnose the site — scout already did
-- Build greenfield pages with no prior context — that's `/sa-build-website`
+- Build greenfield pages with no prior context — that's `/searchatlas:build-website`
 - Skip Phase 4.5 HITL gate
 - Migrate without explicit Phase 6.5 approval
 - Auto-publish redirects without operator sign-off
@@ -573,12 +573,12 @@ No MCP calls in this phase. Anything that needs T+24h+ (indexing verification, p
 
 Phase 2.5 adds a per-page walkthrough decision for NEW page candidates — Approve / Reject / Edit per card — but introduces **no new operator inputs**. All new SA tool calls across Phases 1, 2, 2.3, 5, 6, and 6.5 are auto-driven from scout output + the Phase 2 page map. Phase 7 is a presentation step with zero MCP calls.
 
-**Workflow end-state:** site is live + before/after summary rendered. Actual post-launch ranking delta is `/sa-run-seo`'s job — OTTO needs a 24–48h crawl cycle before fresh pillar scores and rank deltas are measurable.
+**Workflow end-state:** site is live + before/after summary rendered. Actual post-launch ranking delta is `/searchatlas:run-seo`'s job — OTTO needs a 24–48h crawl cycle before fresh pillar scores and rank deltas are measurable.
 
 ## Related skills + commands
 
-- `/sa-scout` — upstream; produces the diagnosis this command consumes
-- `/sa-build-website` — for greenfield (this command's sibling)
-- `/sa-run-seo` — ongoing monthly cadence after Phase 7 handoff
-- `/sa-run-content` — for content refresh without design rebuild (smaller scope alternative)
+- `/searchatlas:scout` — upstream; produces the diagnosis this command consumes
+- `/searchatlas:build-website` — for greenfield (this command's sibling)
+- `/searchatlas:run-seo` — ongoing monthly cadence after Phase 7 handoff
+- `/searchatlas:run-content` — for content refresh without design rebuild (smaller scope alternative)
 - Spec: `_brain/projects/amm-mastermind/specs/website-rebuild-spec.md`

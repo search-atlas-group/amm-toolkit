@@ -1,9 +1,9 @@
 ---
-name: sa-run-gbp
+name: run-gbp
 description: GBP optimization workflow using SearchAtlas's GBP suite — covers location audit, AI-powered recommendations, posts generation, reviews automation, citations, and photo management for both first-time setup and monthly maintenance.
 ---
 
-# /sa-run-gbp
+# /searchatlas:run-gbp
 
 Execute a GBP workflow — either first-time profile optimization or monthly maintenance.
 

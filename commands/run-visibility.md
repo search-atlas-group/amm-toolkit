@@ -1,9 +1,9 @@
 ---
-name: sa-run-visibility
+name: run-visibility
 description: AI visibility audit — brand mentions across ChatGPT, Claude, Gemini, Perplexity; sentiment, share of voice, and citation tracking via SearchAtlas's LLM Visibility tool.
 ---
 
-# /sa-run-visibility
+# /searchatlas:run-visibility
 
 Run an LLM visibility and sentiment audit — track how a brand appears in AI-generated responses.
 

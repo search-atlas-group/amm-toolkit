@@ -1,9 +1,9 @@
 ---
-name: sa-security-scan
+name: security-scan
 description: Scan any Git repository for security risks before running it on your machine — works immediately with zero tools installed, gets more thorough as better tools become available, always produces a plain-English verdict.
 ---
 
-# /sa-security-scan
+# /searchatlas:security-scan
 
 Scan any Git repository for security risks before running it on your machine.
 
@@ -15,7 +15,7 @@ Works immediately — even if you have zero tools installed. Gets more thorough 
 
 ### Step 0: Greet and Parse Input
 
-If the user ran `/sa-security-scan` with no argument, respond:
+If the user ran `/searchatlas:security-scan` with no argument, respond:
 
 > Paste the GitHub (or GitLab, Bitbucket) URL of the repo you want to scan.
 > Example: `https://github.com/owner/repo-name`
@@ -273,7 +273,7 @@ Always end with a concrete action list:
 What to do:
   ✅  You can clone and install this repo normally.
   ✅  Keep dependencies updated (run: npm update / pip install --upgrade)
-  □   If something feels off later, run /sa-security-scan again on the folder.
+  □   If something feels off later, run /searchatlas:security-scan again on the folder.
 ```
 
 **If USE WITH CARE:**
@@ -313,7 +313,7 @@ REPORT_FILE="Security/scans/{repo_name}-$(date +%Y-%m-%d).md"
 
 Tell the user: "I've saved a full report to: `Security/scans/{repo_name}-{date}.md` — you can share that file with your team or clients."
 
-Offer to share via `/sa-send-slack` or `/sa-send-email` if integrations are configured.
+Offer to share via `/searchatlas:send-slack` or `/searchatlas:send-email` if integrations are configured.
 
 ---
 

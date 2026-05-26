@@ -1,9 +1,9 @@
 ---
-name: sa-run-content
+name: run-content
 description: Content generation pipeline — topical maps, article drafting, brand-vault-driven voice profile, publication scheduling via SearchAtlas Content Genius.
 ---
 
-# /sa-run-content
+# /searchatlas:run-content
 
 Generate articles using topical maps and the 4-step content workflow.
 

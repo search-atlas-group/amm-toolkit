@@ -11,7 +11,7 @@ mkdir -p "$SA_CLIENTS_DIR" 2>/dev/null
 
 # 2. Detect legacy ~/.amm/clients and nudge toward migration
 if [ -d "$HOME/.amm/clients" ] && [ -z "$(ls -A "$SA_CLIENTS_DIR" 2>/dev/null)" ]; then
-  echo "📦 Found legacy ~/.amm/clients/ — run /sa-help migrate-data to move it."
+  echo "📦 Found legacy ~/.amm/clients/ — run /searchatlas:help migrate-data to move it."
 fi
 
 # 3. Verify SearchAtlas MCP is registered (best-effort, never hard-fail)

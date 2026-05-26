@@ -1,15 +1,15 @@
 ---
-name: sa-summit-shot
-description: "Atomic single-play executor for the 19 plays taught at the SearchAtlas Summit. Intentionally bounded by default — 1 article draft, 1 PR draft, no auto-deploys. Use /sa-summit-shot {N} to run a specific play directly. Complements /sa-scout — scout says what to run, summit-shot runs it."
+name: summit-shot
+description: "Atomic single-play executor for the 19 plays taught at the SearchAtlas Summit. Intentionally bounded by default — 1 article draft, 1 PR draft, no auto-deploys. Use /searchatlas:summit-shot {N} to run a specific play directly. Complements /searchatlas:scout — scout says what to run, summit-shot runs it."
 ---
 
-# /sa-summit-shot
+# /searchatlas:summit-shot
 
-Run a single play taught at the SearchAtlas Summit. One shot at a time. Each play is intentionally bounded — 1 article, 1 PR, drafts (not auto-deploys). For orchestrated end-to-end workflows, use `/sa-run-seo`, `/sa-run-content`, etc. For full agency-grade execution, see the Agentic Marketing Mastermind program.
+Run a single play taught at the SearchAtlas Summit. One shot at a time. Each play is intentionally bounded — 1 article, 1 PR, drafts (not auto-deploys). For orchestrated end-to-end workflows, use `/searchatlas:run-seo`, `/searchatlas:run-content`, etc. For full agency-grade execution, see the Agentic Marketing Mastermind program.
 
-`/sa-summit-shot` complements `/sa-scout`:
-- `/sa-scout` says **what to run**
-- `/sa-summit-shot` **runs it**
+`/searchatlas:summit-shot` complements `/searchatlas:scout`:
+- `/searchatlas:scout` says **what to run**
+- `/searchatlas:summit-shot` **runs it**
 
 ---
 
@@ -17,7 +17,7 @@ Run a single play taught at the SearchAtlas Summit. One shot at a time. Each pla
 
 ### Phase 1: Pick a Play
 
-If the user invoked `/sa-summit-shot` with a number (e.g., `/sa-summit-shot 9`), skip to Phase 2 with that play.
+If the user invoked `/searchatlas:summit-shot` with a number (e.g., `/searchatlas:summit-shot 9`), skip to Phase 2 with that play.
 
 Otherwise, show the menu:
 
@@ -58,7 +58,7 @@ Pick a number (or type the name):
 
 ### Phase 2: Resolve Context
 
-Every play needs a target. Ask the user (unless already established by `/sa-scout` hand-off):
+Every play needs a target. Ask the user (unless already established by `/searchatlas:scout` hand-off):
 > Which client/domain is this for?
 
 Then resolve from the domain:
@@ -68,7 +68,7 @@ Then resolve from the domain:
 - `business_id` via `business_crud` → `list_businesses` (filter by domain) — only if needed
 
 If the play needs a resource that doesn't exist (e.g., play 8 GBP Optimize but no GBP location connected), tell the user and exit cleanly:
-> ⚠️ This play needs a connected GBP location. Run `/sa-run-gbp` first to connect one.
+> ⚠️ This play needs a connected GBP location. Run `/searchatlas:run-gbp` first to connect one.
 
 ### Phase 3: Execute the Play
 
@@ -101,7 +101,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 4. Poll `get_otto_task_status` until SUCCESS (5–10s intervals)
 5. `seo_analysis` → `get_holistic_seo_pillar_scores` → display the four pillars
 
-**Output:** project ID, install status, first pillar scores. Suggest `/sa-scout` for a full diagnostic.
+**Output:** project ID, install status, first pillar scores. Suggest `/searchatlas:scout` for a full diagnostic.
 
 ---
 
@@ -142,7 +142,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 2. Poll until complete
 3. Display the map: clusters, sub-topics, suggested article titles
 
-**Output:** topical map ID, full map preview, count of suggested titles. **Does not generate articles.** Recommend `/sa-summit-shot 7` (Blog Article) for one, or `/sa-run-content` for batch.
+**Output:** topical map ID, full map preview, count of suggested titles. **Does not generate articles.** Recommend `/searchatlas:summit-shot 7` (Blog Article) for one, or `/searchatlas:run-content` for batch.
 
 ---
 
@@ -157,7 +157,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 4. `content_generation` → `generate_complete_article` with trophy settings (longer word count, more sources, citation hooks for LLMs)
 5. Save as draft. **Do not auto-publish.**
 
-**Output:** article ID, draft preview link, recommendation to publish via `/sa-run-content`.
+**Output:** article ID, draft preview link, recommendation to publish via `/searchatlas:run-content`.
 
 ---
 
@@ -178,7 +178,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 
 #### Play 8 — GBP Optimize
 
-**Inputs:** `location_id` (must already exist — if not, tell user to run `/sa-run-gbp` first)
+**Inputs:** `location_id` (must already exist — if not, tell user to run `/searchatlas:run-gbp` first)
 
 **Steps:**
 1. `gbp_locations_crud` → `get_location` → current state
@@ -228,7 +228,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 2. Schema-discover: try `dpr_list_opportunities`, `dpr_create_campaign` with type `guest_post`
 3. Return a list of 10–25 opportunities with: domain, DA, contact, topic relevance
 
-**Output:** opportunity list (saved to local HTML or CSV). **Does not send outreach.** Recommend `/sa-run-pr` to run an outreach campaign.
+**Output:** opportunity list (saved to local HTML or CSV). **Does not send outreach.** Recommend `/searchatlas:run-pr` to run an outreach campaign.
 
 ---
 
@@ -341,9 +341,9 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 5. Tag gaps as: "no content yet" / "content exists but not optimized for AI" / "competitor brand mentioned more"
 
 **Output:** gap report (markdown table). For each gap, suggest the next shot:
-- "no content" → `/sa-summit-shot 6` (Trophy Content) on this topic
+- "no content" → `/searchatlas:summit-shot 6` (Trophy Content) on this topic
 - "exists but not optimized" → recommend re-grading via `cg_run_content_grader`
-- "competitor brand mentioned more" → `/sa-summit-shot 9` (PR Blast) to push brand mentions
+- "competitor brand mentioned more" → `/searchatlas:summit-shot 9` (PR Blast) to push brand mentions
 
 ---
 
@@ -379,7 +379,7 @@ Next moves to consider:
   • {related_play_or_command}
   • {related_play_or_command}
 
-Run /sa-scout {domain} to re-check pillar status.
+Run /searchatlas:scout {domain} to re-check pillar status.
 ```
 
 ---
@@ -398,12 +398,12 @@ Keep it tight. No paragraphs. Bullets or tables.
 
 ## Golden Rules
 
-- **One shot at a time.** Each play is atomic. Don't chain plays in one invocation. The user runs `/sa-summit-shot` again to run the next one.
+- **One shot at a time.** Each play is atomic. Don't chain plays in one invocation. The user runs `/searchatlas:summit-shot` again to run the next one.
 - **Bounded scope.** 1 article (not 10), 1 PR (not a campaign), draft (not deployed). Quality matters more than volume at this tier.
 - **Confirm before destructive writes.** Publishing PRs, activating ads, deploying schemas — always show a draft and ask `yes/no`.
 - **Drafts by default.** Day 4 (paid) plays save as drafts. The user reviews and pushes to Google Ads themselves when ready.
 - **Schema discovery on every first call.** Tool names may not match the visible MCP set. Call with `{}` to get the schema, then retry with the correct params.
-- **Skip cleanly when prerequisites are missing.** If GBP isn't connected and the user picks Play 8, tell them and exit. Don't auto-engage — that's a `/sa-run-gbp` job.
+- **Skip cleanly when prerequisites are missing.** If GBP isn't connected and the user picks Play 8, tell them and exit. Don't auto-engage — that's a `/searchatlas:run-gbp` job.
 - **Always log the run.** Save a `shots/play-{NN}-{date}.md` record and append to `shots/shots.log` so the user has a paper trail of what was run when.
 - **Tie next moves to commands.** Every play ends with 2–3 suggested follow-ups, each pointing to a specific command.
 - **No big guns.** This command is the summit takeaway, not the AMM full-stack. If a user wants end-to-end orchestration, they upgrade.

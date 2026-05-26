@@ -1,9 +1,9 @@
 ---
-name: sa-my-account
+name: my-account
 description: Account overview — lists all OTTO projects, brand vaults, GBP locations, PPC campaigns, content artifacts, and AI visibility projects across the user's SearchAtlas account, with quota summary.
 ---
 
-# /sa-my-account
+# /searchatlas:my-account
 
 Show a complete overview of the user's SearchAtlas account — all businesses, projects, campaigns, and GBP locations.
 

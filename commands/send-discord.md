@@ -1,9 +1,9 @@
 ---
-name: sa-send-discord
+name: send-discord
 description: Post results to Discord via webhook. Webhook URL from DISCORD_WEBHOOK_URL env var.
 ---
 
-# /sa-send-discord
+# /searchatlas:send-discord
 
 Post a message to Discord via a Webhook.
 

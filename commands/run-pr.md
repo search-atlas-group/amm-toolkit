@@ -1,9 +1,9 @@
 ---
-name: sa-run-pr
+name: run-pr
 description: Authority building — press release drafting and distribution via SearchAtlas Press platform; backlink acquisition through cloud stacks and digital PR outreach campaigns.
 ---
 
-# /sa-run-pr
+# /searchatlas:run-pr
 
 Create and distribute press releases, build cloud stacks, and set up digital PR outreach.
 

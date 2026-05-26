@@ -1,9 +1,9 @@
 ---
-name: sa-business-report
+name: business-report
 description: Single-business deep dive — pulls OTTO project data, brand vault, Site Explorer, GBP, PPC, and LLM visibility from SearchAtlas, then presents a structured report with actionable recommendations and saves a markdown record to the client's reports folder.
 ---
 
-# /sa-business-report
+# /searchatlas:business-report
 
 Generate a deep-dive report on a single business/domain across all SearchAtlas products.
 
@@ -11,7 +11,7 @@ Generate a deep-dive report on a single business/domain across all SearchAtlas p
 
 ### Step 1: Identify the Business
 
-Ask the user which business or domain they want to report on. If unclear, run `/sa-my-account` first to list all businesses.
+Ask the user which business or domain they want to report on. If unclear, run `/searchatlas:my-account` first to list all businesses.
 
 ### Step 2: Gather Data
 
@@ -97,7 +97,7 @@ Create the `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/reports/
 
 The markdown file should contain the full report from Step 3 above, plus:
 - The run timestamp
-- A pointer to run `/sa-scout {domain}` for a deeper diagnostic
-- A pointer to run `/sa-summit-shot` to act on the top recommendation
+- A pointer to run `/searchatlas:scout {domain}` for a deeper diagnostic
+- A pointer to run `/searchatlas:summit-shot` to act on the top recommendation
 
 Print the absolute path after saving so the user can open it directly.

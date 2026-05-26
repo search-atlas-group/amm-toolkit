@@ -1,9 +1,9 @@
 ---
-name: sa-run-seo
+name: run-seo
 description: Monthly SEO workflow using SearchAtlas's holistic SEO scoring, OTTO recommendations, content health checks, indexer status, and keyword tracking — covers both new client onboarding and ongoing monthly maintenance.
 ---
 
-# /sa-run-seo
+# /searchatlas:run-seo
 
 Execute an SEO workflow — either new client onboarding or monthly maintenance.
 

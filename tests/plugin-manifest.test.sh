@@ -5,7 +5,7 @@ MANIFEST=".claude-plugin/plugin.json"
 
 [ -f "$MANIFEST" ] || { echo "FAIL: $MANIFEST missing"; exit 1; }
 
-jq -e '.name == "searchatlas-toolkit"' "$MANIFEST" >/dev/null \
+jq -e '.name == "searchatlas"' "$MANIFEST" >/dev/null \
   || { echo "FAIL: name field wrong"; exit 1; }
 
 jq -e '.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")' "$MANIFEST" >/dev/null \
@@ -29,7 +29,7 @@ jq -e '.name == "searchatlas"' "$MARKETPLACE" >/dev/null \
 jq -e '.owner.name == "SearchAtlas"' "$MARKETPLACE" >/dev/null \
   || { echo "FAIL: marketplace owner.name wrong"; exit 1; }
 
-jq -e '.plugins[0].name == "searchatlas-toolkit"' "$MARKETPLACE" >/dev/null \
+jq -e '.plugins[0].name == "searchatlas"' "$MARKETPLACE" >/dev/null \
   || { echo "FAIL: marketplace plugin name wrong"; exit 1; }
 
 jq -e '.plugins[0].source.source == "github"' "$MARKETPLACE" >/dev/null \

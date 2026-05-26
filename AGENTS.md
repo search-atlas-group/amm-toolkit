@@ -1,14 +1,14 @@
 # SearchAtlas Toolkit — Plugin Instructions for Claude
 
-> This file is loaded automatically by Claude Code when the `searchatlas-toolkit` plugin is active. It provides routing rules, golden rules, parameter references, and the full command surface.
+> This file is loaded automatically by Claude Code when the `searchatlas` plugin is active. It provides routing rules, golden rules, parameter references, and the full command surface.
 
 ---
 
 ## 1. What This Plugin Is
 
-The official SearchAtlas command-line toolkit — a Claude Code plugin (`searchatlas-toolkit`) that delivers SEO, GBP, PPC, content, and AI visibility workflows through the SearchAtlas MCP. For anyone using SearchAtlas: solo SEOs managing their own brand, in-house teams handling multiple sites, and agencies managing clients.
+The official SearchAtlas command-line toolkit — a Claude Code plugin (`searchatlas`) that delivers SEO, GBP, PPC, content, and AI visibility workflows through the SearchAtlas MCP. For anyone using SearchAtlas: solo SEOs managing their own brand, in-house teams handling multiple sites, and agencies managing clients.
 
-No confidential data, no hardcoded keys, no environment-specific paths — everything works on any user's machine after `/plugin install searchatlas-toolkit`.
+No confidential data, no hardcoded keys, no environment-specific paths — everything works on any user's machine after `/plugin install searchatlas`.
 
 ---
 
@@ -56,7 +56,7 @@ Some short tool names map to multiple underlying tools. If a tool behaves unexpe
 
 ### Rule 5: Never Hardcode IDs
 - Project IDs, location IDs, business IDs — always discover them via API first
-- Use `/sa-my-account` to get the user's current resources before running workflows
+- Use `/searchatlas:my-account` to get the user's current resources before running workflows
 
 ### Rule 6: Never Expose Secrets
 - API keys come from `.env` or MCP config — never print them
@@ -74,10 +74,10 @@ The `~/.searchatlas/clients/` directory is for per-client working files (brand p
 
 - `~/.searchatlas/clients/{slug}/brand-profile.md` — canonical identity, synced with SearchAtlas brand vault
 - `~/.searchatlas/clients/{slug}/notes.md` — freeform user notes
-- `~/.searchatlas/clients/{slug}/scouts/{date}.html` — `/sa-scout` history
-- `~/.searchatlas/clients/{slug}/reports/{date}.md` — `/sa-business-report` outputs
-- `~/.searchatlas/clients/{slug}/workflows/{type}-{date}.md` — workflow run logs (`/sa-run-*`)
-- `~/.searchatlas/clients/{slug}/shots/play-{NN}-{date}.md` — `/sa-summit-shot` executions
+- `~/.searchatlas/clients/{slug}/scouts/{date}.html` — `/searchatlas:scout` history
+- `~/.searchatlas/clients/{slug}/reports/{date}.md` — `/searchatlas:business-report` outputs
+- `~/.searchatlas/clients/{slug}/workflows/{type}-{date}.md` — workflow run logs (`/searchatlas:run-*`)
+- `~/.searchatlas/clients/{slug}/shots/play-{NN}-{date}.md` — `/searchatlas:summit-shot` executions
 
 Client data is owned by the user, never by the plugin.
 
@@ -124,12 +124,12 @@ When a user mentions a client, domain, project, or their own brand, route to the
 
 | User says… | Run |
 |------------|-----|
-| "scout {client}" / "audit {domain}" / "what does this client need" / "where do we start with {client}" / "diagnostic" | **`/sa-scout`** — read-only diagnostic across all pillars, returns prioritized action plan + creates SA Report Builder report + saves local HTML internal record |
-| "run a play" / "summit shot" / "what did we learn at the summit" / "run the topical map play" | **`/sa-summit-shot`** — atomic single-play executor (bounded: 1 article, 1 PR, drafts by default). Use `/sa-summit-shot {N}` for direct play number. |
-| "tell me about {client}" / "look at this client / project / brand" / "what do we have for {domain}" / "deep dive" / "full report" | **`/sa-business-report`** — pulls OTTO, brand vault, content, Site Explorer, GBP, PPC, LLM visibility, and gives recommendations |
-| "show me my account" / "what clients do I have" / "list everything" | **`/sa-my-account`** — all businesses, projects, campaigns, GBP locations, quota |
-| "set up a new client / project / brand / your own site" / "onboard {client}" | **`/sa-onboard-client`** — guided wizard |
-| "sync {client} / project" / "push to brand vault" / "pull from SA" / "brand profile out of date" | **`/sa-sync-client`** — two-way brand vault sync |
+| "scout {client}" / "audit {domain}" / "what does this client need" / "where do we start with {client}" / "diagnostic" | **`/searchatlas:scout`** — read-only diagnostic across all pillars, returns prioritized action plan + creates SA Report Builder report + saves local HTML internal record |
+| "run a play" / "summit shot" / "what did we learn at the summit" / "run the topical map play" | **`/searchatlas:summit-shot`** — atomic single-play executor (bounded: 1 article, 1 PR, drafts by default). Use `/searchatlas:summit-shot {N}` for direct play number. |
+| "tell me about {client}" / "look at this client / project / brand" / "what do we have for {domain}" / "deep dive" / "full report" | **`/searchatlas:business-report`** — pulls OTTO, brand vault, content, Site Explorer, GBP, PPC, LLM visibility, and gives recommendations |
+| "show me my account" / "what clients do I have" / "list everything" | **`/searchatlas:my-account`** — all businesses, projects, campaigns, GBP locations, quota |
+| "set up a new client / project / brand / your own site" / "onboard {client}" | **`/searchatlas:onboard-client`** — guided wizard |
+| "sync {client} / project" / "push to brand vault" / "pull from SA" / "brand profile out of date" | **`/searchatlas:sync-client`** — two-way brand vault sync |
 
 ### Specific requests → Run only what they ask for
 
@@ -151,24 +151,24 @@ When a user mentions a client, domain, project, or their own brand, route to the
 
 | User says… | Run |
 |------------|-----|
-| "run SEO" / "do SEO for {client}" / "monthly maintenance" | **`/sa-run-seo`** |
-| "optimize their GBP" / "fix their Google profile" | **`/sa-run-gbp`** |
-| "launch ads" / "set up PPC" / "Google Ads campaign" | **`/sa-run-ppc`** |
-| "create content" / "write articles" / "build topical map" | **`/sa-run-content`** |
-| "press release" / "build authority" / "link building" | **`/sa-run-pr`** |
-| "check AI visibility" / "LLM audit" | **`/sa-run-visibility`** |
-| "post to Slack" / "share results on Slack" | **`/sa-send-slack`** |
-| "post to Discord" / "share on Discord" | **`/sa-send-discord`** |
-| "email the report" / "send an email" | **`/sa-send-email`** |
-| "post to Circle" | **`/sa-send-circle`** |
+| "run SEO" / "do SEO for {client}" / "monthly maintenance" | **`/searchatlas:run-seo`** |
+| "optimize their GBP" / "fix their Google profile" | **`/searchatlas:run-gbp`** |
+| "launch ads" / "set up PPC" / "Google Ads campaign" | **`/searchatlas:run-ppc`** |
+| "create content" / "write articles" / "build topical map" | **`/searchatlas:run-content`** |
+| "press release" / "build authority" / "link building" | **`/searchatlas:run-pr`** |
+| "check AI visibility" / "LLM audit" | **`/searchatlas:run-visibility`** |
+| "post to Slack" / "share results on Slack" | **`/searchatlas:send-slack`** |
+| "post to Discord" / "share on Discord" | **`/searchatlas:send-discord`** |
+| "email the report" / "send an email" | **`/searchatlas:send-email`** |
+| "post to Circle" | **`/searchatlas:send-circle`** |
 
-**Rule of thumb:** If the user is vague about a client, give them the full picture (`/sa-business-report`). If they ask for something specific, don't flood them with everything — just answer what they asked.
+**Rule of thumb:** If the user is vague about a client, give them the full picture (`/searchatlas:business-report`). If they ask for something specific, don't flood them with everything — just answer what they asked.
 
 ---
 
 ## 7. Workflow Execution Pattern
 
-When running a workflow (e.g., `/sa-run-seo`):
+When running a workflow (e.g., `/searchatlas:run-seo`):
 
 1. **Load the YAML template** from `workflows/`
 2. **Ask which business** the user wants to target (use account discovery)
@@ -192,43 +192,43 @@ All commands live in `commands/` and are loaded automatically when the plugin is
 ### Diagnostics & Reports
 | Command | SearchAtlas capabilities used |
 |---|---|
-| `/sa-scout` | Holistic SEO scoring, Site Explorer, GBP audit, AI visibility (full diagnostic) |
-| `/sa-business-report` | OTTO project data, brand vault, Site Explorer, GBP, PPC, LLM visibility |
-| `/sa-my-account` | All OTTO projects, brand vaults, GBP locations, PPC campaigns, content, AI visibility |
+| `/searchatlas:scout` | Holistic SEO scoring, Site Explorer, GBP audit, AI visibility (full diagnostic) |
+| `/searchatlas:business-report` | OTTO project data, brand vault, Site Explorer, GBP, PPC, LLM visibility |
+| `/searchatlas:my-account` | All OTTO projects, brand vaults, GBP locations, PPC campaigns, content, AI visibility |
 
 ### Onboarding & Brand Management
 | Command | SearchAtlas capabilities used |
 |---|---|
-| `/sa-onboard-client` | Brand vault creation/import, OTTO project setup, knowledge graph |
-| `/sa-sync-client` | Brand vault two-way sync |
+| `/searchatlas:onboard-client` | Brand vault creation/import, OTTO project setup, knowledge graph |
+| `/searchatlas:sync-client` | Brand vault two-way sync |
 
 ### Marketing Workflows
 | Command | SearchAtlas capabilities used |
 |---|---|
-| `/sa-run-seo` | Holistic audit, OTTO recommendations, content health, indexer, keyword tracking |
-| `/sa-run-gbp` | Location audit, posts, reviews automation, citations, photo management |
-| `/sa-run-ppc` | Google Ads sync, keyword clusters, ad generation, performance review |
-| `/sa-run-content` | Content Genius — topical maps, article drafting, brand-vault voice |
-| `/sa-run-pr` | Press release drafting + distribution via SearchAtlas Press |
-| `/sa-run-visibility` | LLM Visibility — mentions across ChatGPT/Claude/Gemini/Perplexity |
-| `/sa-summit-shot` | Atomic single-play executor — 19 plays from the Summit playbook |
+| `/searchatlas:run-seo` | Holistic audit, OTTO recommendations, content health, indexer, keyword tracking |
+| `/searchatlas:run-gbp` | Location audit, posts, reviews automation, citations, photo management |
+| `/searchatlas:run-ppc` | Google Ads sync, keyword clusters, ad generation, performance review |
+| `/searchatlas:run-content` | Content Genius — topical maps, article drafting, brand-vault voice |
+| `/searchatlas:run-pr` | Press release drafting + distribution via SearchAtlas Press |
+| `/searchatlas:run-visibility` | LLM Visibility — mentions across ChatGPT/Claude/Gemini/Perplexity |
+| `/searchatlas:summit-shot` | Atomic single-play executor — 19 plays from the Summit playbook |
 
 ### Sharing & Notifications
 | Command | Integration |
 |---|---|
-| `/sa-send-slack` | Slack Incoming Webhooks (multi-channel via `SLACK_WEBHOOK_{NAME}` env vars) |
-| `/sa-send-discord` | Discord webhook |
-| `/sa-send-email` | Resend REST API |
-| `/sa-send-circle` | Circle API v2 |
+| `/searchatlas:send-slack` | Slack Incoming Webhooks (multi-channel via `SLACK_WEBHOOK_{NAME}` env vars) |
+| `/searchatlas:send-discord` | Discord webhook |
+| `/searchatlas:send-email` | Resend REST API |
+| `/searchatlas:send-circle` | Circle API v2 |
 
 ### Setup & Utilities
 | Command | Purpose |
 |---|---|
-| `/sa-setup-integrations` | Configure Slack/Discord/Email/Circle webhooks in `.env` |
-| `/sa-security-scan` | Scan local setup for exposed secrets, misconfigured webhooks |
-| `/sa-build-website` | Generate marketing site via SearchAtlas Website Studio |
-| `/sa-rebuild-website` | Refresh/regenerate existing website |
-| `/sa-help` | Command reference (this listing) |
+| `/searchatlas:setup-integrations` | Configure Slack/Discord/Email/Circle webhooks in `.env` |
+| `/searchatlas:security-scan` | Scan local setup for exposed secrets, misconfigured webhooks |
+| `/searchatlas:build-website` | Generate marketing site via SearchAtlas Website Studio |
+| `/searchatlas:rebuild-website` | Refresh/regenerate existing website |
+| `/searchatlas:help` | Command reference (this listing) |
 
 ---
 

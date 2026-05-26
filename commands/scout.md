@@ -1,17 +1,17 @@
 ---
-name: sa-scout
+name: scout
 description: Read-only diagnostic across SEO, GBP, PPC, content, and AI visibility. Uses SearchAtlas's holistic SEO scoring, Site Explorer, GBP audit, and AI visibility tools to give you a full picture and prioritized actions. Creates a SearchAtlas Report Builder report and saves a local HTML record.
 ---
 
-# /sa-scout
+# /searchatlas:scout
 
 Run-first diagnostic. Take a domain, pull the essentials from SearchAtlas across every pillar, and return a prioritized action plan tied to specific commands.
 
-**`/sa-scout` is read-only.** It does not engage OTTO projects, does not create brand vaults, does not deploy schemas, does not generate content. It diagnoses and recommends. The only writes it performs are:
+**`/searchatlas:scout` is read-only.** It does not engage OTTO projects, does not create brand vaults, does not deploy schemas, does not generate content. It diagnoses and recommends. The only writes it performs are:
 1. Creates a **SearchAtlas Report Builder** report (default template, client-shareable)
 2. Saves a **local self-contained HTML** record to `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client-slug}/scouts/{date}.html`
 
-Other commands (`/sa-onboard-client`, `/sa-summit-shot`, `/sa-run-*`) are what take action.
+Other commands (`/searchatlas:onboard-client`, `/searchatlas:summit-shot`, `/searchatlas:run-*`) are what take action.
 
 ---
 
@@ -38,7 +38,7 @@ Check what already exists for this domain — do **not** create anything:
 - `business_crud` → `list_businesses` (filter by domain) → `business_id` or null
 - `visibility` → `list_brands` (filter by domain) → `brand_id` or null
 
-Mark each as `exists` or `missing`. If everything is `missing`, this is a brand-new domain — `/sa-scout` will report that and recommend `/sa-onboard-client`. **Do not engage anything.**
+Mark each as `exists` or `missing`. If everything is `missing`, this is a brand-new domain — `/searchatlas:scout` will report that and recommend `/searchatlas:onboard-client`. **Do not engage anything.**
 
 ### Phase 3: Parallel Discovery
 
@@ -93,17 +93,17 @@ Apply this rubric in order (top items take priority):
 
 | Diagnostic finding | Recommended shot |
 |---|---|
-| No brand vault | `/sa-onboard-client` |
-| Brand vault exists, no active voice profile | `/sa-summit-shot 1` (Brand Vault Setup) |
-| No OTTO project | `/sa-onboard-client` (full setup) |
-| OTTO health < 70 OR open issues > 25 | `/sa-run-seo` (monthly maintenance) |
-| Authority < 40 OR < 25 referring domains | `/sa-summit-shot 9` (PR Blast) → then `10` (Cloudstack) |
-| Content < 50 OR no topical map | `/sa-summit-shot 5` (Topical Map) → `7` (Blog Article) |
-| < 5 keywords in pos 1-3 | `/sa-summit-shot 5` (Topical Map) |
-| GBP missing | `/sa-summit-shot 8` (GBP Optimize) |
-| LLM Visibility not monitored | `/sa-summit-shot 4` (LLM Visibility Setup) |
-| LLM mentions exist, SoV < 30% | `/sa-summit-shot 17–19` (Day 5 deep dive) |
-| Strong organic but no paid | `/sa-summit-shot 14` (Branded Google Ads draft) |
+| No brand vault | `/searchatlas:onboard-client` |
+| Brand vault exists, no active voice profile | `/searchatlas:summit-shot 1` (Brand Vault Setup) |
+| No OTTO project | `/searchatlas:onboard-client` (full setup) |
+| OTTO health < 70 OR open issues > 25 | `/searchatlas:run-seo` (monthly maintenance) |
+| Authority < 40 OR < 25 referring domains | `/searchatlas:summit-shot 9` (PR Blast) → then `10` (Cloudstack) |
+| Content < 50 OR no topical map | `/searchatlas:summit-shot 5` (Topical Map) → `7` (Blog Article) |
+| < 5 keywords in pos 1-3 | `/searchatlas:summit-shot 5` (Topical Map) |
+| GBP missing | `/searchatlas:summit-shot 8` (GBP Optimize) |
+| LLM Visibility not monitored | `/searchatlas:summit-shot 4` (LLM Visibility Setup) |
+| LLM mentions exist, SoV < 30% | `/searchatlas:summit-shot 17–19` (Day 5 deep dive) |
+| Strong organic but no paid | `/searchatlas:summit-shot 14` (Branded Google Ads draft) |
 
 Generate the top 4–6 priorities. Don't dump all 11 — pick what's most leveraged.
 
@@ -171,7 +171,7 @@ Build a client-shareable report in SA Report Builder using a default template.
 
 Path: `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/scouts/{YYYY-MM-DD-HHmm}.html`
 
-If the `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/` folder doesn't exist yet, create it (this matches the `/sa-onboard-client` convention; later if the user runs `/sa-onboard-client`, that command will populate `CLAUDE.md` and `brand-profile.md` in the same folder).
+If the `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/` folder doesn't exist yet, create it (this matches the `/searchatlas:onboard-client` convention; later if the user runs `/searchatlas:onboard-client`, that command will populate `CLAUDE.md` and `brand-profile.md` in the same folder).
 
 **HTML requirements:**
 - **Self-contained** — inline CSS, no external assets except web fonts via Google Fonts (optional, with system fallback). User can open the file directly in a browser, email it as an attachment, or commit it to git.
@@ -190,9 +190,9 @@ If the `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/` folder doe
 9. **Recommended Shots** — numbered priority list, each item has:
    - Finding (one line)
    - Why it matters (one line)
-   - Command to run (`/sa-summit-shot 9`, `/sa-run-seo`, etc.)
+   - Command to run (`/searchatlas:summit-shot 9`, `/searchatlas:run-seo`, etc.)
 10. **Notes pointer card** — NOT an editable in-page textarea (textarea state is lost on reload). Instead, a static card that points to a sibling `notes.md` in the same folder, with the relative path displayed and a copy-paste `open` command. Notes belong in the file, not in the DOM.
-11. Footer — "Generated by Agentic Marketing Mastermind toolkit · run again with `/sa-scout {domain}`"
+11. Footer — "Generated by Agentic Marketing Mastermind toolkit · run again with `/searchatlas:scout {domain}`"
 
 **Sidecar `notes.md` (write alongside the HTML file):**
 
@@ -203,7 +203,7 @@ Pre-populated template (so the marketer knows what to capture):
 ```markdown
 # Scout notes — {domain} — {YYYY-MM-DD HH:MM}
 
-> What worked, what didn't, what to revisit on the next /sa-scout run.
+> What worked, what didn't, what to revisit on the next /searchatlas:scout run.
 > This file is the source of truth — the HTML dashboard is just the dashboard view.
 
 ## Decisions made
@@ -223,7 +223,7 @@ Pre-populated template (so the marketer knows what to capture):
 - Editable in any tool (Claude Code, VS Code, Obsidian, vim)
 - Survives browser closes, machine wipes, reflows
 - Commits cleanly to git when the user wants a paper trail
-- Future `/sa-scout` runs in the same `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/scouts/` tree can read prior `notes.md` files for continuity
+- Future `/searchatlas:scout` runs in the same `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/scouts/` tree can read prior `notes.md` files for continuity
 - Shareable — the marketer can hand a teammate the folder and the notes come along
 
 **Style:**
@@ -259,8 +259,8 @@ Score bar style: `████████░░` (filled blocks for score/10, r
 - **Skip cleanly.** If a resource doesn't exist (no GBP, no PPC, no LLM brand), mark the pillar `not set up` and continue. Never block.
 - **Always discover IDs from the domain** — never hardcode. Resolve via `find_project_by_hostname`, `list_brand_vaults`, etc.
 - **Schema discovery on first use** — if any tool errors, call with `{}` to get the schema, then retry. Especially important for the Report Builder create tool, which may not match the names of the visible read tools.
-- **Tie every recommendation to a command.** No "improve content" — say "run `/sa-summit-shot 5` (Topical Map) to expand coverage."
+- **Tie every recommendation to a command.** No "improve content" — say "run `/searchatlas:summit-shot 5` (Topical Map) to expand coverage."
 - **Pick top 4–6 priorities, not all 11.** Quality over quantity.
-- **The SA Report Builder report is client-facing** (no `/sa-summit-shot` command names — that's an internal artifact). The local HTML is internal-facing (full priority list with commands).
+- **The SA Report Builder report is client-facing** (no `/searchatlas:summit-shot` command names — that's an internal artifact). The local HTML is internal-facing (full priority list with commands).
 - **One run, four artifacts**: chat output, SA report (if create tool available), local HTML (dashboard), local `notes.md` (sidecar — source of truth for marketer context).
 - **Notes go in `notes.md`, never in the DOM.** Any time you're tempted to add an in-page editable input to the HTML — stop. The HTML is read-only dashboard view. Anything mutable belongs in a file alongside it.

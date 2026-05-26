@@ -124,14 +124,14 @@ jq '
   )
   | .enabledPlugins = (
     (.enabledPlugins // {})
-    + { "searchatlas-toolkit@searchatlas": true }
+    + { "searchatlas@searchatlas": true }
   )
 ' "$SETTINGS" > "$TMP" && mv "$TMP" "$SETTINGS"
 
 echo
 echo "✅ Migration complete."
 echo
-echo "Next: open Claude Code. It will prompt you to install searchatlas-toolkit."
+echo "Next: open Claude Code. It will prompt you to install searchatlas."
 echo "After approval, all sa-* commands are available."
 echo
 
