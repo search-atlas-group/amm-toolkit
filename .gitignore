@@ -35,6 +35,12 @@
 !/.claude-plugin/
 !/.claude-plugin/**
 
+# ── Reserved plugin directories (future agents/skills) ───────────────────────
+!/agents/
+!/agents/**
+!/skills/
+!/skills/**
+
 # ── Tests ────────────────────────────────────────────────────────────────────
 !/tests/
 !/tests/**
