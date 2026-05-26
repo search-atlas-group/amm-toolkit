@@ -1,4 +1,9 @@
-# /send-circle
+---
+name: sa-send-circle
+description: Post to Circle space via Circle API v2. API key from CIRCLE_API_KEY.
+---
+
+# /sa-send-circle
 
 Post a message to a Circle community space.
 
