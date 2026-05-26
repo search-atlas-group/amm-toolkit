@@ -1,8 +1,13 @@
-# /build-website
+---
+name: sa-build-website
+description: Generate a brand new marketing website from brand vault data via SearchAtlas Website Studio — guided end-to-end from brand intake through market research, design selection, content generation, and live publish.
+---
+
+# /sa-build-website
 
 End-to-end guided workflow to plan, design, build, and launch a **brand new website** using the SearchAtlas toolchain. The operator gives us a domain, a small handful of fields, and (optionally) some brand materials — Claude + SA MCP do the rest. Final launch target: Web Studio.
 
-> **For redesigning or replacing an existing site, use `/rebuild-website` instead.** That command consumes scout's output and focuses on design execution. This command is for greenfield only.
+> **For redesigning or replacing an existing site, use `/sa-rebuild-website` instead.** That command consumes scout's output and focuses on design execution. This command is for greenfield only.
 
 ## Data flow — Brand Vault is the single source of truth
 
@@ -15,7 +20,7 @@ Every operator input (services, location, brand colors, voice notes, dropped log
 This means:
 - Operator types each piece of info once — propagates everywhere via BV
 - Two-way sync: WS-side edits push back to BV before publish
-- Other commands (`/run-content`, `/run-pr`, `/run-seo`) all read the same BV downstream
+- Other commands (`/sa-run-content`, `/sa-run-pr`, `/sa-run-seo`) all read the same BV downstream
 
 **Design principles:** copy-before-design, theme-first approval, small-chunks iteration, page-type tiering, industry aesthetic library.
 **Workflow gates:** Pre-Build HITL gate, budget input, multi-format intake, BV auto-crawl when missing, Website Studio MCP for build/publish.
@@ -47,13 +52,13 @@ For greenfield, we only check the 2 SA assets that exist independent of having a
 | `mcp__searchatlas__cg_list_brand_vaults` (filter by domain) | `brand_vault_uuid` if exists |
 | `mcp__searchatlas__gbp_list_locations` (filter by domain/name) | `gbp_location_id` if exists |
 
-**Do not check:** OTTO, PPC, LLM Visibility. These require a live crawlable site — `/run-seo` provisions them once the site has had time to be crawled.
+**Do not check:** OTTO, PPC, LLM Visibility. These require a live crawlable site — `/sa-run-seo` provisions them once the site has had time to be crawled.
 
 Display brief check summary:
 
 ```
 🏷️  Brand Vault   {emoji} {found / will create}
-📍  GBP location  {emoji} {found / handled by /run-seo if missing}
+📍  GBP location  {emoji} {found / handled by /sa-run-seo if missing}
 ```
 
 ---
@@ -146,7 +151,7 @@ For pure greenfield (no operator materials AND no prior business presence anywhe
 
 ```
 What's the client's monthly budget for ongoing marketing services?
-(Captured here, used by /run-seo to size the post-launch cadence — PR, cloud
+(Captured here, used by /sa-run-seo to size the post-launch cadence — PR, cloud
 stacks, content frequency. The publish workflow itself doesn't act on this.)
 
   1. Starter         < $2K / mo
@@ -389,7 +394,7 @@ Brand
 
 Budget tier
   {tier_name} ({range})
-  → Captured for /run-seo (post-launch cadence sized there, not here)
+  → Captured for /sa-run-seo (post-launch cadence sized there, not here)
 
 Site plan
   {N} pages: {core} Core · {service} Service · {location} Location · {landing} Landing · {compliance} Compliance
@@ -527,23 +532,23 @@ Custom domain:   https://{domain}                    ← pending DNS cutover
                  (DNS propagation: minutes to hours; SSL auto-provisions once DNS resolves)
 
 What's next:
-  /run-seo {domain}   — provisions OTTO, LLM Visibility, GBP linkage, and
-                        sizes the ongoing cadence (cloud stacks, PRs,
-                        articles, DPR) against the live, crawled site.
+  /sa-run-seo {domain}   — provisions OTTO, LLM Visibility, GBP linkage, and
+                           sizes the ongoing cadence (cloud stacks, PRs,
+                           articles, DPR) against the live, crawled site.
 ```
 
-The publish workflow ends here. Real post-launch data (pillar scores, LLM tracking, rank tracking deltas) takes hours-to-days of crawl latency — synchronous post-launch provisioning would just create empty projects. `/run-seo` runs that cadence properly against a site that's been live long enough to be crawled.
+The publish workflow ends here. Real post-launch data (pillar scores, LLM tracking, rank tracking deltas) takes hours-to-days of crawl latency — synchronous post-launch provisioning would just create empty projects. `/sa-run-seo` runs that cadence properly against a site that's been live long enough to be crawled.
 
 ---
 
 ## What this command does NOT do
 
-- Touch an existing site — that's `/rebuild-website`
-- Ingest scout output — also `/rebuild-website`
+- Touch an existing site — that's `/sa-rebuild-website`
+- Ingest scout output — also `/sa-rebuild-website`
 - Inherit OTTO baselines — greenfield has no baseline
 - Skip Phase 4.5 HITL gate — hard halt; no override
 - Auto-publish to production without Phase 6.5 approval
-- Provision OTTO/PPC/LLMV/DPR or run any post-launch SEO cadence (cloud stacks, articles, PRs) — that's `/run-seo`'s job once the site is live and crawled
+- Provision OTTO/PPC/LLMV/DPR or run any post-launch SEO cadence (cloud stacks, articles, PRs) — that's `/sa-run-seo`'s job once the site is live and crawled
 
 ## Operator-facing input summary
 
@@ -561,6 +566,6 @@ The 8 fields the operator fills in. Everything else is auto-generated:
 ## Related skills + commands
 
 - `launch-website` — upstream planning skill; this command can consume its `plan.md` output as a richer Phase 2 seed
-- `/onboard-client` — client setup; usually precedes this command
-- `/rebuild-website` — for redesigning existing sites
-- `/run-seo` — picks up once the site is live and crawled; provisions OTTO/LLMV/PPC and runs the ongoing cadence (cloud stacks, PRs, articles, DPR) sized by `budget-tier.json`
+- `/sa-onboard-client` — client setup; usually precedes this command
+- `/sa-rebuild-website` — for redesigning existing sites
+- `/sa-run-seo` — picks up once the site is live and crawled; provisions OTTO/LLMV/PPC and runs the ongoing cadence (cloud stacks, PRs, articles, DPR) sized by `budget-tier.json`
