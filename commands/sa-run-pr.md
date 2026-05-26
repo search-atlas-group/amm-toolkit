@@ -1,4 +1,9 @@
-# /run-pr
+---
+name: sa-run-pr
+description: Authority building — press release drafting and distribution via SearchAtlas Press platform; backlink acquisition through cloud stacks and digital PR outreach campaigns.
+---
+
+# /sa-run-pr
 
 Create and distribute press releases, build cloud stacks, and set up digital PR outreach.
 
@@ -43,6 +48,24 @@ After distribution:
 - `backlinks` → `get_site_backlinks` (filter: new)
 - `backlinks` → `get_site_referring_domains`
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/pr-{YYYY-MM-DD}.md`
+
+The log should include:
+- Client name and slug
+- Date/time of run
+- Press release title, distribution network, and distribution URL (if applicable)
+- Cloud stack anchor text, target URL, and publish status (if applicable)
+- Digital PR campaign name and activation status (if applicable)
+- New backlinks detected
+- Steps failed with error details
+- Next recommended action
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 ```
@@ -54,6 +77,8 @@ After distribution:
 🔗 Backlinks       {N} new backlinks detected              View →
 
 {total} actions completed · {failed} failed
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/pr-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
