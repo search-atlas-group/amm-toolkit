@@ -1,4 +1,9 @@
-# /run-content
+---
+name: sa-run-content
+description: Content generation pipeline — topical maps, article drafting, brand-vault-driven voice profile, publication scheduling via SearchAtlas Content Genius.
+---
+
+# /sa-run-content
 
 Generate articles using topical maps and the 4-step content workflow.
 
@@ -39,6 +44,23 @@ Ask if the user wants to publish:
 - **WordPress** — `content_publication` → `publish_wordpress_article`
 - **CMS** — `content_publication` → `publish_cms_article`
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/content-{YYYY-MM-DD}.md`
+
+The log should include:
+- Domain and client slug
+- Date/time of run
+- Topical map created (keyword, cluster count, title count)
+- Articles generated (titles, content project IDs, scores)
+- Articles published (titles, URLs)
+- Steps failed with error details
+- Next recommended action
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 ```
@@ -55,6 +77,8 @@ Ask if the user wants to publish:
 📤 Published: {N}/{total}
 
 {total} articles created · {failed} failed
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/content-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
