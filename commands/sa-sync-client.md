@@ -1,4 +1,9 @@
-# /sync-client [client-slug]
+---
+name: sa-sync-client
+description: Two-way sync between a client's local brand-profile.md and their SearchAtlas brand vault. Push local changes up to SearchAtlas, pull remote updates down to the local file, or run a full bidirectional sync. Modifies the existing brand-profile.md in place — no new output files are created.
+---
+
+# /sa-sync-client [client-slug]
 
 Two-way sync between a client's local `brand-profile.md` and their SearchAtlas brand vault.
 
@@ -13,12 +18,12 @@ Run this whenever:
 ### Step 1: Identify the Client
 
 If `client-slug` was passed as an argument, use it. Otherwise:
-1. List the folders in `clients/` (excluding `_template`)
+1. List the folders in `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/` (excluding `_template`)
 2. Ask member to pick which client to sync
 
 ### Step 2: Load Client Data
 
-Read from `clients/{slug}/brand-profile.md`:
+Read from `${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/brand-profile.md`:
 - Extract the Brand Vault UUID and Hostname from the Sync section at the bottom
 - Note the timestamps: `Last pulled from SA` and `Last pushed to SA`
 
