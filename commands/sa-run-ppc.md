@@ -1,4 +1,9 @@
-# /run-ppc
+---
+name: sa-run-ppc
+description: PPC campaign setup and maintenance using SearchAtlas's PPC tools — syncs with Google Ads, builds keyword clusters, generates ad content, launches Smart Ads campaigns, and reviews performance metrics.
+---
+
+# /sa-run-ppc
 
 Build and launch a Google Ads PPC campaign using Smart Ads (OTTO PPC).
 
@@ -39,6 +44,25 @@ Load `workflows/ppc-launch.yaml` and execute:
 
 Only proceed after explicit user confirmation.
 
+### Final Step: Save Workflow Log
+
+After completing all steps, write a workflow log to:
+
+`${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{client_slug}/workflows/ppc-{YYYY-MM-DD}.md`
+
+The log should include:
+- Business name, domain, and client slug
+- Date/time of run
+- Google Ads account ID targeted
+- Steps completed with results (counts, IDs where available)
+- Steps failed with error details
+- Products created (names, landing pages)
+- Keyword clusters created (cluster names, keyword counts)
+- Daily budget set
+- Next recommended action (e.g., check performance in 7 days)
+
+After writing the file, print the path in chat so the user can open it.
+
 ## Output Format
 
 ```
@@ -51,6 +75,8 @@ Only proceed after explicit user confirmation.
 ▶️ Campaigns       activated + running at ${budget}/day     View →
 
 {total} actions completed · {failed} failed
+
+📄 Workflow log: ${SA_CLIENTS_DIR:-$HOME/.searchatlas/clients}/{slug}/workflows/ppc-{YYYY-MM-DD}.md
 ```
 
 ## Golden Rules
