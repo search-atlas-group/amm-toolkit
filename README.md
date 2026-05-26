@@ -15,17 +15,20 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 /plugin install searchatlas
 ```
 
-That's it. First time you run an `sa-*` command, you'll be prompted to authorize SearchAtlas via OAuth. New to SearchAtlas? You'll be prompted to create a free account during auth.
+That's it. First time you run a `/searchatlas:*` command, you'll be prompted to authorize SearchAtlas via OAuth. New to SearchAtlas? You'll be prompted to create a free account during auth.
 
-### Using Claude Desktop or claude.ai? 🟪
+### Using Claude Desktop, claude.ai, or Cowork? 🟪
 
-Plugins are a Claude Code feature. But the underlying SearchAtlas MCP works in Desktop and on the web — add it as a custom connector:
+Plugins are a Claude Code feature — they don't run in Claude Desktop, claude.ai, or Claude Cowork (Cowork has its own separate plugin system and can't install Claude Code plugins). But the underlying SearchAtlas MCP works on all of them. Add it as a custom connector:
 
 ```
 https://mcp.searchatlas.com/mcp
 ```
 
-You won't get the `sa-*` slash commands (those are Claude Code-only), but you'll get raw access to every SearchAtlas tool and can drive workflows by asking Claude in plain language.
+- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector
+- **Cowork:** Settings → Add Custom Connector
+
+You won't get the `/searchatlas:*` slash commands or the routing skill (those are Claude Code-only), but you'll get full access to every SearchAtlas tool and can drive workflows by asking Claude in plain language.
 
 ---
 

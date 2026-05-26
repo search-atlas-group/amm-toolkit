@@ -1,6 +1,6 @@
 ---
 name: help
-description: Command reference — list of all sa-* commands with descriptions of which SearchAtlas capabilities each one uses.
+description: Command reference — list of all /searchatlas:* commands with descriptions of which SearchAtlas capabilities each one uses.
 ---
 
 # /searchatlas:help

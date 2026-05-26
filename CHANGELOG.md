@@ -4,6 +4,12 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] — 2026-05-26
+
+### Fixed
+- README quickstart fork now names Claude Cowork explicitly (MCP-only path, same as Desktop/web) and corrected leftover `sa-*` prose to `/searchatlas:*`
+- `commands/help.md` and `Scripts/migrate-to-plugin.sh` — fixed remaining `sa-*` prose references
+
 ## [2.1.0] — 2026-05-26
 
 ### Added

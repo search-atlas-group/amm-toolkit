@@ -132,7 +132,7 @@ echo
 echo "✅ Migration complete."
 echo
 echo "Next: open Claude Code. It will prompt you to install searchatlas."
-echo "After approval, all sa-* commands are available."
+echo "After approval, all /searchatlas:* commands are available."
 echo
 
 if [ "$TEST_MODE" != "1" ]; then
