@@ -1,4 +1,9 @@
-# /send-discord
+---
+name: sa-send-discord
+description: Post results to Discord via webhook. Webhook URL from DISCORD_WEBHOOK_URL env var.
+---
+
+# /sa-send-discord
 
 Post a message to Discord via a Webhook.
 
@@ -34,7 +39,7 @@ Use the `integrations/discord/send-message.sh` script:
 
 ```bash
 source .env
-bash integrations/discord/send-message.sh "$DISCORD_WEBHOOK_URL" "Your formatted message here"
+bash "$CLAUDE_PLUGIN_ROOT/integrations/discord/send-message.sh" "$DISCORD_WEBHOOK_URL" "Your formatted message here"
 ```
 
 Or send directly via curl:
