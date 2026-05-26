@@ -18,3 +18,21 @@ jq -e '.mcpServers.searchatlas.url == "https://mcp.searchatlas.com/mcp"' "$MANIF
   || { echo "FAIL: searchatlas MCP not registered correctly"; exit 1; }
 
 echo "PASS: plugin manifest valid"
+
+MARKETPLACE=".claude-plugin/marketplace.json"
+
+[ -f "$MARKETPLACE" ] || { echo "FAIL: $MARKETPLACE missing"; exit 1; }
+
+jq -e '.name == "searchatlas"' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace name wrong"; exit 1; }
+
+jq -e '.owner.name == "SearchAtlas"' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace owner.name wrong"; exit 1; }
+
+jq -e '.plugins[0].name == "searchatlas-toolkit"' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace plugin name wrong"; exit 1; }
+
+jq -e '.plugins[0].source == "."' "$MARKETPLACE" >/dev/null \
+  || { echo "FAIL: marketplace plugin source must be \".\" (same-repo)"; exit 1; }
+
+echo "PASS: marketplace manifest valid"

@@ -1,0 +1,15 @@
+{
+  "name": "searchatlas",
+  "owner": {
+    "name": "SearchAtlas",
+    "email": "support@searchatlas.com"
+  },
+  "plugins": [
+    {
+      "name": "searchatlas-toolkit",
+      "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows.",
+      "source": ".",
+      "category": "marketing"
+    }
+  ]
+}
