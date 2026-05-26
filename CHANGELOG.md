@@ -4,6 +4,14 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — 2026-05-26
+
+### Added
+- **`using-searchatlas` skill** (`skills/using-searchatlas/SKILL.md`) — the plugin's runtime "brain": intent-routing rules, golden rules for the SearchAtlas MCP, parameter quick-reference, account-discovery flow, and conventions. Auto-loads when a user works on SearchAtlas/SEO/marketing tasks.
+
+### Fixed
+- **Plugin instructions now actually load for users.** Previously this guidance lived in root `AGENTS.md`, which Claude Code does **not** load from an installed plugin (only skills load). The routing/golden-rules intelligence was inert for end users; it's now delivered via the auto-invoked skill above. `AGENTS.md` is slimmed to a pointer for contributors.
+
 ## [2.0.0] — 2026-05-26
 
 ### Changed (breaking)
