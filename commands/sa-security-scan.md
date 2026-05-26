@@ -1,4 +1,9 @@
-# /security-scan
+---
+name: sa-security-scan
+description: Scan any Git repository for security risks before running it on your machine — works immediately with zero tools installed, gets more thorough as better tools become available, always produces a plain-English verdict.
+---
+
+# /sa-security-scan
 
 Scan any Git repository for security risks before running it on your machine.
 
@@ -10,7 +15,7 @@ Works immediately — even if you have zero tools installed. Gets more thorough 
 
 ### Step 0: Greet and Parse Input
 
-If the user ran `/security-scan` with no argument, respond:
+If the user ran `/sa-security-scan` with no argument, respond:
 
 > Paste the GitHub (or GitLab, Bitbucket) URL of the repo you want to scan.
 > Example: `https://github.com/owner/repo-name`
@@ -189,8 +194,7 @@ After running all patterns, use your own judgment to read 3–5 flagged files an
 
 Run the scanner script:
 ```bash
-AMM_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-bash "$AMM_ROOT/scripts/repo-security-scan.sh" "{repo_url}" \
+bash "$CLAUDE_PLUGIN_ROOT/Scripts/repo-security-scan.sh" "{repo_url}" \
   --output /tmp/security-scan-results/
 ```
 
@@ -202,8 +206,7 @@ Read `/tmp/security-scan-results/report.json` and narrate each finding in plain 
 
 #### If Docker is available (Tier 3):
 ```bash
-AMM_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-bash "$AMM_ROOT/scripts/repo-sandbox.sh" "{repo_url}" \
+bash "$CLAUDE_PLUGIN_ROOT/Scripts/repo-sandbox.sh" "{repo_url}" \
   --timeout 90 --network none
 ```
 
@@ -212,8 +215,7 @@ Plain English explanation to offer user:
 
 #### If Docker is NOT available (macOS native sandbox):
 ```bash
-AMM_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-bash "$AMM_ROOT/scripts/mac-sandbox-run.sh" "{repo_url}"
+bash "$CLAUDE_PLUGIN_ROOT/Scripts/mac-sandbox-run.sh" "{repo_url}"
 ```
 
 Plain English explanation:
@@ -271,7 +273,7 @@ Always end with a concrete action list:
 What to do:
   ✅  You can clone and install this repo normally.
   ✅  Keep dependencies updated (run: npm update / pip install --upgrade)
-  □   If something feels off later, run /security-scan again on the folder.
+  □   If something feels off later, run /sa-security-scan again on the folder.
 ```
 
 **If USE WITH CARE:**
@@ -305,14 +307,13 @@ What to do:
 ### Step 7: Save Report
 
 ```bash
-AMM_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-mkdir -p "$AMM_ROOT/Security/scans/"
-REPORT_FILE="$AMM_ROOT/Security/scans/{repo_name}-$(date +%Y-%m-%d).md"
+mkdir -p "Security/scans/"
+REPORT_FILE="Security/scans/{repo_name}-$(date +%Y-%m-%d).md"
 ```
 
 Tell the user: "I've saved a full report to: `Security/scans/{repo_name}-{date}.md` — you can share that file with your team or clients."
 
-Offer to share via `/send-slack` or `/send-email` if integrations are configured.
+Offer to share via `/sa-send-slack` or `/sa-send-email` if integrations are configured.
 
 ---
 
