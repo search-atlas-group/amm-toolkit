@@ -31,6 +31,14 @@
 !/commands/
 !/commands/**
 
+# ── Plugin manifest ──────────────────────────────────────────────────────────
+!/.claude-plugin/
+!/.claude-plugin/**
+
+# ── Tests ────────────────────────────────────────────────────────────────────
+!/tests/
+!/tests/**
+
 !/workflows/
 !/workflows/**
 

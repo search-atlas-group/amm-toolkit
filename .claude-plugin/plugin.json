@@ -1,0 +1,21 @@
+{
+  "name": "searchatlas-toolkit",
+  "version": "1.0.0",
+  "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows powered by the SearchAtlas MCP.",
+  "author": {
+    "name": "SearchAtlas",
+    "url": "https://searchatlas.com"
+  },
+  "homepage": "https://github.com/searchatlas/amm-toolkit",
+  "license": "MIT",
+  "mcpServers": {
+    "searchatlas": {
+      "type": "http",
+      "url": "https://mcp.searchatlas.com/mcp"
+    }
+  },
+  "hooks": "./hooks/hooks.json",
+  "commands": "./commands",
+  "agents": "./agents",
+  "skills": "./skills"
+}
