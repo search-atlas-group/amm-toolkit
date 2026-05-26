@@ -1,4 +1,9 @@
-# /setup-integrations
+---
+name: sa-setup-integrations
+description: Interactive wizard to connect your existing tools (HubSpot, ClickUp, Linear, Notion, Slack, Gmail, Google Calendar, GitHub) to Claude Code — guides through OAuth flows and API token setup one integration at a time.
+---
+
+# /sa-setup-integrations
 
 Interactive wizard to connect your existing tools to Claude Code. Run this once and Claude will configure each integration automatically — you just answer questions and click through OAuth flows.
 
@@ -256,7 +261,7 @@ To use your integrations, just ask naturally:
   "What's on my calendar tomorrow?"
   "Create a GitHub issue for [description]"
 
-To add more later, run /setup-integrations again.
+To add more later, run /sa-setup-integrations again.
 To verify everything is working, run: bash scripts/verify-setup.sh
 ```
 
