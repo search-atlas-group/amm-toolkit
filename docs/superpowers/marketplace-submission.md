@@ -10,10 +10,10 @@ Both marketplace paths require the plugin to already exist as a working public r
 
 - [ ] `feature/plugin-conversion` merged into `main`
 - [ ] `v1.0.0` tagged and pushed to GitHub
-- [ ] `github.com/searchatlas/amm-toolkit` is public
+- [ ] `github.com/search-atlas-group/amm-toolkit` is public
 - [ ] README's quickstart commands work end-to-end:
   ```
-  /plugin marketplace add searchatlas/amm-toolkit
+  /plugin marketplace add search-atlas-group/amm-toolkit
   /plugin install searchatlas-toolkit
   ```
 - [ ] At least one `sa-*` command runs successfully against the real MCP after OAuth
@@ -39,7 +39,7 @@ Both marketplace paths require the plugin to already exist as a working public r
 | Field | Value |
 |---|---|
 | **Plugin name** | `searchatlas-toolkit` |
-| **Repository URL** | `https://github.com/searchatlas/amm-toolkit` |
+| **Repository URL** | `https://github.com/search-atlas-group/amm-toolkit` |
 | **Short description** | Official SearchAtlas toolkit — SEO, GBP, PPC, content, and AI visibility workflows. |
 | **Long description** | Official SearchAtlas command-line toolkit. 21 slash commands covering the full SearchAtlas surface: SEO audits, Google Business Profile optimization, Google Ads campaign management, content generation via Content Genius, press release distribution, AI visibility tracking across ChatGPT/Claude/Gemini/Perplexity, and more. For anyone using SearchAtlas to manage SEO and digital marketing — solo operators, in-house teams, and agencies alike. Powered by the SearchAtlas MCP, which is auto-registered when the plugin installs (no separate setup). |
 | **Category** | Integrations (best fit if a single category is required; ask Anthropic about a Marketing/SEO category if asked) |

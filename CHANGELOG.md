@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [1.0.0] — 2026-05-26
 
 ### Added
-- Plugin packaging — install via `/plugin marketplace add searchatlas/amm-toolkit` + `/plugin install searchatlas-toolkit`
+- Plugin packaging — install via `/plugin marketplace add search-atlas-group/amm-toolkit` + `/plugin install searchatlas-toolkit`
 - SearchAtlas MCP server auto-registered on install (no separate `claude mcp add` step)
 - 21 slash commands prefixed `sa-*` (e.g., `/sa-scout`, `/sa-run-seo`, `/sa-business-report`)
 - Plugin-scoped instructions in `AGENTS.md` (intent routing, golden rules, parameter reference)

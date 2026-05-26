@@ -60,7 +60,7 @@ jq -e '.hooks // [] | map(select(.command | tostring | contains("auto-update-hoo
   || { echo "FAIL: auto-update hook still in settings.json"; rm -rf "$SANDBOX"; exit 1; }
 
 # Assertion 5: extraKnownMarketplaces.searchatlas added (OBJECT keyed by marketplace name)
-jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "searchatlas/amm-toolkit"' \
+jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "search-atlas-group/amm-toolkit"' \
   "$FAKE_HOME/.claude/settings.json" >/dev/null \
   || { echo "FAIL: extraKnownMarketplaces.searchatlas not set correctly"; rm -rf "$SANDBOX"; exit 1; }
 

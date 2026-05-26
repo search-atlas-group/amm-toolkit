@@ -11,7 +11,7 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 ### Using Claude Code? 🟦
 
 ```
-/plugin marketplace add searchatlas/amm-toolkit
+/plugin marketplace add search-atlas-group/amm-toolkit
 /plugin install searchatlas-toolkit
 ```
 
@@ -126,5 +126,5 @@ If you've already deleted the cloned repo, just run the standard install at the 
 
 ## Support
 
-- Issues: https://github.com/searchatlas/amm-toolkit/issues
+- Issues: https://github.com/search-atlas-group/amm-toolkit/issues
 - SearchAtlas help: https://help.searchatlas.com

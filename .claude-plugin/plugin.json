@@ -6,7 +6,7 @@
     "name": "SearchAtlas",
     "url": "https://searchatlas.com"
   },
-  "homepage": "https://github.com/searchatlas/amm-toolkit",
+  "homepage": "https://github.com/search-atlas-group/amm-toolkit",
   "license": "MIT",
   "mcpServers": {
     "searchatlas": {

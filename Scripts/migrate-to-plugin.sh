@@ -117,7 +117,7 @@ jq '
       "searchatlas": {
         "source": {
           "source": "github",
-          "repo": "searchatlas/amm-toolkit"
+          "repo": "search-atlas-group/amm-toolkit"
         }
       }
     }

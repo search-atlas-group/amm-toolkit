@@ -100,7 +100,7 @@ Confirm the exact JSON schema for declaring a marketplace and an enabled plugin 
 ```json
 {
   "extraKnownMarketplaces": [
-    { "source": "github", "repo": "searchatlas/amm-toolkit" }
+    { "source": "github", "repo": "search-atlas-group/amm-toolkit" }
   ],
   "enabledPlugins": ["searchatlas-toolkit"]
 }
@@ -195,7 +195,7 @@ Write `.claude-plugin/plugin.json`:
     "name": "SearchAtlas",
     "url": "https://searchatlas.com"
   },
-  "homepage": "https://github.com/searchatlas/amm-toolkit",
+  "homepage": "https://github.com/search-atlas-group/amm-toolkit",
   "license": "MIT",
   "mcpServers": {
     "searchatlas": {
@@ -947,7 +947,7 @@ jq -e '.hooks // [] | map(select(.command | tostring | contains("auto-update-hoo
   || { echo "FAIL: auto-update hook still in settings.json"; rm -rf "$SANDBOX"; exit 1; }
 
 # Assertion 5: extraKnownMarketplaces.searchatlas added (object, keyed by marketplace name)
-jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "searchatlas/amm-toolkit"' \
+jq -e '.extraKnownMarketplaces.searchatlas.source.repo == "search-atlas-group/amm-toolkit"' \
   "$FAKE_HOME/.claude/settings.json" >/dev/null \
   || { echo "FAIL: extraKnownMarketplaces.searchatlas not set correctly"; rm -rf "$SANDBOX"; exit 1; }
 
@@ -1113,7 +1113,7 @@ jq '
       "searchatlas": {
         "source": {
           "source": "github",
-          "repo": "searchatlas/amm-toolkit"
+          "repo": "search-atlas-group/amm-toolkit"
         }
       }
     }
@@ -1201,7 +1201,7 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 ### Using Claude Code? ðŸŸ¦
 
 ```
-/plugin marketplace add searchatlas/amm-toolkit
+/plugin marketplace add search-atlas-group/amm-toolkit
 /plugin install searchatlas-toolkit
 ```
 
@@ -1314,7 +1314,7 @@ If you've already deleted the cloned repo, just run the standard install above â
 
 ## Support
 
-- Issues: https://github.com/searchatlas/amm-toolkit/issues
+- Issues: https://github.com/search-atlas-group/amm-toolkit/issues
 - SearchAtlas help: https://help.searchatlas.com
 ```
 
@@ -1520,7 +1520,7 @@ git push origin main --tags
 
 - [ ] **Step 4: Done**
 
-Plugin is published. Users can now `/plugin marketplace add searchatlas/amm-toolkit && /plugin install searchatlas-toolkit`. Existing users can run `./scripts/migrate-to-plugin.sh` from their clone.
+Plugin is published. Users can now `/plugin marketplace add search-atlas-group/amm-toolkit && /plugin install searchatlas-toolkit`. Existing users can run `./scripts/migrate-to-plugin.sh` from their clone.
 
 ---
 

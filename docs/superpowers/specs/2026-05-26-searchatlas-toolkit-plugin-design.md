@@ -99,7 +99,7 @@ toolkit-public/
     "name": "SearchAtlas",
     "url": "https://searchatlas.com"
   },
-  "homepage": "https://github.com/searchatlas/amm-toolkit",
+  "homepage": "https://github.com/search-atlas-group/amm-toolkit",
   "license": "MIT",
 
   "mcpServers": {
@@ -139,7 +139,7 @@ toolkit-public/
 **Install flow for CLI users:**
 
 ```
-/plugin marketplace add searchatlas/amm-toolkit
+/plugin marketplace add search-atlas-group/amm-toolkit
 /plugin install searchatlas-toolkit
 ```
 
@@ -337,7 +337,7 @@ Next time the user opens Claude Code, they see a trust prompt:
 
 ```
 SearchAtlas Toolkit plugin requested by your settings.
-Trust this marketplace (searchatlas/amm-toolkit) and install? [y/n]
+Trust this marketplace (search-atlas-group/amm-toolkit) and install? [y/n]
 ```
 
 They press `y`. Plugin installed, MCP registered, AGENTS.md loaded, commands available.
@@ -352,7 +352,7 @@ They press `y`. Plugin installed, MCP registered, AGENTS.md loaded, commands ava
    ```json
    {
      "extraKnownMarketplaces": [
-       { "source": "github", "repo": "searchatlas/amm-toolkit" }
+       { "source": "github", "repo": "search-atlas-group/amm-toolkit" }
      ],
      "enabledPlugins": ["searchatlas-toolkit"]
    }
@@ -375,7 +375,7 @@ The nudge stops appearing once migration removes the hook itself. No one gets ba
 
 Fallback path in README:
 
-1. Run standard plugin install: `/plugin marketplace add searchatlas/amm-toolkit` then `/plugin install searchatlas-toolkit`.
+1. Run standard plugin install: `/plugin marketplace add search-atlas-group/amm-toolkit` then `/plugin install searchatlas-toolkit`.
 2. Plugin's SessionStart hook detects empty `~/.searchatlas/clients/` and offers a `/sa-help migrate-data` command that scans common locations (`~/Desktop`, `~/Documents`, `~/`) for old `toolkit-public/clients/` data and moves it.
 
 ---
