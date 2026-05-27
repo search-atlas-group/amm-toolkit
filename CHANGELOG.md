@@ -4,6 +4,14 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.4] — 2026-05-26
+
+### Fixed
+- **SessionStart banner never fired on install.** `plugin.json` declared `"hooks": "./hooks/hooks.json"`, but Claude Code auto-loads that standard path — the double reference triggered a "Duplicate hooks file detected" error and the hook failed to load entirely. Removed the redundant manifest field; `hooks/hooks.json` is now discovered automatically.
+
+### Added
+- Banner art reproduced at the top of `README.md` (renders in monospace on GitHub, matching the in-terminal splash).
+
 ## [2.2.3] — 2026-05-26
 
 ### Changed

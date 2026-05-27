@@ -1,5 +1,21 @@
 # SearchAtlas Toolkit
 
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                                          ·   ✦
+ ____                      _        _   _   _      ·
+/ ___|  ___  __ _ _ __ ___| |__    / \ | |_| | __ _ ___
+\___ \ / _ \/ _` | '__/ __| '_ \  / _ \| __| |/ _` / __|
+ ___) |  __/ (_| | | | (__| | | |/ ___ \ |_| | (_| \__ \
+|____/ \___|\__,_|_|  \___|_| |_/_/   \_\__|_|\__,_|___/   ✦
+
+  ✦  /\_/\     SEO · GBP · PPC · Content · AI Visibility
+    ( o.o )    Powered by the SearchAtlas MCP — auto-connected
+     >   <     21 commands ready  ·  /searchatlas:help
+    (")_(")              ·   ✦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
 > Official command-line toolkit for SearchAtlas — SEO, GBP, PPC, content, and AI visibility, all powered by the SearchAtlas MCP.
 
 For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, content, or AI visibility — solo operators, in-house teams, and agencies alike.
