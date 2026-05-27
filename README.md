@@ -46,6 +46,23 @@ https://mcp.searchatlas.com/mcp
 
 You won't get the `/searchatlas:*` slash commands or the routing skill (those are Claude Code-only), but you'll get full access to every SearchAtlas tool and can drive workflows by asking Claude in plain language.
 
+### Staying updated 🔄
+
+The marketplace tracks the `main` branch, so each release is live the moment it's pushed. To get updates **automatically**, enable auto-update for the marketplace (one-time):
+
+- Run `/plugin`, open the **Marketplaces** tab, select **searchatlas**, and enable **auto-update**.
+
+With that on, new releases land at your next Claude Code startup — no commands needed. (Auto-update is off by default for community marketplaces, so this opt-in is what makes updates hands-free.)
+
+To update **manually** at any time:
+
+```
+/plugin marketplace update searchatlas
+/plugin update searchatlas
+```
+
+Run the marketplace update first — `/plugin update` alone won't see a new release until the local marketplace metadata is refreshed.
+
 ---
 
 ## What You Get

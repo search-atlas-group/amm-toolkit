@@ -4,6 +4,23 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.5] — 2026-05-26
+
+### Changed
+- **Marketplace now tracks the `main` branch instead of a pinned version tag** (`source.ref: "main"`). Releases no longer require editing `marketplace.json` — a version bump + push to `main` is the whole release. This also removes the "ref lags the latest tag → marketplace serves a stale version" failure mode.
+
+### Added
+- `Scripts/release.sh` — one-command release: bumps `plugin.json` version, validates, commits, and pushes to `main` (optionally tags). Requires a matching `CHANGELOG.md` entry first.
+- README "Staying updated" section, including how to enable marketplace auto-update so future releases land at startup with no manual steps.
+
+### Note for existing users
+If you installed before v2.2.5 and aren't seeing updates, your local marketplace clone is cached at an older ref. Refresh it once:
+```
+/plugin marketplace update searchatlas
+/plugin update searchatlas
+```
+Enabling auto-update for the marketplace (see README) makes this automatic going forward.
+
 ## [2.2.4] — 2026-05-26
 
 ### Fixed
