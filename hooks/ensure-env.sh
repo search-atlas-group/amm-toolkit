@@ -38,7 +38,24 @@ if command -v claude >/dev/null 2>&1; then
   fi
 fi
 
-# 5. Emit as a visible systemMessage (jq encodes newlines/specials safely)
+# 5. Update check — nudge when a newer version is on main. The local compare is
+#    instant; the latest-version cache is refreshed in the background (urllib,
+#    3s timeout) so startup never blocks. Opt out with SA_NO_UPDATE_CHECK=1.
+if [ -z "${SA_NO_UPDATE_CHECK:-}" ] && command -v python3 >/dev/null 2>&1; then
+  UCACHE="$DATA_DIR/.update-check.json"
+  RAW_URL="https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/.claude-plugin/plugin.json"
+  # Refresh the cache in the background when missing or older than a day.
+  if [ ! -f "$UCACHE" ] || [ -n "$(find "$UCACHE" -mtime +1 2>/dev/null)" ]; then
+    ( python3 "$SCRIPT_DIR/update-fetch.py" "$RAW_URL" "$UCACHE" & ) >/dev/null 2>&1
+  fi
+  UPDATE_LINE="$(python3 "$SCRIPT_DIR/update-check.py" "$SCRIPT_DIR/../.claude-plugin/plugin.json" "$UCACHE" 2>/dev/null)"
+  if [ -n "$UPDATE_LINE" ]; then
+    MSG="$MSG
+$UPDATE_LINE"
+  fi
+fi
+
+# 6. Emit as a visible systemMessage (jq encodes newlines/specials safely)
 if command -v jq >/dev/null 2>&1; then
   jq -n --arg m "$MSG" '{systemMessage:$m}'
 else

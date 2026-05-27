@@ -4,6 +4,11 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.6] — 2026-05-26
+
+### Added
+- **"Update available" nudge.** The SessionStart hook now compares your installed version against the latest on `main` and, when you're behind, appends a line to the banner: `⬆ SearchAtlas vX.Y.Z available (you're on vA.B.C) — run: /plugin marketplace update searchatlas && /plugin update searchatlas`. The latest-version cache is refreshed in the background (urllib, 3s timeout, ~24h cache) so startup never blocks. Opt out with `SA_NO_UPDATE_CHECK=1`. Helpers: `hooks/update-check.py` (local compare) and `hooks/update-fetch.py` (background fetch).
+
 ## [2.2.5] — 2026-05-26
 
 ### Changed
