@@ -31,6 +31,8 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 /plugin install searchatlas
 ```
 
+Then **restart Claude Code** to finish setup. (A restart activates everything and shows the welcome banner — `/reload-plugins` alone hot-loads the commands but skips the welcome.)
+
 That's it. First time you run a `/searchatlas:*` command, you'll be prompted to authorize SearchAtlas via OAuth. New to SearchAtlas? You'll be prompted to create a free account during auth.
 
 ### Using Claude Desktop, claude.ai, or Cowork? 🟪
