@@ -96,6 +96,10 @@ async def _idle_watcher() -> None:
 def find_toolkit_root(start: Path) -> Path:
     cur = start
     for _ in range(6):
+        if (cur / ".claude-plugin" / "plugin.json").exists():
+            return cur
+        if (cur / "commands" / "advanced" / "rebuild-website.md").exists():
+            return cur
         if (cur / "commands" / "rebuild-website.md").exists():
             return cur
         cur = cur.parent
