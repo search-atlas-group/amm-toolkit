@@ -4,6 +4,25 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.7] — 2026-05-27
+
+### Fixed
+- **Install failed on machines without GitHub SSH keys.** The plugin's source used the `github` shorthand (`{"source":"github","repo":"…"}`), which delegates clone protocol to the user's git config — boxes without SSH keys configured for GitHub were getting "Permission denied (publickey)" errors. Switched to an explicit HTTPS URL source (`{"source":"url","url":"https://github.com/…/.git","ref":"main"}`) so any user can install anonymously with zero auth.
+- README quickstart now uses the **explicit HTTPS marketplace URL** for `/plugin marketplace add` (instead of the `owner/repo` shorthand), for the same reason — the shorthand path can also resolve to SSH on some machines.
+
+### Note for users hit by the SSH error
+Either reinstall against the new HTTPS-source marketplace:
+```
+/plugin marketplace remove searchatlas
+/plugin marketplace add https://github.com/search-atlas-group/amm-toolkit.git
+/plugin install searchatlas
+```
+…or simply refresh and update if you already added it:
+```
+/plugin marketplace update searchatlas
+/plugin update searchatlas
+```
+
 ## [2.2.6] — 2026-05-26
 
 ### Added

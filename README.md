@@ -27,7 +27,7 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 ### Using Claude Code? 🟦
 
 ```
-/plugin marketplace add search-atlas-group/amm-toolkit
+/plugin marketplace add https://github.com/search-atlas-group/amm-toolkit.git
 /plugin install searchatlas
 ```
 
