@@ -511,6 +511,7 @@
         <span class="progress-num" id="progressNum">0%</span>
       </div>
       <div id="connWrap" title="Checking…"><span class="conn-dot" id="connDot"></span><span id="connText">Checking…</span></div>
+      <button onclick="stopWizard()" title="Cleanly stop the local wizard server (auto-stops after 5 min idle)" style="background:#fff5f5; border:1px solid #fecaca; color:#991b1b; padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer;">Stop wizard</button>
     </div>
   </header>
 
@@ -743,6 +744,18 @@ Internal lingo: we say 'investment' not 'cost', 'treatment plan' not 'quote'. Ow
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script>
+// Stop the local wizard server cleanly from the UI. Defined outside the
+// main IIFE so the onclick handler can resolve it.
+async function stopWizard() {
+  if (!confirm('Stop the wizard? Any in-progress work in this tab will be lost.')) return;
+  try {
+    await fetch('/api/shutdown', { method: 'POST' });
+  } catch (_) { /* server already gone */ }
+  document.body.innerHTML = '<div style="padding:60px 24px; text-align:center; font-family:system-ui,-apple-system,sans-serif; color:#666;"><div style="font-size:42px; margin-bottom:14px;">✓</div><div style="font-size:18px; font-weight:600; margin-bottom:6px; color:#222;">Wizard stopped</div><div style="font-size:14px; color:#888;">Close this tab, or re-run <code style="background:#f3f0ff; padding:2px 6px; border-radius:4px;">bash run.sh</code> to start again.</div></div>';
+}
+</script>
 
 <script>
 (() => {

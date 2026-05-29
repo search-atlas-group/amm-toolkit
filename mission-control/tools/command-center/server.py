@@ -11,7 +11,7 @@ Form payload from the UI is converted into a single self-contained prompt that:
   4. Runs each selected service's onboarding playbook from workflows/.
   5. Returns the standard Phase 5 summary.
 
-Stream parsing is deliberately friendly: raw `mcp__claude_ai_Search_Atlas__*`
+Stream parsing is deliberately friendly: raw `{SA_NS}*`
 tool names are mapped to readable process labels ("Scoring holistic SEO
 pillars…", "Creating brand vault…", "Searching Google Business listings…")
 before being forwarded to the browser. Internal tools (Read, Skill,
