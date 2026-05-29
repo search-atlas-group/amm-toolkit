@@ -11,7 +11,7 @@ Form payload from the UI is converted into a single self-contained prompt that:
   4. Runs each selected service's onboarding playbook from workflows/.
   5. Returns the standard Phase 5 summary.
 
-Stream parsing is deliberately friendly: raw `{SA_NS}*`
+Stream parsing is deliberately friendly: raw `__SA_NS__*`
 tool names are mapped to readable process labels ("Scoring holistic SEO
 pillars…", "Creating brand vault…", "Searching Google Business listings…")
 before being forwarded to the browser. Internal tools (Read, Skill,
@@ -33,6 +33,11 @@ from typing import AsyncIterator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+
+# Shared SA namespace discovery — see mission-control/tools/_shared/.
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from _shared.sa_namespace import discover_sa_namespace  # noqa: E402
 
 
 HERE = Path(__file__).resolve().parent
@@ -315,32 +320,15 @@ _MCP_CACHE_TTL = 300
 
 
 async def _check_sa_mcp_configured(claude_path: str) -> bool:
+    """Returns True if SearchAtlas is reachable in this Claude setup —
+    either via CLI install OR via a claude.ai web connector. Delegates to
+    the shared two-stage namespace discovery so step endpoints don't
+    false-negative for users who installed SA outside `claude mcp add`."""
     now = time.monotonic()
     if now - _mcp_cache["checked_at"] < _MCP_CACHE_TTL:
         return bool(_mcp_cache["sa_configured"])
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            claude_path, "mcp", "list",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
-        text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        # SA can be registered under several names — match any reasonable form:
-        # - claude.ai connector → "claude.ai Search Atlas" (with space) → lowercase "search atlas"
-        # - manually added via `claude mcp add searchatlas …` → "searchatlas"
-        # - other variants (search-atlas, search_atlas) seen in older installs
-        # The URL `mcp.searchatlas.com` is the most reliable signal because
-        # it appears in EVERY registration regardless of the display name.
-        ok = (
-            "mcp.searchatlas.com" in text
-            or "searchatlas" in text
-            or "search atlas" in text
-            or "search-atlas" in text
-            or "search_atlas" in text
-        )
-    except Exception:
-        ok = False
+    ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
+    ok = ns is not None
     _mcp_cache["checked_at"] = now
     _mcp_cache["sa_configured"] = ok
     return ok

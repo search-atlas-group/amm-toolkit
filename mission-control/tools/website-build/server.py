@@ -365,6 +365,15 @@ _MCP_CACHE_TTL_FAIL = 10  # HIGH-6: never trap operator in a 5-minute false nega
 
 
 async def _check_sa_mcp_configured(claude_path: str) -> bool:
+    """Returns True if SearchAtlas is reachable in this Claude setup —
+    either via CLI install OR via a claude.ai web connector. Delegates to
+    the shared two-stage namespace discovery so step endpoints don't
+    false-negative for users who installed SA outside `claude mcp add`.
+
+    The old short-cache layer (5-min OK TTL, 10-s fail TTL) is preserved
+    here for callers that don't need the actual namespace — only a yes/no
+    answer. Successful discovery in `_NS_CACHE` is the authoritative signal.
+    """
     now = time.monotonic()
     elapsed = now - _mcp_cache["checked_at"]
     cached_ok = bool(_mcp_cache.get("sa_configured"))
@@ -372,23 +381,10 @@ async def _check_sa_mcp_configured(claude_path: str) -> bool:
         return True
     if (not cached_ok) and elapsed < _MCP_CACHE_TTL_FAIL:
         return False
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            claude_path, "mcp", "list",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
-        text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        ok = (
-            "mcp.searchatlas.com" in text
-            or "searchatlas" in text
-            or "search atlas" in text
-            or "search-atlas" in text
-            or "search_atlas" in text
-        )
-    except Exception:
-        ok = False
+
+    ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
+    ok = ns is not None
+
     _mcp_cache["checked_at"] = now
     _mcp_cache["sa_configured"] = ok
     return ok
@@ -434,10 +430,10 @@ def domain_to_slug(domain: str) -> str:
 MCP_NAMESPACE_HINT = (
     "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed under one of two\n"
     "namespace prefixes depending on how the user installed the connector:\n"
-    "  - `{SA_NS}<tool>`               (manual `claude mcp add` install)\n"
-    "  - `{SA_NS}<tool>`    (claude.ai connector install)\n"
+    "  - `__SA_NS__<tool>`               (manual `claude mcp add` install)\n"
+    "  - `__SA_NS__<tool>`    (claude.ai connector install)\n"
     "If a referenced tool name isn't directly available in your tool set,\n"
-    "call `ToolSearch` with the query `select:{SA_NS}<tool>`\n"
+    "call `ToolSearch` with the query `select:__SA_NS__<tool>`\n"
     "to load its schema, then call the loaded tool. Use whichever variant works.\n"
     "Either namespace produces an identical response shape.\n"
     "\n"
@@ -489,7 +485,7 @@ async def run_claude_step(
         out.stderr_text = "claude CLI not found on PATH"
         return out
 
-    # Resolve {SA_NS} placeholder in the prompt using whatever namespace this
+    # Resolve __SA_NS__ placeholder in the prompt using whatever namespace this
     # user's SearchAtlas connector lives at. Falls back to empty-string
     # substitution if discovery can't find SA — the spawned model can still
     # locate the tool via ToolSearch or will fail clearly.
@@ -645,10 +641,10 @@ def _called_required_tools(run: ClaudeRunResult, required: list[str]) -> bool:
 
 AUTH_PROBE_PROMPT = """You are a non-interactive auth probe for the SearchAtlas MCP connector.
 
-Call `{SA_NS}cg_list_brand_vaults` with empty input, then emit the result block.
+Call `__SA_NS__cg_list_brand_vaults` with empty input, then emit the result block.
 
-If `{SA_NS}cg_list_brand_vaults` is not loaded in your tool list yet, first call
-`ToolSearch` with the query `{SA_NS}cg_list_brand_vaults` to surface it, then
+If `__SA_NS__cg_list_brand_vaults` is not loaded in your tool list yet, first call
+`ToolSearch` with the query `__SA_NS__cg_list_brand_vaults` to surface it, then
 call it.
 
 If even after ToolSearch you cannot locate `cg_list_brand_vaults` under ANY
@@ -817,9 +813,9 @@ Location hint: {location or "(unknown)"}
 
 Fire BOTH tools in parallel (single tool batch):
 
-  1. {SA_NS}cg_list_brand_vaults  with input filtering by the hostname `{domain}`
+  1. __SA_NS__cg_list_brand_vaults  with input filtering by the hostname `{domain}`
      (try {{ "search": "{domain}" }} or {{ "domain": "{domain}" }} — whichever the schema accepts).
-  2. {SA_NS}gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
+  2. __SA_NS__gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
      (try {{ "search": "{business or domain}" }} or {{ "domain": "{domain}" }} — whichever is accepted).
 
 Then emit exactly one result block. Use ONLY real values returned by the tools — never invent UUIDs.
@@ -926,10 +922,10 @@ Hostname: {hostname}
 
 Fire all FOUR tools in parallel (single tool batch):
 
-  1. {SA_NS}bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
-  2. {SA_NS}bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
-  3. {SA_NS}bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
-  4. {SA_NS}bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
+  1. __SA_NS__bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
+  2. __SA_NS__bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
+  3. __SA_NS__bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
+  4. __SA_NS__bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
 
 Then emit exactly one result block with the real values returned:
 
@@ -1016,19 +1012,19 @@ Operator-confirmed fields:
 
 Perform these tool calls in order (each call must wait on the prior's response):
 
-  1. {SA_NS}bv_create
+  1. __SA_NS__bv_create
        input: {{ "domain": "<from payload.domain>", "name": "<from payload.business_name>" }}
        → capture the returned brand_vault_uuid.
 
-  2. {SA_NS}bv_update_business_info
+  2. __SA_NS__bv_update_business_info
        input: {{ "uuid": "<uuid from step 1>", "business_name": ..., "industry": ..., "phone": ..., "address": ..., "hours": ..., "service_areas": ... }}
        (populate from payload — omit empty fields, do not invent).
 
-  3. {SA_NS}bv_update
+  3. __SA_NS__bv_update
        input: {{ "uuid": "<uuid>", "primary_color": ..., "secondary_color": ..., "voice_tone": ..., "voice_style": ..., "voice_avoid": ... }}
        (only set fields that are present in the payload).
 
-  4. {SA_NS}bv_update_knowledge_graph
+  4. __SA_NS__bv_update_knowledge_graph
        input: {{ "uuid": "<uuid>", "entities": [...], "competitors": [...] }}
        (only set fields that are present in the payload).
 
@@ -1132,23 +1128,23 @@ Run TWO parallel waves of SA MCP tools, then synthesize a proposed sitemap.
 
 For each target keyword in `payload.target_keywords` (or, if empty, infer 3 seed keywords from services × location × industry):
 
-  - {SA_NS}se_lookup_keyword       → volume + intent + difficulty
-  - {SA_NS}se_get_serp_overview    → who ranks today
-  - {SA_NS}se_get_serp_features    → which SERP features
+  - __SA_NS__se_lookup_keyword       → volume + intent + difficulty
+  - __SA_NS__se_get_serp_overview    → who ranks today
+  - __SA_NS__se_get_serp_features    → which SERP features
 
 Also fire ONCE in the same batch:
 
-  - {SA_NS}gbp_list_categories            → category taxonomy
-  - {SA_NS}se_get_organic_competitors per keyword → discovered competitors
+  - __SA_NS__gbp_list_categories            → category taxonomy
+  - __SA_NS__se_get_organic_competitors per keyword → discovered competitors
 
 Merge auto-discovered competitors with `payload.known_competitors`, cap at 5.
 
 ### Wave 2 (fire all four tools in a SINGLE tool batch, after Wave 1 returns)
 
-  - {SA_NS}se_get_indexed_pages per competitor → real page structures
-  - {SA_NS}se_analyze_keyword_gap between competitors → unclaimed territory
-  - {SA_NS}cg_create_topical_map seeded with the Wave 1 keyword data
-  - {SA_NS}cg_topic_suggestions (no BV uuid required — use `domain` if needed)
+  - __SA_NS__se_get_indexed_pages per competitor → real page structures
+  - __SA_NS__se_analyze_keyword_gap between competitors → unclaimed territory
+  - __SA_NS__cg_create_topical_map seeded with the Wave 1 keyword data
+  - __SA_NS__cg_topic_suggestions (no BV uuid required — use `domain` if needed)
 
 ### Synthesis
 
@@ -1450,9 +1446,9 @@ def build_prompt(payload: dict) -> str:
     L.append(f"Use slug `{slug}` for the local project folder.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `{SA_NS}cg_list_brand_vaults` with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `__SA_NS__cg_list_brand_vaults` with empty params `{}` as an authentication probe.")
     L.append("")
-    L.append("If that probe (or ANY subsequent `{SA_NS}*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
+    L.append("If that probe (or ANY subsequent `__SA_NS__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")
     L.append("1. IMMEDIATELY emit exactly this on its own line: `## Phase ERROR — AUTHENTICATION REQUIRED`")
     L.append("2. Then emit one paragraph: `Search Atlas MCP is not authenticated in this Claude Code session. Open Claude.ai, run /mcp, and complete the OAuth flow for the SearchAtlas connector. Then re-run this build.`")
@@ -1460,7 +1456,7 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("**HARD RULES — NEVER violate:**")
     L.append("- NEVER fabricate UUIDs, project IDs, Website Studio URLs, or any data that should come from a real MCP call. If you don't have it from a successful tool response, omit the line.")
-    L.append("- NEVER say `Build complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `{SA_NS}ws_publish_project` actually returned a URL in this run.")
+    L.append("- NEVER say `Build complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `__SA_NS__ws_publish_project` actually returned a URL in this run.")
     L.append("- NEVER `proceed with local artifacts` as a fallback for failed MCP calls. The user does NOT want a fake run.")
     L.append("- If the auth probe succeeds, proceed normally with the phases below using real MCP calls only.")
     L.append("")
@@ -1837,9 +1833,11 @@ def parse_claude_event(raw_line: str) -> list[dict]:
                     "ws_publish_project" in tool_name.lower()
                 )
                 short = short_tool_name(tool_name)
+                # Any mcp__<namespace>__<tool> is treated as a SearchAtlas call
+                # (the wizards only ever ask Claude to call SA tools through
+                # MCP), plus an explicit fallback for anything we've labeled.
                 is_sa = (
-                    tool_name.startswith("{SA_NS}")
-                    or tool_name.startswith("{SA_NS}")
+                    tool_name.startswith("mcp__")
                     or short in TOOL_LABELS
                 )
                 _state.setdefault("tool_use_index", {})[tool_use_id] = {

@@ -14,7 +14,7 @@ This server has TWO modes:
    structured JSON to the frontend.
 
 HARD GUARDRAILS shared across every bridge:
-- If the Claude session never emits ANY `{SA_NS}*` tool_use,
+- If the Claude session never emits ANY `__SA_NS__*` tool_use,
   the bridge returns 502 `{"error": "no_tool_calls_made"}`.
 - If ANY tool_result text contains an auth/OAuth/401 signal, the bridge
   returns 401 `{"error": "authentication_required"}`.
@@ -338,28 +338,15 @@ _MCP_CACHE_TTL = 300
 
 
 async def _check_sa_mcp_configured(claude_path: str) -> bool:
+    """Returns True if SearchAtlas is reachable in this Claude setup —
+    either via CLI install OR via a claude.ai web connector. Delegates to
+    the shared two-stage namespace discovery so step endpoints don't
+    false-negative for users who installed SA outside `claude mcp add`."""
     now = time.monotonic()
     if now - _mcp_cache["checked_at"] < _MCP_CACHE_TTL:
         return bool(_mcp_cache["sa_configured"])
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            claude_path, "mcp", "list",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
-        text = (stdout or b"").decode("utf-8", errors="replace").lower()
-        # The local install may expose the SA MCP under any of these names —
-        # all should count as "configured".
-        ok = (
-            ("mcp.searchatlas.com" in text)
-            or ("searchatlas" in text)
-            or ("search atlas" in text)
-            or ("search-atlas" in text)
-            or ("search_atlas" in text)
-        )
-    except Exception:
-        ok = False
+    ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
+    ok = ns is not None
     _mcp_cache["checked_at"] = now
     _mcp_cache["sa_configured"] = ok
     return ok
@@ -461,7 +448,7 @@ async def run_claude_session(
             "auth_error": False, "timed_out": False,
         }
 
-    # Resolve {SA_NS} placeholder in the prompt using whatever namespace this
+    # Resolve __SA_NS__ placeholder in the prompt using whatever namespace this
     # user's SearchAtlas connector lives at. Falls back to empty-string
     # substitution if discovery can't find SA.
     sa_ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
@@ -595,7 +582,7 @@ async def run_claude_session(
 
 def is_sa_tool(name: str) -> bool:
     """Detect any Search Atlas MCP call regardless of which namespace prefix
-    the local Claude install uses (`{SA_NS}*`, `{SA_NS}*`, etc.)."""
+    the local Claude install uses (`__SA_NS__*`, `__SA_NS__*`, etc.)."""
     if not name:
         return False
     low = name.lower()
@@ -672,8 +659,8 @@ async def auth_probe(request: Request):
         "Call the Search Atlas MCP tool `cg_list_brand_vaults` with empty params `{}` "
         "as an authentication probe. The tool will be exposed under one of these prefixed names — "
         "use whichever variant is available:\n"
-        "  - `{SA_NS}cg_list_brand_vaults`\n"
-        "  - `{SA_NS}cg_list_brand_vaults`\n\n"
+        "  - `__SA_NS__cg_list_brand_vaults`\n"
+        "  - `__SA_NS__cg_list_brand_vaults`\n\n"
         "RULES:\n"
         "- Call cg_list_brand_vaults exactly once via whichever Search Atlas namespace is connected.\n"
         "- Do NOT call WebFetch, Read, Bash, or any other tool.\n"
@@ -998,8 +985,8 @@ def _build_asset_inheritance_prompt(domain: str) -> str:
 Run these Search Atlas MCP calls IN PARALLEL and return a single JSON object with the merged result. Do not narrate. Do not call any non-SearchAtlas tool.
 
 The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever variant is available in this session:
-- `{SA_NS}<tool>`
-- `{SA_NS}<tool>`
+- `__SA_NS__<tool>`
+- `__SA_NS__<tool>`
 
 Required calls (fire each exactly once, in parallel):
 
@@ -1121,8 +1108,8 @@ def _build_link_preservation_prompt(domain: str, urls: list[str]) -> str:
     return f"""# Link equity preservation probe for `{domain}`
 
 The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `{SA_NS}<tool>`
-- `{SA_NS}<tool>`
+- `__SA_NS__<tool>`
+- `__SA_NS__<tool>`
 
 For EACH of the high-Authority Keep URLs below, fire IN PARALLEL:
 - `se_get_anchor_text` for that URL
@@ -1213,8 +1200,8 @@ def _build_pre_launch_prompt(domain: str, tracked: list[str]) -> str:
 Capture the CURRENT (pre-launch) state of the old domain so the rebuild can later compute a delta.
 
 The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `{SA_NS}<tool>`
-- `{SA_NS}<tool>`
+- `__SA_NS__<tool>`
+- `__SA_NS__<tool>`
 
 Required calls (fire in parallel):
 1. `krt_list_projects` with `{{}}` → find the KRT project matching `{domain}`.
@@ -1309,8 +1296,8 @@ def _build_new_page_evidence_prompt(domain: str, candidates: list[dict], competi
     return f"""# NEW page evidence research for `{domain}`
 
 The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `{SA_NS}<tool>`
-- `{SA_NS}<tool>`
+- `__SA_NS__<tool>`
+- `__SA_NS__<tool>`
 
 For each NEW page candidate below, fire IN PARALLEL:
 1. `se_lookup_keyword` for its primary_kw (volume + difficulty + intent)
@@ -1381,7 +1368,7 @@ async def new_page_evidence(request: Request):
             yield await emit({"type": "error", "message": "claude CLI not found"})
             return
 
-        # Resolve {SA_NS} placeholder using this user's actual SA namespace.
+        # Resolve __SA_NS__ placeholder using this user's actual SA namespace.
         sa_ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
         rendered_prompt = render_prompt(prompt, sa_ns)
 
@@ -1544,9 +1531,9 @@ def build_prompt(payload: dict) -> str:
     L.append("**Skip Phase 0** (target identification + scout ingest) — the wizard already did it.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `cg_list_brand_vaults` (under either `{SA_NS}` or `{SA_NS}` — use whichever namespace is connected) with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `cg_list_brand_vaults` (under either `__SA_NS__` or `__SA_NS__` — use whichever namespace is connected) with empty params `{}` as an authentication probe.")
     L.append("")
-    L.append("If that probe (or ANY subsequent `{SA_NS}*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
+    L.append("If that probe (or ANY subsequent `__SA_NS__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")
     L.append("1. IMMEDIATELY emit exactly this on its own line: `## Phase ERROR — AUTHENTICATION REQUIRED`")
     L.append("2. Then emit one paragraph: `Search Atlas MCP is not authenticated in this Claude Code session. Open Claude.ai, run /mcp, and complete the OAuth flow for the SearchAtlas connector. Then re-run this rebuild.`")
@@ -1554,7 +1541,7 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("**HARD RULES — NEVER violate:**")
     L.append("- NEVER fabricate UUIDs, project IDs, Website Studio URLs, or any data that should come from a real MCP call.")
-    L.append("- NEVER say `Build complete`, `Migration complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `{SA_NS}ws_publish_project` actually returned a URL in this run.")
+    L.append("- NEVER say `Build complete`, `Migration complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `__SA_NS__ws_publish_project` actually returned a URL in this run.")
     L.append("- NEVER `proceed with local artifacts` as a fallback for failed MCP calls. The user wants either a real rebuild or a clear error.")
     L.append("- If the auth probe succeeds, proceed normally with the phases below using real MCP calls only.")
     L.append("")

@@ -210,7 +210,13 @@ async def discover_sa_namespace(claude_path: str, cwd: str) -> Optional[str]:
 
 
 def render_prompt(template: str, sa_ns: Optional[str]) -> str:
-    """Substitute ``{SA_NS}`` in the template with the discovered prefix.
+    """Substitute ``__SA_NS__`` in the template with the discovered prefix.
+
+    The placeholder uses ``__SA_NS__`` rather than ``{SA_NS}`` so that
+    prompt templates can be Python f-strings (which contain other
+    interpolations like ``{domain}``) without Python trying to resolve
+    ``SA_NS`` as a variable. The double-underscore form is render-safe
+    inside f-strings, plain strings, and docstrings alike.
 
     If sa_ns is None (discovery failed), substitute with an empty string —
     the spawned Claude will then see naked tool names like
@@ -218,7 +224,7 @@ def render_prompt(template: str, sa_ns: Optional[str]) -> str:
     explicitly, which the caller handles via the structured auth-probe
     response). Idempotent.
     """
-    return template.replace("{SA_NS}", sa_ns or "")
+    return template.replace("__SA_NS__", sa_ns or "")
 
 
 def reset_cache_for_tests() -> None:
