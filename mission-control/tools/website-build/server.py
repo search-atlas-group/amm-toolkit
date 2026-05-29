@@ -69,6 +69,14 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
+# Import shared SA namespace discovery from the sibling _shared package.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from _shared.sa_namespace import (  # noqa: E402
+    discover_sa_namespace,
+    render_prompt,
+    check_sa_via_cli,
+)
+
 
 HERE = Path(__file__).resolve().parent
 AUDIT_LOG = Path("/tmp/amm-website-build-audit.log")
@@ -331,6 +339,23 @@ async def ping():
     return {"ok": True, "bridge": "website-build"}
 
 
+@app.post("/api/shutdown")
+async def shutdown():
+    """Called by the Stop button in the UI. Schedules a SIGTERM ~200ms in the
+    future so the HTTP response returns to the browser first."""
+    audit("shutdown:requested", {})
+
+    async def _kill_self():
+        await asyncio.sleep(0.2)
+        try:
+            os.kill(os.getpid(), signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+    asyncio.create_task(_kill_self())
+    return {"ok": True, "message": "shutting down"}
+
+
 # ── Health (cached) ──────────────────────────────────────────────────────────
 
 
@@ -409,10 +434,10 @@ def domain_to_slug(domain: str) -> str:
 MCP_NAMESPACE_HINT = (
     "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed under one of two\n"
     "namespace prefixes depending on how the user installed the connector:\n"
-    "  - `mcp__searchatlas__<tool>`               (manual `claude mcp add` install)\n"
-    "  - `mcp__claude_ai_Search_Atlas__<tool>`    (claude.ai connector install)\n"
+    "  - `{SA_NS}<tool>`               (manual `claude mcp add` install)\n"
+    "  - `{SA_NS}<tool>`    (claude.ai connector install)\n"
     "If a referenced tool name isn't directly available in your tool set,\n"
-    "call `ToolSearch` with the query `select:mcp__claude_ai_Search_Atlas__<tool>`\n"
+    "call `ToolSearch` with the query `select:{SA_NS}<tool>`\n"
     "to load its schema, then call the loaded tool. Use whichever variant works.\n"
     "Either namespace produces an identical response shape.\n"
     "\n"
@@ -463,6 +488,13 @@ async def run_claude_step(
     if not claude_path:
         out.stderr_text = "claude CLI not found on PATH"
         return out
+
+    # Resolve {SA_NS} placeholder in the prompt using whatever namespace this
+    # user's SearchAtlas connector lives at. Falls back to empty-string
+    # substitution if discovery can't find SA — the spawned model can still
+    # locate the tool via ToolSearch or will fail clearly.
+    sa_ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
+    prompt = render_prompt(prompt, sa_ns)
 
     cmd = [
         claude_path, "-p",
@@ -613,49 +645,88 @@ def _called_required_tools(run: ClaudeRunResult, required: list[str]) -> bool:
 
 AUTH_PROBE_PROMPT = """You are a non-interactive auth probe for the SearchAtlas MCP connector.
 
-Call exactly ONE Search Atlas MCP tool, with empty parameters, then emit the
-result block. The Search Atlas MCP may be exposed under any of these
-namespace prefixes — use whichever variant is available in this session:
+Call `{SA_NS}cg_list_brand_vaults` with empty input, then emit the result block.
 
-  - mcp__searchatlas__cg_list_brand_vaults
-  - mcp__claude_ai_Search_Atlas__cg_list_brand_vaults
+If `{SA_NS}cg_list_brand_vaults` is not loaded in your tool list yet, first call
+`ToolSearch` with the query `{SA_NS}cg_list_brand_vaults` to surface it, then
+call it.
+
+If even after ToolSearch you cannot locate `cg_list_brand_vaults` under ANY
+namespace, the SearchAtlas connector is not installed in this session — emit
+the result block with authenticated: false and error: "tool_not_available".
 
 Input: {}
 
-If you cannot find ANY variant of `cg_list_brand_vaults` in your available
-tools, you MUST first call `ToolSearch` with the query
-`select:mcp__claude_ai_Search_Atlas__cg_list_brand_vaults` to load its schema,
-then immediately call the loaded tool. This is acceptable.
-
-After the SA tool returns, emit on its own line, with no prefix:
+After the SA tool returns (or you confirm it's not available), emit on its own line, with no prefix:
 
 <<<RESULT>>>{"authenticated": <true|false>, "tool_called": "cg_list_brand_vaults", "error": "<short message or empty>"}<<<END>>>
 
 Rules:
 - If the tool returns ANY result (even an empty list) → authenticated: true, error: "".
 - If the tool returns an authentication / OAuth / 401 / "not authenticated" / "unauthorized" / "connector not authenticated" error → authenticated: false, error: <the error message, single line, < 240 chars>.
-- Do NOT invent or simulate a response. The probe is invalid unless the real SA tool was invoked.
+- Do NOT invent or simulate a response. The probe is invalid unless the real SA tool was invoked or confirmed unavailable.
 - After emitting the RESULT block, stop. Do not continue.
 - Do not call WebFetch, Read, Bash, Edit, or any tool other than ToolSearch (to load) and the SA cg_list_brand_vaults tool.
 """
 
 
+def _classify_auth_error(err_text: str) -> bool:
+    """Return True if the error string looks like an OAuth / unauthorized
+    failure (as opposed to a generic tool-not-found or network problem)."""
+    if not err_text:
+        return False
+    low = err_text.lower()
+    return any(needle in low for needle in (
+        "unauthorized",
+        "not authenticated",
+        "connector not authenticated",
+        "401",
+        "oauth",
+        "auth required",
+        "authentication required",
+        "invalid token",
+        "expired token",
+        "expired credential",
+    ))
+
+
 @app.post("/api/auth-probe")
 async def auth_probe(request: Request):
+    """Returns a structured 4-state response so the frontend can show
+    accurate copy. States:
+
+      - ok                  — discovery + probe call both succeeded
+      - not_installed       — SearchAtlas not detectable in this Claude setup
+      - oauth_expired       — tool exists but call returned an auth/401 error
+      - discovery_timeout   — probe timed out or model never reached a verdict
+
+    The previous ``{"authenticated": ..., "error": ...}`` shape is gone;
+    callers must now branch on ``state``.
+    """
     rid = uuid.uuid4().hex[:8]
     audit("auth-probe:request", {"rid": rid})
 
-    # Fast path: if `claude mcp list` doesn't show searchatlas, no need to spawn
-    # a 60-second subprocess just to discover the connector is missing.
     claude_path = shutil.which("claude")
-    if claude_path:
-        sa_configured = await _check_sa_mcp_configured(claude_path)
-        if not sa_configured:
-            audit("auth-probe:short-circuit", {"rid": rid, "reason": "mcp_not_configured"})
-            return JSONResponse(
-                {"authenticated": False, "error": "searchatlas_mcp_not_configured"},
-                status_code=200,
-            )
+    if not claude_path:
+        audit("auth-probe:no-claude", {"rid": rid})
+        return JSONResponse({
+            "state": "not_installed",
+            "reason": "claude CLI not on PATH",
+            "hint": "Install Claude Code from https://claude.com/code, then re-run the wizard.",
+        }, status_code=200)
+
+    # Two-stage namespace discovery. If both stages fail, SearchAtlas isn't
+    # reachable in this user's Claude setup at all — that's the
+    # not_installed state. This is the load-bearing fix for users who have
+    # SearchAtlas as a claude.ai web connector (invisible to `claude mcp list`).
+    sa_ns = await discover_sa_namespace(claude_path, str(TOOLKIT_ROOT))
+    if sa_ns is None:
+        audit("auth-probe:no-namespace", {"rid": rid})
+        return JSONResponse({
+            "state": "not_installed",
+            "reason": "no SearchAtlas MCP found in this Claude Code setup",
+            "hint": "Run /mcp in Claude Code and connect SearchAtlas, OR add the SearchAtlas connector in your claude.ai account. Then click Retry.",
+        }, status_code=200)
 
     try:
         run = await run_claude_step(
@@ -666,10 +737,16 @@ async def auth_probe(request: Request):
         )
     except Exception as exc:
         audit("auth-probe:exception", {"rid": rid, "err": str(exc)})
-        return JSONResponse({"authenticated": False, "error": f"server_error: {exc}"}, status_code=500)
+        return JSONResponse({
+            "state": "discovery_timeout",
+            "reason": f"server_error: {exc}",
+            "hint": "Click Retry, or restart the wizard.",
+            "namespace": sa_ns,
+        }, status_code=200)
 
     audit("auth-probe:tool_calls", {
         "rid": rid,
+        "namespace": sa_ns,
         "tool_calls": [t.get("name") for t in run.tool_calls],
         "tool_results_n": len(run.tool_results),
         "rc": run.rc,
@@ -678,59 +755,54 @@ async def auth_probe(request: Request):
     })
 
     if run.timeout:
-        # Treat as not-authenticated rather than a hard 504 — the modal will
-        # show a friendly retry path and the wizard stays operable.
-        return JSONResponse(
-            {"authenticated": False, "error": "timeout — probe took too long"},
-            status_code=200,
-        )
+        return JSONResponse({
+            "state": "discovery_timeout",
+            "reason": "probe took longer than 45s",
+            "hint": "Click Retry, or restart the wizard.",
+            "namespace": sa_ns,
+        }, status_code=200)
 
-    # No tool calls at all → cannot trust the answer
-    if not run.tool_calls:
-        return JSONResponse(
-            {"authenticated": False, "error": "no_tool_calls_made"},
-            status_code=200,
-        )
-
-    # We require the model to have called cg_list_brand_vaults via ANY namespace.
-    # If it only called ToolSearch (deferred-tool loader) and never reached the
-    # SA tool, fall through to the result_blob, which the model populates with
-    # the error message — that's still authoritative for our auth verdict.
-    called_sa_bv = _called_required_tools(run, ["cg_list_brand_vaults"])
     blob = run.result_blob or {}
+    err_text = (blob.get("error") or "").strip()
+    called_sa_bv = _called_required_tools(run, ["cg_list_brand_vaults"])
 
-    if not called_sa_bv:
-        # Trust the result blob if the model honestly reported that the tool
-        # wasn't available in this environment. That's the same outcome as
-        # "MCP not configured" from the user's perspective.
-        err = (blob.get("error") or "").strip()
-        if err:
-            return JSONResponse(
-                {"authenticated": False, "error": err},
-                status_code=200,
-            )
-        audit("auth-probe:wrong-tool", {
-            "rid": rid,
-            "tool_calls": [t.get("name") for t in run.tool_calls],
-        })
-        return JSONResponse(
-            {"authenticated": False, "error": "wrong_tool_called"},
-            status_code=502,
-        )
+    # Tool was called and result_blob says authenticated → good.
+    if called_sa_bv and bool(blob.get("authenticated")):
+        return JSONResponse({
+            "state": "ok",
+            "namespace": sa_ns,
+        }, status_code=200)
 
-    if _has_auth_error(run):
-        return JSONResponse(
-            {"authenticated": False, "error": "authentication_required"},
-            status_code=200,
-        )
+    # Auth-shaped error reaches us either via the result_blob the model
+    # emitted, or via tool_result content. Both paths classify identically.
+    if _has_auth_error(run) or _classify_auth_error(err_text):
+        return JSONResponse({
+            "state": "oauth_expired",
+            "reason": err_text or "auth error from SearchAtlas",
+            "hint": "In Claude Code, run /mcp → SearchAtlas → complete the OAuth flow again.",
+            "namespace": sa_ns,
+        }, status_code=200)
 
-    # Inspect the result blob the model emitted
-    authed = bool(blob.get("authenticated"))
-    if authed:
-        return {"authenticated": True, "error": None}
+    # Tool wasn't called and the model said `tool_not_available` (its own
+    # confirmation that the SA tool wasn't in its session, even though
+    # namespace discovery thought it was). Treat as not_installed so the
+    # user gets the install / OAuth instructions, not a vague timeout.
+    if not called_sa_bv and ("not_available" in err_text.lower() or "not available" in err_text.lower()):
+        return JSONResponse({
+            "state": "not_installed",
+            "reason": err_text,
+            "hint": "SearchAtlas appears configured but no tools are loaded. Try running /mcp in Claude Code to reconnect, then click Retry.",
+            "namespace": sa_ns,
+        }, status_code=200)
 
-    err = (blob.get("error") or "").strip() or "unknown"
-    return {"authenticated": False, "error": err}
+    # Anything else (tool not called and no clear reason) — surface as
+    # discovery_timeout so the user can retry without being lied to.
+    return JSONResponse({
+        "state": "discovery_timeout",
+        "reason": err_text or "tool was not called",
+        "hint": "Click Retry, or restart the wizard.",
+        "namespace": sa_ns,
+    }, status_code=200)
 
 
 # ── /api/detect-assets ───────────────────────────────────────────────────────
@@ -745,9 +817,9 @@ Location hint: {location or "(unknown)"}
 
 Fire BOTH tools in parallel (single tool batch):
 
-  1. mcp__searchatlas__cg_list_brand_vaults  with input filtering by the hostname `{domain}`
+  1. {SA_NS}cg_list_brand_vaults  with input filtering by the hostname `{domain}`
      (try {{ "search": "{domain}" }} or {{ "domain": "{domain}" }} — whichever the schema accepts).
-  2. mcp__searchatlas__gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
+  2. {SA_NS}gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
      (try {{ "search": "{business or domain}" }} or {{ "domain": "{domain}" }} — whichever is accepted).
 
 Then emit exactly one result block. Use ONLY real values returned by the tools — never invent UUIDs.
@@ -854,10 +926,10 @@ Hostname: {hostname}
 
 Fire all FOUR tools in parallel (single tool batch):
 
-  1. mcp__searchatlas__bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
-  2. mcp__searchatlas__bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
-  3. mcp__searchatlas__bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
-  4. mcp__searchatlas__bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
+  1. {SA_NS}bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
+  2. {SA_NS}bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
+  3. {SA_NS}bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
+  4. {SA_NS}bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
 
 Then emit exactly one result block with the real values returned:
 
@@ -944,19 +1016,19 @@ Operator-confirmed fields:
 
 Perform these tool calls in order (each call must wait on the prior's response):
 
-  1. mcp__searchatlas__bv_create
+  1. {SA_NS}bv_create
        input: {{ "domain": "<from payload.domain>", "name": "<from payload.business_name>" }}
        → capture the returned brand_vault_uuid.
 
-  2. mcp__searchatlas__bv_update_business_info
+  2. {SA_NS}bv_update_business_info
        input: {{ "uuid": "<uuid from step 1>", "business_name": ..., "industry": ..., "phone": ..., "address": ..., "hours": ..., "service_areas": ... }}
        (populate from payload — omit empty fields, do not invent).
 
-  3. mcp__searchatlas__bv_update
+  3. {SA_NS}bv_update
        input: {{ "uuid": "<uuid>", "primary_color": ..., "secondary_color": ..., "voice_tone": ..., "voice_style": ..., "voice_avoid": ... }}
        (only set fields that are present in the payload).
 
-  4. mcp__searchatlas__bv_update_knowledge_graph
+  4. {SA_NS}bv_update_knowledge_graph
        input: {{ "uuid": "<uuid>", "entities": [...], "competitors": [...] }}
        (only set fields that are present in the payload).
 
@@ -1060,23 +1132,23 @@ Run TWO parallel waves of SA MCP tools, then synthesize a proposed sitemap.
 
 For each target keyword in `payload.target_keywords` (or, if empty, infer 3 seed keywords from services × location × industry):
 
-  - mcp__searchatlas__se_lookup_keyword       → volume + intent + difficulty
-  - mcp__searchatlas__se_get_serp_overview    → who ranks today
-  - mcp__searchatlas__se_get_serp_features    → which SERP features
+  - {SA_NS}se_lookup_keyword       → volume + intent + difficulty
+  - {SA_NS}se_get_serp_overview    → who ranks today
+  - {SA_NS}se_get_serp_features    → which SERP features
 
 Also fire ONCE in the same batch:
 
-  - mcp__searchatlas__gbp_list_categories            → category taxonomy
-  - mcp__searchatlas__se_get_organic_competitors per keyword → discovered competitors
+  - {SA_NS}gbp_list_categories            → category taxonomy
+  - {SA_NS}se_get_organic_competitors per keyword → discovered competitors
 
 Merge auto-discovered competitors with `payload.known_competitors`, cap at 5.
 
 ### Wave 2 (fire all four tools in a SINGLE tool batch, after Wave 1 returns)
 
-  - mcp__searchatlas__se_get_indexed_pages per competitor → real page structures
-  - mcp__searchatlas__se_analyze_keyword_gap between competitors → unclaimed territory
-  - mcp__searchatlas__cg_create_topical_map seeded with the Wave 1 keyword data
-  - mcp__searchatlas__cg_topic_suggestions (no BV uuid required — use `domain` if needed)
+  - {SA_NS}se_get_indexed_pages per competitor → real page structures
+  - {SA_NS}se_analyze_keyword_gap between competitors → unclaimed territory
+  - {SA_NS}cg_create_topical_map seeded with the Wave 1 keyword data
+  - {SA_NS}cg_topic_suggestions (no BV uuid required — use `domain` if needed)
 
 ### Synthesis
 
@@ -1378,9 +1450,9 @@ def build_prompt(payload: dict) -> str:
     L.append(f"Use slug `{slug}` for the local project folder.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `mcp__searchatlas__cg_list_brand_vaults` with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `{SA_NS}cg_list_brand_vaults` with empty params `{}` as an authentication probe.")
     L.append("")
-    L.append("If that probe (or ANY subsequent `mcp__searchatlas__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
+    L.append("If that probe (or ANY subsequent `{SA_NS}*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")
     L.append("1. IMMEDIATELY emit exactly this on its own line: `## Phase ERROR — AUTHENTICATION REQUIRED`")
     L.append("2. Then emit one paragraph: `Search Atlas MCP is not authenticated in this Claude Code session. Open Claude.ai, run /mcp, and complete the OAuth flow for the SearchAtlas connector. Then re-run this build.`")
@@ -1388,7 +1460,7 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("**HARD RULES — NEVER violate:**")
     L.append("- NEVER fabricate UUIDs, project IDs, Website Studio URLs, or any data that should come from a real MCP call. If you don't have it from a successful tool response, omit the line.")
-    L.append("- NEVER say `Build complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `mcp__searchatlas__ws_publish_project` actually returned a URL in this run.")
+    L.append("- NEVER say `Build complete`, `Site is live`, `Published to Website Studio`, or equivalent unless `{SA_NS}ws_publish_project` actually returned a URL in this run.")
     L.append("- NEVER `proceed with local artifacts` as a fallback for failed MCP calls. The user does NOT want a fake run.")
     L.append("- If the auth probe succeeds, proceed normally with the phases below using real MCP calls only.")
     L.append("")
@@ -1766,8 +1838,8 @@ def parse_claude_event(raw_line: str) -> list[dict]:
                 )
                 short = short_tool_name(tool_name)
                 is_sa = (
-                    tool_name.startswith("mcp__searchatlas__")
-                    or tool_name.startswith("mcp__claude_ai_Search_Atlas__")
+                    tool_name.startswith("{SA_NS}")
+                    or tool_name.startswith("{SA_NS}")
                     or short in TOOL_LABELS
                 )
                 _state.setdefault("tool_use_index", {})[tool_use_id] = {
