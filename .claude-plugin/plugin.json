@@ -1,7 +1,7 @@
 {
   "name": "searchatlas",
   "displayName": "SearchAtlas Toolkit",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "description": "Official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI visibility workflows powered by the SearchAtlas MCP.",
   "keywords": ["seo", "gbp", "ppc", "content", "ai-visibility", "llm-visibility", "marketing", "searchatlas"],
   "author": {

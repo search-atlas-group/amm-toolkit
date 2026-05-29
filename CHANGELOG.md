@@ -4,6 +4,22 @@ All notable changes to the SearchAtlas Toolkit plugin.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.8] — 2026-05-28
+
+### Fixed
+- **Wizards: namespace-agnostic SearchAtlas discovery.** The `website-build`, `website-rebuild`, and `command-center` wizards used to hardcode `mcp__searchatlas__*` as the SearchAtlas tool prefix. Users who installed SearchAtlas under a different name — including anyone using the **claude.ai web connector** — got false-negative "SearchAtlas needs authentication" errors even when the connector was correctly installed. Wizards now discover the actual namespace in two stages: parse `claude mcp list --json` (fast path), and fall back to a model probe that handles claude.ai connectors (which don't appear in `mcp list`). Triggered by Don Franklin's report on 2026-05-28.
+- **Wizards: toolkit-root detection survives plugin reorgs.** `find_toolkit_root` in three wizards looked for command markers at their pre-plugin paths and silently fell back to the wrong directory (`mission-control/tools/`) when files moved. Now uses `.claude-plugin/plugin.json` as the canonical marker with legacy paths as fallbacks. (Shipped earlier in 2.2.8 as `989683f`.)
+
+### Improved
+- **Auth modal now tells the truth.** Instead of always saying "SearchAtlas needs authentication", wizards distinguish four real failure states: `not_installed` (no SA connector found), `oauth_expired` (auth lapsed), `discovery_timeout` (probe slow), `server_offline` (local wizard server is down). Each has distinct copy and an actionable hint.
+- **`run.sh` auto-kills stale wizard processes** on the target port before binding. No more `Errno 48: address already in use` from previous zombie runs.
+- **New "Stop wizard" button** in each wizard UI. POSTs `/api/shutdown` to cleanly terminate the local server — no more terminal-hunting.
+- **Idle-timeout badge** surfaces in each wizard so users understand the wizard auto-stops after 5 min of inactivity.
+- **Launch banner** lists all three ways to stop the wizard (Ctrl+C, Stop button, idle).
+
+### Internal
+- New `mission-control/tools/_shared/sa_namespace.py` module factored out of duplicated wizard code. All three wizards import from it; future wizards will too.
+
 ## [2.2.7] — 2026-05-27
 
 ### Fixed
