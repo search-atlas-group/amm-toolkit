@@ -83,6 +83,15 @@ body { background: radial-gradient(circle at top, #f5f0ff 0%, var(--bg) 50%); }
   font-size: 11px; color: var(--muted-2);
   text-transform: uppercase; letter-spacing: 0.08em;
   margin-bottom: 32px; font-weight: 600;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.idle-badge {
+  font-size: 10.5px;
+  color: var(--muted);
+  opacity: 0.7;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 /* Step containers */
@@ -738,32 +747,27 @@ textarea { resize: vertical; min-height: 60px; }
       <span id="health-text">Checking…</span>
     </span>
     <button class="reset-btn" onclick="resetWizard()">Start fresh</button>
+    <button class="reset-btn" onclick="stopWizard()" title="Cleanly stop the local wizard server" style="background:#fff5f5; border-color:#fecaca; color:#991b1b;">Stop wizard</button>
   </div>
 </div>
 
 <div class="progress" id="progress"></div>
-<div class="progress-label" id="progressLabel">Step 1 of 11 · Tell us about the client</div>
+<div class="progress-label" id="progressLabel">
+  <span id="progressLabelText">Step 1 of 11 · Tell us about the client</span>
+  <span class="idle-badge" title="Wizard auto-stops after 5 min of inactivity so you don't have to remember to kill it.">⏱ auto-stops after 5 min idle</span>
+</div>
 
-<!-- AUTH MODAL · blocks the wizard until SA MCP is authenticated -->
+<!-- AUTH MODAL · blocks the wizard until SA MCP is authenticated.
+     showAuthModal({state, reason, hint}) populates title/body/hint per state.
+     States: not_installed | oauth_expired | discovery_timeout | server_offline -->
 <div id="auth-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(26,21,48,0.78); align-items:center; justify-content:center; padding:24px;">
   <div style="background:#fff; max-width:540px; width:100%; border-radius:14px; padding:28px; box-shadow:0 24px 48px rgba(0,0,0,0.25);">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-      <span style="font-size:28px;">🔐</span>
-      <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--text);">SearchAtlas needs authentication</h2>
+      <span id="auth-modal-icon" style="font-size:28px;">🔐</span>
+      <h2 id="auth-modal-title" style="margin:0; font-size:20px; font-weight:700; color:var(--text);">SearchAtlas needs authentication</h2>
     </div>
-    <p id="auth-modal-msg" style="font-size:14px; line-height:1.55; color:var(--muted); margin:0 0 16px;">
-      We tried to call SearchAtlas just now and got an auth error. Connect the MCP server before continuing — nothing in this wizard runs without it.
-    </p>
-    <p style="font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 8px;">
-      Open the MCP client where you installed it and confirm the SearchAtlas connector is authenticated:
-    </p>
-    <ul style="font-size:13px; line-height:1.7; color:var(--text); padding-left:20px; margin:0 0 14px;">
-      <li><strong>Claude Code (CLI)</strong>: run <code>/mcp</code> and complete OAuth for SearchAtlas.</li>
-      <li><strong>Claude Desktop / Cursor / Windsurf</strong>: open the app's MCP settings, find SearchAtlas, complete OAuth.</li>
-    </ul>
-    <p style="font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 18px;">
-      Once authenticated, click <strong>Retry</strong>.
-    </p>
+    <p id="auth-modal-msg" style="font-size:14px; line-height:1.55; color:var(--muted); margin:0 0 16px;"></p>
+    <div id="auth-modal-hint" style="font-size:13px; line-height:1.6; color:var(--text); background:var(--muted-bg, #f5f3ff); padding:12px 14px; border-radius:8px; margin:0 0 14px;"></div>
     <div id="auth-modal-error" style="display:none; background:var(--red-bg); border-left:3px solid var(--red); padding:8px 12px; border-radius:6px; font-size:12.5px; color:#7f1d1d; margin-bottom:12px; word-break:break-word;"></div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn btn-secondary" id="auth-modal-cancel" onclick="hideAuthModal()">Dismiss</button>
@@ -3037,23 +3041,71 @@ async function checkHealth() {
 }
 
 // ────────────────────────────────────────────────────────────
-// AUTH MODAL · blocks the wizard until SA MCP is authenticated
+// AUTH MODAL · blocks the wizard until SA MCP is reachable.
+// Backend returns { state, reason, hint, namespace } from /api/auth-probe.
+// Frontend renders per-state copy so users see what actually failed.
 // ────────────────────────────────────────────────────────────
 let _authProbeInflight = false;
 
-function showAuthModal(reason) {
-  const modal = document.getElementById('auth-modal');
+const AUTH_STATE_COPY = {
+  not_installed: {
+    icon: '🔌',
+    title: "SearchAtlas isn't connected",
+    body:  "We couldn't find a SearchAtlas MCP server in your Claude Code setup. The wizard needs it to run — connect it once, then click Retry."
+  },
+  oauth_expired: {
+    icon: '🔑',
+    title: 'SearchAtlas needs to be re-authorized',
+    body:  'Your SearchAtlas connection is no longer authenticated. Re-complete the OAuth flow, then click Retry.'
+  },
+  discovery_timeout: {
+    icon: '⏱',
+    title: "Couldn't verify SearchAtlas in time",
+    body:  "The probe to SearchAtlas didn't finish. This usually means Claude was slow — try again, or restart the wizard."
+  },
+  server_offline: {
+    icon: '⚠️',
+    title: 'Wizard server is offline',
+    body:  "The local wizard server isn't responding. Restart it with `bash run.sh` in your terminal."
+  },
+};
+
+function showAuthModal(payload) {
+  // Backward-compat: old call sites pass a plain string; treat as oauth_expired.
+  if (typeof payload === 'string' || payload == null) {
+    payload = { state: 'oauth_expired', reason: payload || '', hint: '' };
+  }
+  const state = payload.state || 'oauth_expired';
+  const copy = AUTH_STATE_COPY[state] || AUTH_STATE_COPY.oauth_expired;
+
+  const modal   = document.getElementById('auth-modal');
+  const iconEl  = document.getElementById('auth-modal-icon');
+  const titleEl = document.getElementById('auth-modal-title');
+  const msgEl   = document.getElementById('auth-modal-msg');
+  const hintEl  = document.getElementById('auth-modal-hint');
+  const errBox  = document.getElementById('auth-modal-error');
   if (!modal) return;
-  modal.style.display = 'flex';
-  const errBox = document.getElementById('auth-modal-error');
+
+  if (iconEl)  iconEl.textContent  = copy.icon;
+  if (titleEl) titleEl.textContent = copy.title;
+  if (msgEl)   msgEl.textContent   = copy.body;
+  if (hintEl) {
+    if (payload.hint) {
+      hintEl.style.display = 'block';
+      hintEl.textContent   = payload.hint;
+    } else {
+      hintEl.style.display = 'none';
+    }
+  }
   if (errBox) {
-    if (reason) {
+    if (payload.reason) {
       errBox.style.display = 'block';
-      errBox.textContent = reason;
+      errBox.textContent   = `Reason: ${payload.reason}`;
     } else {
       errBox.style.display = 'none';
     }
   }
+  modal.style.display = 'flex';
 }
 
 function hideAuthModal() {
@@ -3074,29 +3126,32 @@ async function authProbe(opts) {
       headers: { 'Content-Type': 'application/json' },
       body: '{}'
     });
-    if (res.status === 504) {
-      data = { authenticated: false, error: 'timeout' };
-    } else if (res.status === 502) {
-      const body = await res.json().catch(() => ({}));
-      data = { authenticated: false, error: body.error || 'no_tool_calls_made' };
-    } else {
-      data = await res.json().catch(() => ({ authenticated: false, error: 'bad_response' }));
-    }
+    data = await res.json().catch(() => ({ state: 'discovery_timeout', reason: 'bad_response' }));
   } catch (e) {
-    data = { authenticated: false, error: 'network: ' + e.message };
+    // Local server unreachable — distinct from any auth state.
+    data = { state: 'server_offline', reason: e.message, hint: 'Restart the wizard with `bash run.sh`.' };
   }
   _authProbeInflight = false;
   if (retryBtn) { retryBtn.disabled = false; retryBtn.textContent = 'Retry'; }
 
-  if (!data || !data.authenticated) {
-    if (!silent) showAuthModal(data?.error ? `Reason: ${data.error}` : null);
-    return false;
+  if (data && data.state === 'ok') {
+    hideAuthModal();
+    return true;
   }
-  hideAuthModal();
-  return true;
+  if (!silent) showAuthModal(data);
+  return false;
 }
 
 async function retryAuthProbe() { await authProbe({ silent: false }); }
+
+// Stop the local wizard server cleanly from the UI.
+async function stopWizard() {
+  if (!confirm('Stop the wizard? Any in-progress work in this tab will be lost.')) return;
+  try {
+    await fetch('/api/shutdown', { method: 'POST' });
+  } catch (_) { /* server already gone */ }
+  document.body.innerHTML = '<div style="padding:60px 24px; text-align:center; font-family:system-ui,-apple-system,sans-serif; color:#666;"><div style="font-size:42px; margin-bottom:14px;">✓</div><div style="font-size:18px; font-weight:600; margin-bottom:6px; color:#222;">Wizard stopped</div><div style="font-size:14px; color:#888;">Close this tab, or re-run <code style="background:#f3f0ff; padding:2px 6px; border-radius:4px;">bash run.sh</code> to start again.</div></div>';
+}
 
 // ────────────────────────────────────────────────────────────
 // STEP LIFECYCLE HOOKS
