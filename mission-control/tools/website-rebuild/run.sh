@@ -64,11 +64,22 @@ if ! python -c "import fastapi, uvicorn" &>/dev/null; then
 fi
 echo -e "  ${GREEN}✓${NC}  Dependencies installed"
 
+# ── 5b. Free the port if a previous wizard is still bound ───────────────────
+if lsof -ti :"$PORT" >/dev/null 2>&1; then
+  echo -e "  ${DIM}ℹ Stopping stale wizard on port $PORT…${NC}"
+  lsof -ti :"$PORT" | xargs kill -9 2>/dev/null || true
+  sleep 0.3
+fi
+
 # ── 6. Launch ────────────────────────────────────────────────────────────────
 URL="http://localhost:$PORT"
 echo ""
-echo -e "  Starting on ${GREEN}$URL${NC}"
-echo -e "  ${DIM}Ctrl+C to stop${NC}"
+echo -e "  Wizard running at ${GREEN}$URL${NC}"
+echo ""
+echo -e "  ${DIM}Stop the wizard from any of these:${NC}"
+echo -e "  ${DIM}  • Ctrl+C in this terminal${NC}"
+echo -e "  ${DIM}  • \"Stop wizard\" button in the UI${NC}"
+echo -e "  ${DIM}  • Auto-stops after 5 min of inactivity${NC}"
 echo ""
 
 # Open the browser after a short delay so the server has time to bind

@@ -925,11 +925,15 @@ textarea { resize: vertical; min-height: 60px; }
   <div class="brand-right">
     <span class="conn-status" id="conn-wrap" title="Checking…"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">Checking…</span></span>
     <button class="reset-btn" onclick="resetWizard()">Start fresh</button>
+    <button class="reset-btn" onclick="stopWizard()" title="Cleanly stop the local wizard server" style="background:#fff5f5; border-color:#fecaca; color:#991b1b;">Stop wizard</button>
   </div>
 </div>
 
 <div class="progress" id="progress"></div>
-<div class="progress-label" id="progressLabel">Step 1 of 12 · Target + scout output</div>
+<div class="progress-label" id="progressLabel" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+  <span>Step 1 of 12 · Target + scout output</span>
+  <span style="font-size:10.5px; color:#888; opacity:0.7; font-weight:500; letter-spacing:0.04em; text-transform:none;" title="Wizard auto-stops after 5 min of inactivity so you don't have to remember to kill it.">⏱ auto-stops after 5 min idle</span>
+</div>
 
 <!-- ────────────────────────────────────────────────────────── -->
 <!-- STEP 1 · Identify target + drop scout output                -->
@@ -1513,6 +1517,15 @@ try {
 
 function persist() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// Stop the local wizard server cleanly from the UI.
+async function stopWizard() {
+  if (!confirm('Stop the wizard? Any in-progress work in this tab will be lost.')) return;
+  try {
+    await fetch('/api/shutdown', { method: 'POST' });
+  } catch (_) { /* server already gone */ }
+  document.body.innerHTML = '<div style="padding:60px 24px; text-align:center; font-family:system-ui,-apple-system,sans-serif; color:#666;"><div style="font-size:42px; margin-bottom:14px;">✓</div><div style="font-size:18px; font-weight:600; margin-bottom:6px; color:#222;">Wizard stopped</div><div style="font-size:14px; color:#888;">Close this tab, or re-run <code style="background:#f3f0ff; padding:2px 6px; border-radius:4px;">bash run.sh</code> to start again.</div></div>';
 }
 
 function resetWizard() {
