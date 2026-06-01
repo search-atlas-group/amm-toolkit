@@ -27,46 +27,24 @@ For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, 
 
 ## Quickstart
 
-### Using Claude Code? 🟦
+**[→ Full visual setup guide](https://htmlpreview.github.io/?https://github.com/search-atlas-group/amm-toolkit/blob/main/docs/get-started.html)** — step-by-step for both clients, with troubleshooting, updating, and the all-important per-chat connector tip. Best for first-time setup.
+
+The short version:
+
+**Claude Code** — install the plugin, then **restart Claude Code**:
 
 ```
 /plugin marketplace add https://github.com/search-atlas-group/amm-toolkit.git
 /plugin install searchatlas
 ```
 
-Then **restart Claude Code** to finish setup. (A restart activates everything and shows the welcome banner — `/reload-plugins` alone hot-loads the commands but skips the welcome.)
-
-That's it. First time you run a `/searchatlas:*` command, you'll be prompted to authorize SearchAtlas via OAuth. New to SearchAtlas? You'll be prompted to create a free account during auth.
-
-### Using Claude Desktop, claude.ai, or Cowork? 🟪
-
-Plugins are a Claude Code feature — they don't run in Claude Desktop, claude.ai, or Claude Cowork (Cowork has its own separate plugin system and can't install Claude Code plugins). But the underlying SearchAtlas MCP works on all of them. Add it as a custom connector:
+**Claude Desktop, claude.ai, or Cowork** — plugins are Claude Code-only, so add the MCP as a custom connector (Settings → Connectors → Add custom connector):
 
 ```
 https://mcp.searchatlas.com/mcp
 ```
 
-- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector
-- **Cowork:** Settings → Add Custom Connector
-
-You won't get the `/searchatlas:*` slash commands or the routing skill (those are Claude Code-only), but you'll get full access to every SearchAtlas tool and can drive workflows by asking Claude in plain language.
-
-### Staying updated 🔄
-
-The marketplace tracks the `main` branch, so each release is live the moment it's pushed. To get updates **automatically**, enable auto-update for the marketplace (one-time):
-
-- Run `/plugin`, open the **Marketplaces** tab, select **searchatlas**, and enable **auto-update**.
-
-With that on, new releases land at your next Claude Code startup — no commands needed. (Auto-update is off by default for community marketplaces, so this opt-in is what makes updates hands-free.)
-
-To update **manually** at any time:
-
-```
-/plugin marketplace update searchatlas
-/plugin update searchatlas
-```
-
-Run the marketplace update first — `/plugin update` alone won't see a new release until the local marketplace metadata is refreshed.
+The first SearchAtlas tool call prompts a one-time OAuth sign-in (create a free account then if you need one). Updating and troubleshooting are covered in the [guide](https://htmlpreview.github.io/?https://github.com/search-atlas-group/amm-toolkit/blob/main/docs/get-started.html).
 
 ---
 
