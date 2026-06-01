@@ -18,6 +18,9 @@
 
 > Official command-line toolkit for SearchAtlas — SEO, GBP, PPC, content, and AI visibility, all powered by the SearchAtlas MCP.
 
+> ### 👉 New here? [**Open the visual Quick Start guide →**](https://htmlpreview.github.io/?https://github.com/search-atlas-group/amm-toolkit/blob/main/docs/get-started.html)
+> Connect SearchAtlas to **Claude Desktop** (no code) or **Claude Code** in a few minutes — step-by-step, with screenshots-level detail and troubleshooting. No need to read the rest of this page.
+
 For anyone using SearchAtlas to manage SEO, Google Business Profiles, paid ads, content, or AI visibility — solo operators, in-house teams, and agencies alike.
 
 ---
