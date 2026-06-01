@@ -89,3 +89,4 @@ docs/.*
 !docs/CLAUDE_DESKTOP_PROMPTS.md
 !docs/welcome.html
 !docs/install.html
+!docs/get-started.html

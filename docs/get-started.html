@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Atlas · Quick Start — connect to Claude</title>
+<style>
+  :root {
+    --sa-bg: #06050e;
+    --sa-surface: rgba(255, 255, 255, 0.04);
+    --sa-surface-2: rgba(255, 255, 255, 0.06);
+    --sa-border: rgba(255, 255, 255, 0.08);
+    --sa-border-strong: rgba(255, 255, 255, 0.18);
+    --sa-border-active: rgba(170, 133, 236, 0.55);
+    --sa-text: #f4f3fb;
+    --sa-text-dim: rgba(244, 243, 251, 0.66);
+    --sa-text-faint: rgba(244, 243, 251, 0.40);
+    --sa-purple-300: #BC98FF;
+    --sa-purple-400: #AA85EC;
+    --sa-mint: #00FFD4;
+    --sa-green: #4ade80;
+    --sa-amber: #fbbf24;
+    --sa-font: -apple-system, BlinkMacSystemFont, "Inter Tight", "Inter", system-ui, sans-serif;
+    --sa-mono: ui-monospace, "SF Mono", "Menlo", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { min-height: 100vh; }
+  body {
+    font-family: var(--sa-font); color: var(--sa-text); background: var(--sa-bg);
+    background-image:
+      radial-gradient(1400px 900px at 85% -10%, rgba(146, 107, 217, 0.16), transparent 60%),
+      radial-gradient(1100px 800px at -5% 105%, rgba(0, 255, 212, 0.07), transparent 60%);
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+    padding: 44px 24px 80px; display: flex; justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 40px; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: radial-gradient(circle at 30% 30%, #BC98FF 0%, #6D00DA 70%, #3D0080 100%);
+    box-shadow: 0 0 22px rgba(170, 133, 236, 0.35);
+  }
+  .brand-name { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+  .brand-name .accent { background: linear-gradient(135deg, #c8b6ee 0%, #00FFD4 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px;
+    border: 1px solid var(--sa-border-strong); border-radius: 999px; font-family: var(--sa-mono);
+    font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sa-text-dim);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sa-green);
+    box-shadow: 0 0 8px var(--sa-green); animation: blink 2.4s ease-in-out infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  /* Hero */
+  .hero { display: flex; flex-direction: column; gap: 14px; }
+  .eyebrow { font-family: var(--sa-mono); font-size: 11.5px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--sa-purple-400); }
+  h1 { font-size: clamp(32px, 5vw, 50px); font-weight: 600; line-height: 1.05; letter-spacing: -0.025em; }
+  h1 .accent { background: linear-gradient(135deg, #c8b6ee 0%, #00FFD4 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: 17px; color: var(--sa-text-dim); max-width: 680px; }
+
+  /* Section titles */
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .section-kicker { font-family: var(--sa-mono); font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--sa-purple-400); }
+  h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; scroll-margin-top: 24px; }
+  .section-intro { font-size: 15px; color: var(--sa-text-dim); margin: 8px 0 22px; max-width: 700px; }
+
+  /* Path chooser */
+  .paths { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 700px) { .paths { grid-template-columns: 1fr; } }
+  .path-card {
+    display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit;
+    background: var(--sa-surface); border: 1px solid var(--sa-border); border-radius: 14px;
+    padding: 22px; transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+  .path-card:hover { border-color: var(--sa-border-active); background: var(--sa-surface-2); transform: translateY(-2px); }
+  .path-icon {
+    width: 38px; height: 38px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 18px; background: rgba(255,255,255,0.06); border: 1px solid var(--sa-border-strong); margin-bottom: 4px;
+  }
+  .path-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .path-who { font-family: var(--sa-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sa-mint); }
+  .path-desc { font-size: 13.5px; color: var(--sa-text-dim); }
+  .path-go { margin-top: auto; font-size: 13px; font-weight: 600; color: var(--sa-purple-300); }
+
+  /* Decision note */
+  .note { display: flex; gap: 12px; align-items: flex-start; background: rgba(170, 133, 236, 0.08);
+    border: 1px solid rgba(170, 133, 236, 0.28); border-radius: 12px; padding: 16px 18px;
+    font-size: 13.5px; color: var(--sa-text-dim); }
+  .note strong { color: var(--sa-text); font-weight: 600; }
+  .note .ico { flex-shrink: 0; font-size: 15px; color: var(--sa-purple-300); }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 16px; }
+  .step { position: relative; background: var(--sa-surface); border: 1px solid var(--sa-border);
+    border-radius: 16px; padding: 22px 24px 22px 68px; transition: border-color 0.2s; }
+  .step:hover { border-color: rgba(170,133,236,0.4); }
+  .step-badge { position: absolute; left: 20px; top: 20px; width: 34px; height: 34px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 30% 30%, #BC98FF 0%, #6D00DA 75%); color: #fff;
+    font-weight: 700; font-size: 15px; font-family: var(--sa-mono); box-shadow: 0 0 16px rgba(170,133,236,0.4); }
+  .step-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 9px; }
+  .step-body { font-size: 14.5px; color: var(--sa-text-dim); }
+  .step-body p + p { margin-top: 9px; }
+  .step-body strong { color: var(--sa-text); }
+  .step-body ul { list-style: none; margin: 11px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  .step-body li { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+  .step-body li .dot { flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--sa-purple-400); margin-top: 7px; }
+
+  .inline-code { font-family: var(--sa-mono); font-size: 12.5px; color: var(--sa-purple-300);
+    background: rgba(170,133,236,0.12); padding: 1px 6px; border-radius: 5px; word-break: break-word; }
+
+  /* Command / URL box + copy */
+  .cmd-box { position: relative; background: rgba(0,0,0,0.45); border: 1px solid var(--sa-border-strong);
+    border-radius: 10px; padding: 13px 15px; font-family: var(--sa-mono); font-size: 12.5px; line-height: 1.7;
+    color: var(--sa-text); word-break: break-all; overflow-wrap: anywhere; margin-top: 13px; }
+  .cmd-box-text { display: block; white-space: pre-wrap; user-select: all; }
+  .cmd-box .prompt { color: var(--sa-purple-400); user-select: none; }
+  .copy-row { display: flex; gap: 10px; align-items: stretch; margin-top: 13px; flex-wrap: wrap; }
+  .copy-row .cmd-box { flex: 1; min-width: 220px; margin-top: 0; display: flex; align-items: center; }
+  .copy-btn { padding: 0 18px; border-radius: 10px; border: 1px solid var(--sa-border-strong);
+    background: rgba(170,133,236,0.14); color: var(--sa-purple-300); font-family: var(--sa-mono);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600;
+    transition: all 0.15s; white-space: nowrap; align-self: center; }
+  .copy-btn:hover { background: rgba(170,133,236,0.26); border-color: var(--sa-purple-400); }
+  .copy-btn.copied { background: rgba(74,222,128,0.18); border-color: rgba(74,222,128,0.55); color: var(--sa-green); }
+  .copy-btn.block { margin-top: 11px; align-self: flex-start; padding: 8px 16px; }
+
+  .field-list { margin-top: 13px; background: rgba(0,0,0,0.3); border: 1px solid var(--sa-border);
+    border-radius: 10px; overflow: hidden; }
+  .field-row { display: flex; gap: 14px; padding: 11px 15px; font-size: 13.5px; align-items: baseline; }
+  .field-row + .field-row { border-top: 1px solid var(--sa-border); }
+  .field-key { flex-shrink: 0; width: 130px; color: var(--sa-text-faint); font-family: var(--sa-mono);
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .field-val { color: var(--sa-text); font-family: var(--sa-mono); font-size: 13px; word-break: break-all; }
+  .field-val .free { color: var(--sa-text-dim); font-family: var(--sa-font); font-size: 13px; }
+
+  /* Callouts */
+  .callout { margin-top: 15px; display: flex; gap: 12px; align-items: flex-start; border-radius: 12px;
+    padding: 14px 16px; font-size: 13.5px; }
+  .callout .ico { flex-shrink: 0; font-size: 15px; line-height: 1.4; }
+  .callout strong { font-weight: 600; }
+  .callout-warn { background: rgba(251,191,36,0.09); border: 1px solid rgba(251,191,36,0.32); color: var(--sa-text-dim); }
+  .callout-warn .ico, .callout-warn strong { color: var(--sa-amber); }
+  .callout-ok { background: rgba(0,255,212,0.08); border: 1px solid rgba(0,255,212,0.3); color: var(--sa-text-dim); }
+  .callout-ok .ico, .callout-ok strong { color: var(--sa-mint); }
+  .callout a { color: var(--sa-purple-300); text-decoration: none; }
+
+  /* Method block for Claude Code */
+  .method { background: var(--sa-surface); border: 1px solid var(--sa-border); border-radius: 14px; padding: 22px; }
+  .method + .method { margin-top: 16px; }
+  .method-label { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .tag { font-family: var(--sa-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 5px; }
+  .tag-rec { color: var(--sa-mint); background: rgba(0,255,212,0.12); border: 1px solid rgba(0,255,212,0.35); }
+  .tag-plain { color: var(--sa-text-dim); background: rgba(255,255,255,0.05); border: 1px solid var(--sa-border-strong); }
+  .method-desc { font-size: 13.5px; color: var(--sa-text-dim); }
+  .ministeps { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--sa-text-dim); margin-top: 13px; }
+  .ministeps .row { display: flex; gap: 8px; align-items: baseline; }
+  .ministeps .n { font-family: var(--sa-mono); font-size: 10.5px; color: var(--sa-purple-400); font-weight: 600; min-width: 16px; }
+  .ministeps code { font-family: var(--sa-mono); font-size: 11.5px; color: var(--sa-purple-300);
+    background: rgba(170,133,236,0.1); padding: 1px 5px; border-radius: 4px; }
+
+  /* What you get */
+  .gets { background: var(--sa-surface); border: 1px solid var(--sa-border); border-radius: 14px; padding: 24px; }
+  .gets-grid { display: grid; gap: 14px 26px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 600px) { .gets-grid { grid-template-columns: 1fr; } }
+  .get-item { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; color: var(--sa-text); }
+  .get-mark { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; background: rgba(0, 255, 212, 0.12);
+    border: 1px solid rgba(0, 255, 212, 0.35); color: var(--sa-mint); font-size: 9px; font-weight: 700; }
+  .get-detail { color: var(--sa-text-dim); font-size: 12.5px; }
+
+  /* Use it */
+  .usebox { background: linear-gradient(135deg, rgba(170,133,236,0.10), rgba(0,255,212,0.06));
+    border: 1px solid rgba(170,133,236,0.3); border-radius: 16px; padding: 24px; }
+  .usebox .sub { font-size: 14px; color: var(--sa-text-dim); margin: 6px 0 16px; }
+  .prompt-ex { background: rgba(0,0,0,0.4); border: 1px solid var(--sa-border-strong); border-radius: 10px;
+    padding: 12px 15px; font-size: 13.5px; color: var(--sa-text); margin-bottom: 10px; line-height: 1.55; }
+  .prompt-ex:last-child { margin-bottom: 0; }
+  .prompt-ex .q { color: var(--sa-mint); font-family: var(--sa-mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; display: block; margin-bottom: 5px; }
+
+  /* Disclosure */
+  details { border: 1px solid var(--sa-border); border-radius: 10px; background: rgba(0,0,0,0.2);
+    overflow: hidden; margin-bottom: 10px; }
+  summary { cursor: pointer; padding: 13px 16px; font-size: 14px; font-weight: 600; color: var(--sa-purple-300); list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸ "; color: var(--sa-text-faint); }
+  details[open] summary::before { content: "▾ "; }
+  details .d-body { padding: 0 16px 15px; font-size: 13.5px; color: var(--sa-text-dim); }
+  details .d-body p + p { margin-top: 9px; }
+  details .d-body a { color: var(--sa-purple-300); text-decoration: none; }
+  details .d-body strong { color: var(--sa-text); }
+
+  /* Footer */
+  .footer { border-top: 1px solid var(--sa-border); padding-top: 18px; font-family: var(--sa-mono);
+    font-size: 11px; letter-spacing: 0.06em; color: var(--sa-text-faint); display: flex;
+    justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .footer a { color: var(--sa-purple-400); text-decoration: none; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    padding: 12px 22px; border-radius: 10px; background: rgba(74,222,128,0.18); border: 1px solid rgba(74,222,128,0.5);
+    color: var(--sa-green); font-family: var(--sa-mono); font-size: 12.5px; letter-spacing: 0.08em;
+    text-transform: uppercase; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+    z-index: 1000; backdrop-filter: blur(12px); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">Search Atlas <span class="accent">MCP</span></span>
+    </div>
+    <span class="status-pill"><span class="status-dot"></span>620 tools · live</span>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="eyebrow">Quick Start · everything in one place</span>
+    <h1>Connect Search Atlas to <span class="accent">Claude</span>.</h1>
+    <p class="lede">
+      The Search Atlas MCP gives Claude live access to all 620 Search Atlas tools — SEO, GBP, PPC, content, authority building, and AI visibility. Pick the way you use Claude below and follow the steps. No API key, no JSON editing — you just sign in with your Search Atlas account when prompted.
+    </p>
+  </section>
+
+  <!-- Path chooser -->
+  <section>
+    <div class="section-head"><span class="section-kicker">Step 1 — pick your path</span></div>
+    <p class="section-intro">Not sure? If you don't write code, you're on <strong>Claude Desktop</strong> (or claude.ai in a browser). Choose that.</p>
+    <div class="paths">
+      <a class="path-card" href="#claude-desktop">
+        <span class="path-icon">◇</span>
+        <span class="path-who">Most people · no code</span>
+        <span class="path-title">Claude Desktop</span>
+        <span class="path-desc">The app, claude.ai, or Cowork. Add Search Atlas as a connector and ask in plain English. ~3 minutes.</span>
+        <span class="path-go">See the step-by-step →</span>
+      </a>
+      <a class="path-card" href="#claude-code">
+        <span class="path-icon">▸_</span>
+        <span class="path-who">Power users · terminal</span>
+        <span class="path-title">Claude Code</span>
+        <span class="path-desc">The CLI. Install the toolkit plugin for 21 slash commands + wizards, or add just the MCP yourself. ~1 minute.</span>
+        <span class="path-go">See the install →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- The big clarifier -->
+  <div class="note">
+    <span class="ico">◆</span>
+    <div>
+      <strong>What's the difference?</strong> Both connect to the exact same 620 Search Atlas tools. The <strong>toolkit extras</strong> — the plugin, the <span class="inline-code">/searchatlas:*</span> slash commands, and the browser wizards — only run in <strong>Claude Code</strong>. On Claude Desktop / claude.ai / Cowork you get all the tools too; you just drive them by asking in plain language instead of typing slash commands.
+    </div>
+  </div>
+
+  <!-- ================= CLAUDE DESKTOP ================= -->
+  <section>
+    <div class="section-head"><span class="section-kicker">No-code setup</span></div>
+    <h2 id="claude-desktop">Claude Desktop, claude.ai &amp; Cowork</h2>
+    <p class="section-intro">Follow every step in order and you can't get it wrong. Takes about 3 minutes. You'll need <strong>Claude</strong> (app at <a href="https://claude.ai/download" target="_blank" rel="noopener" style="color:var(--sa-purple-300);text-decoration:none">claude.ai/download</a>, or just <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--sa-purple-300);text-decoration:none">claude.ai</a> in a browser) and a <strong>Search Atlas account</strong> (free at <a href="https://searchatlas.com" target="_blank" rel="noopener" style="color:var(--sa-purple-300);text-decoration:none">searchatlas.com</a> — you can also make one during sign-in).</p>
+
+    <div class="steps">
+
+      <div class="step">
+        <span class="step-badge">1</span>
+        <div class="step-title">Open Claude's Connectors page</div>
+        <div class="step-body">
+          <p>Connectors are how Claude reaches outside tools. The link below opens the exact page — it works for both the <strong>Claude Desktop app</strong> and <strong>claude.ai</strong> (connectors are tied to your account, so they sync to both).</p>
+          <div class="copy-row">
+            <span class="cmd-box"><span class="cmd-box-text">https://claude.ai/customize/connectors</span></span>
+            <button class="copy-btn" onclick="copyText('https://claude.ai/customize/connectors', this, 'Page URL copied')">Copy link</button>
+          </div>
+          <p style="margin-top:11px">Sign in to Claude if it asks. In the app you can also reach it via <strong>Settings → Connectors</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-badge">2</span>
+        <div class="step-title">Find "Custom connectors"</div>
+        <div class="step-body">
+          <p><strong>Scroll all the way to the bottom</strong> of that page. Below the pre-built connectors (Gmail, GitHub, etc.) there's a section called <strong>Custom connectors</strong> — it's easy to miss, keep scrolling.</p>
+          <p>Click the <span class="inline-code">+</span> next to it, then <strong>Add custom connector</strong>.</p>
+          <div class="callout callout-warn"><span class="ico">!</span>
+            <div>Don't see it? You're likely on the wrong page. The URL must be <span class="inline-code">claude.ai/customize/connectors</span>. (Full fix in Troubleshooting below.)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-badge">3</span>
+        <div class="step-title">Fill in the two fields</div>
+        <div class="step-body">
+          <p>A small box pops up. Enter exactly this:</p>
+          <div class="field-list">
+            <div class="field-row"><span class="field-key">Name</span><span class="field-val">Search Atlas <span class="free">(or anything you like)</span></span></div>
+            <div class="field-row"><span class="field-key">Remote MCP URL</span><span class="field-val">https://mcp.searchatlas.com/mcp</span></div>
+          </div>
+          <div class="copy-row">
+            <span class="cmd-box"><span class="cmd-box-text">https://mcp.searchatlas.com/mcp</span></span>
+            <button class="copy-btn" onclick="copyText('https://mcp.searchatlas.com/mcp', this, 'Connector URL copied')">Copy URL</button>
+          </div>
+          <p style="margin-top:11px">Leave <strong>Advanced settings</strong> alone — Search Atlas handles sign-in automatically. Then click <strong>Add</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-badge">4</span>
+        <div class="step-title">Sign in to Search Atlas (one time, ever)</div>
+        <div class="step-body">
+          <p>The moment you click Add, a browser tab opens. <strong>Sign in to your Search Atlas account</strong> (or create one free), then click the big <strong>Authorize</strong> button.</p>
+          <div class="callout callout-ok"><span class="ico">✓</span><div><strong>Connection done.</strong> You only sign in once — Claude remembers it from now on.</div></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-badge">5</span>
+        <div class="step-title">Turn it on in your chat — every new chat</div>
+        <div class="step-body">
+          <p>Read this one twice — it's the step everyone forgets. <strong>Adding the connector does NOT switch it on automatically.</strong> In each chat where you want Search Atlas:</p>
+          <ul>
+            <li><span class="dot"></span><span>Click the <span class="inline-code">+</span> button next to the message box.</span></li>
+            <li><span class="dot"></span><span>Choose <strong>Connectors</strong> (it may say "Add tools").</span></li>
+            <li><span class="dot"></span><span>Toggle <strong>Search Atlas</strong> <strong>on</strong>.</span></li>
+          </ul>
+          <div class="callout callout-warn"><span class="ico">!</span><div>You do this <strong>in every new chat</strong>. If Claude ever says it can't find Search Atlas tools, this toggle is almost always why.</div></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-badge">6</span>
+        <div class="step-title">Test it</div>
+        <div class="step-body">
+          <p>Start a fresh chat, turn on the connector (Step 5), and send this:</p>
+          <div class="prompt-ex"><span class="q">Paste into Claude</span>List my Search Atlas projects.</div>
+          <p>Claude calls a Search Atlas tool and shows your projects. If it's your very first tool call and you skipped Step 4, a sign-in tab pops up — click <strong>Authorize</strong> and you're set.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= CLAUDE CODE ================= -->
+  <section>
+    <div class="section-head"><span class="section-kicker">Terminal setup</span></div>
+    <h2 id="claude-code">Claude Code</h2>
+    <p class="section-intro">Two ways. The <strong>toolkit plugin</strong> is recommended — it gives you the 21 slash commands and browser wizards on top of the MCP. Or add just the MCP yourself if you only want the tools.</p>
+
+    <div class="method">
+      <div class="method-label">With the toolkit <span class="tag tag-rec">Recommended</span></div>
+      <div class="method-desc">Installs the plugin: 21 slash commands, browser wizards, and the MCP — all auto-connected.</div>
+      <div class="cmd-box"><span class="cmd-box-text" id="cmd-plugin"><span class="prompt">&gt; </span>/plugin marketplace add https://github.com/search-atlas-group/amm-toolkit.git
+<span class="prompt">&gt; </span>/plugin install searchatlas</span></div>
+      <button class="copy-btn block" onclick="copyText('/plugin marketplace add https://github.com/search-atlas-group/amm-toolkit.git\n/plugin install searchatlas', this, 'Plugin commands copied')">Copy commands</button>
+      <div class="ministeps">
+        <div class="row"><span class="n">1</span><span>Paste both lines into Claude Code.</span></div>
+        <div class="row"><span class="n">2</span><span><strong>Restart Claude Code</strong> to finish setup.</span></div>
+        <div class="row"><span class="n">3</span><span>Run any <code>/searchatlas:*</code> command → sign in via OAuth on first use.</span></div>
+      </div>
+      <div class="callout callout-ok" style="margin-top:14px"><span class="ico">↻</span><div><strong>Stay updated automatically:</strong> run <code style="font-family:var(--sa-mono)">/plugin</code> → Marketplaces tab → select <strong>searchatlas</strong> → enable auto-update. New releases then land at your next startup.</div></div>
+    </div>
+
+    <div class="method">
+      <div class="method-label">By yourself <span class="tag tag-plain">MCP only</span></div>
+      <div class="method-desc">Just the 620 tools, no slash commands. One line in your terminal.</div>
+      <div class="copy-row">
+        <span class="cmd-box"><span class="cmd-box-text">claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp</span></span>
+        <button class="copy-btn" onclick="copyText('claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp', this, 'Command copied')">Copy</button>
+      </div>
+      <div class="ministeps">
+        <div class="row"><span class="n">1</span><span>Run the command, then restart Claude Code.</span></div>
+        <div class="row"><span class="n">2</span><span>First Search Atlas tool call → sign in via OAuth.</span></div>
+        <div class="row"><span class="n">3</span><span>Verify with <code>claude mcp list</code>.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What you get -->
+  <section class="gets">
+    <div class="section-head"><span class="section-kicker">What you get</span></div>
+    <div class="gets-grid" style="margin-top:8px">
+      <div class="get-item"><span class="get-mark">✓</span><div><strong>620 Search Atlas tools</strong> — <span class="get-detail">SEO, GBP, PPC, content, PR, authority, LLM visibility. On every client above.</span></div></div>
+      <div class="get-item"><span class="get-mark">✓</span><div><strong>21 slash commands</strong> — <span class="get-detail">Claude Code only. /scout, /onboard-client, /run-seo, /run-gbp, /run-ppc, /run-content… Type /searchatlas:help.</span></div></div>
+      <div class="get-item"><span class="get-mark">✓</span><div><strong>OAuth sign-in</strong> — <span class="get-detail">No API key, no JSON. Approve with your normal Search Atlas login.</span></div></div>
+      <div class="get-item"><span class="get-mark">✓</span><div><strong>Browser wizards</strong> — <span class="get-detail">Claude Code only. Onboard a client, build &amp; rebuild websites — no terminal.</span></div></div>
+    </div>
+  </section>
+
+  <!-- Use it -->
+  <section class="usebox">
+    <div class="section-head"><span class="section-kicker">Step 2 — actually use it</span></div>
+    <p class="sub">On Claude Desktop, just ask in plain English — Claude picks the right tool. (On Claude Code you can also type the slash commands.) A few to try:</p>
+    <div class="prompt-ex"><span class="q">SEO audit</span>Run an SEO audit on example.com and summarize the top 5 fixes.</div>
+    <div class="prompt-ex"><span class="q">AI visibility</span>How visible is my brand in ChatGPT, Claude, Gemini, and Perplexity for "best running shoes"?</div>
+    <div class="prompt-ex"><span class="q">Content</span>Draft a blog post about local SEO for dentists using Search Atlas Content Genius.</div>
+    <div class="prompt-ex"><span class="q">Google Business Profile</span>Show my Google Business Profile reviews and draft replies to the negative ones.</div>
+  </section>
+
+  <!-- Troubleshooting -->
+  <section>
+    <div class="section-head"><span class="section-kicker">If something's wrong</span></div>
+    <h2 style="font-size:22px;margin-bottom:16px">Troubleshooting</h2>
+
+    <details>
+      <summary>Claude Desktop: I don't see "Custom connectors" or "Add custom connector"</summary>
+      <div class="d-body">
+        <p>Make sure the page URL is exactly <span class="inline-code">claude.ai/customize/connectors</span> — not Settings → Profile or Account. Scroll all the way down; custom connectors sit below the pre-built ones.</p>
+        <p>Custom connectors require a <strong>paid Claude plan</strong> (Pro, Max, Team, or Enterprise). On the free plan the option won't appear.</p>
+        <p><strong>Team / Enterprise:</strong> your workspace owner must add it at the org level first — they go to <a href="https://claude.ai/admin-settings/connectors" target="_blank" rel="noopener">claude.ai/admin-settings/connectors</a> → Add → Custom → Web → paste <span class="inline-code">https://mcp.searchatlas.com/mcp</span>. After that it shows on your personal Connectors page.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Claude says it can't find Search Atlas / "no tools available"</summary>
+      <div class="d-body">
+        <p><strong>Claude Desktop:</strong> you forgot to turn the connector on for this chat — click the <span class="inline-code">+</span> next to the message box → Connectors → toggle <strong>Search Atlas</strong> on. You do this in every new chat.</p>
+        <p><strong>Claude Code:</strong> restart Claude Code after installing — the MCP loads on the next session start. Then check with <span class="inline-code">claude mcp list</span>.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>The sign-in tab never appeared, or I got "Unauthorized"</summary>
+      <div class="d-body">
+        <p>Sign in at <a href="https://searchatlas.com" target="_blank" rel="noopener">searchatlas.com</a> first, then ask Claude to run a Search Atlas tool again and click <strong>Authorize</strong>. On Claude Code, your OAuth token may have expired — re-run any tool and re-authorize, or restart.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Claude Code: the slash commands didn't show up after install</summary>
+      <div class="d-body">
+        <p><strong>Restart Claude Code.</strong> A restart activates everything and shows the welcome banner. To update later: <span class="inline-code">/plugin marketplace update searchatlas</span> then <span class="inline-code">/plugin update searchatlas</span> (run the marketplace update first).</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Still stuck</summary>
+      <div class="d-body">
+        <p>Email <a href="mailto:support@searchatlas.com">support@searchatlas.com</a> or visit <a href="https://help.searchatlas.com" target="_blank" rel="noopener">help.searchatlas.com</a>.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>Search Atlas MCP · mcp.searchatlas.com/mcp · 620 tools</span>
+    <span>Need help? <a href="mailto:support@searchatlas.com">support@searchatlas.com</a></span>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+function copyText(text, btn, label) {
+  const original = btn.textContent;
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  };
+  const finish = () => {
+    btn.textContent = '✓ Copied'; btn.classList.add('copied');
+    showToast(label || 'Copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1800);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(finish).catch(() => { fallback(); finish(); });
+  } else { fallback(); finish(); }
+}
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+</script>
+
+</body>
+</html>
