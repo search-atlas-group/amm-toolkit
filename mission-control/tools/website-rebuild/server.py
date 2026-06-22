@@ -155,9 +155,8 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_create_audit_report_external": "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    # se_get_organic now takes view=keywords|competitors. friendly_label keys on
-    # the bare tool name only (not tool_input["view"]), so organic-keyword and
-    # organic-competitor steps collapse to this one key/label. FLAGGED FOR REVIEW.
+    # se_get_organic takes view=keywords|competitors|pages; per-view progress
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains to protect",
@@ -601,7 +600,8 @@ async def run_claude_session(
 
 def is_sa_tool(name: str) -> bool:
     """Detect any Search Atlas MCP call regardless of which namespace prefix
-    the local Claude install uses (`__SA_NS__*`, `__SA_NS__*`, etc.)."""
+    the local Claude install uses (e.g. `mcp__searchatlas__*`,
+    `mcp__claude_ai_Search_Atlas__*`)."""
     if not name:
         return False
     low = name.lower()
