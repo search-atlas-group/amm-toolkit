@@ -10,16 +10,16 @@ the contract narrow: the JSON we return is a direct projection of real MCP
 Endpoints
 ---------
 - POST /api/auth-probe       — JSON. Spawns Claude with empty payload, asks it to
-                                call `cg_list_brand_vaults({})` once. Returns
+                                call `bv_list({})` once. Returns
                                 `{"authenticated": bool, "error": "..." | None}`.
 
 - POST /api/detect-assets    — JSON. Payload `{ "domain": ... }`. Asks Claude to
-                                run `cg_list_brand_vaults` + `gbp_list_locations`
+                                run `bv_list` + `gbp_list_locations`
                                 filtered by domain and return a single JSON line.
 
 - POST /api/pull-bv          — JSON. Payload `{ "brand_vault_uuid", "hostname" }`.
                                 Pulls bv_get_details + bv_get_business_info +
-                                bv_list_voice_profiles + bv_get_knowledge_graph.
+                                bv_list_voice_templates + bv_get_knowledge_graph.
 
 - POST /api/create-bv        — JSON. Payload = operator-confirmed fields.
                                 Calls bv_create then bv_update_business_info,
@@ -178,7 +178,7 @@ TOOL_LABELS: dict[str, str] = {
     "bv_update_business_info": "Saving business info",
     "bv_get_knowledge_graph":  "Loading knowledge graph",
     "bv_update_knowledge_graph": "Building the knowledge graph",
-    "bv_list_voice_profiles":  "Checking voice profiles",
+    "bv_list_voice_templates": "Checking voice profiles",
     "bv_select_voice_profile": "Activating the voice profile",
     "bv_upload_image":     "Uploading brand asset",
     "bv_list_images":      "Listing brand images",
@@ -204,8 +204,9 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_create_audit_report_external": "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    "se_get_organic_keywords":      "Analyzing organic keywords",
-    "se_get_organic_competitors":   "Identifying organic competitors",
+    # se_get_organic takes view=keywords|competitors|pages; per-view progress
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
+    "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains",
     "se_get_serp_overview":         "Mapping who ranks today",
@@ -227,7 +228,8 @@ TOOL_LABELS: dict[str, str] = {
     "cg_create_brand_vault":        "Creating brand vault",
     "cg_get_brand_vault_details":   "Loading brand vault",
     "cg_run_content_grader":        "Grading content quality",
-    "cg_list_brand_vaults":         "Checking for an existing brand vault",
+    # (legacy brand-vault-list key removed — folded into the bv_list key above,
+    #  which already carries the same "Checking for an existing brand vault" label.)
     "otto_list_projects":           "Checking for an existing OTTO project",
     "otto_find_project_by_hostname":"Looking up OTTO project",
     "otto_get_project_details":     "Loading OTTO project",
@@ -252,7 +254,7 @@ TOOL_LABELS: dict[str, str] = {
     "ws_get_project":               "Verifying Website Studio state",
     "ws_ensure_containers_running": "Starting Website Studio build environment",
     "ws_list_projects":             "Listing Website Studio projects",
-    "llmv_get_brand_overview":      "Reading brand presence in LLMs",
+    "llmv_get_overview":            "Reading brand presence in LLMs",
     "kg_validate_completeness":     "Validating knowledge graph completeness",
     "get_balance":                  "Checking your balance",
     "show_otto_quota":              "Checking your quota",
@@ -276,10 +278,26 @@ def short_tool_name(raw: str) -> str:
     return raw
 
 
+# A few SA tools multiplex distinct operations behind a `view` argument
+# (e.g. se_get_organic, llmv_get_overview). The old per-operation tool names
+# that used to give each its own progress label no longer exist, so key the
+# label on (bare tool name, view) to keep the per-view distinction.
+VIEW_LABELS: dict[tuple[str, str], str] = {
+    ("se_get_organic", "keywords"):    "Analyzing organic keywords",
+    ("se_get_organic", "competitors"): "Identifying organic competitors",
+    ("se_get_organic", "pages"):       "Analyzing top organic pages",
+    ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
+    ("llmv_get_overview", "trend"):    "Reading visibility trend",
+}
+
+
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
+    view = (tool_input or {}).get("view")
+    if view and (short, view) in VIEW_LABELS:
+        return VIEW_LABELS[(short, view)]
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":
@@ -428,14 +446,12 @@ def domain_to_slug(domain: str) -> str:
 
 
 MCP_NAMESPACE_HINT = (
-    "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed under one of two\n"
-    "namespace prefixes depending on how the user installed the connector:\n"
-    "  - `__SA_NS__<tool>`               (manual `claude mcp add` install)\n"
-    "  - `__SA_NS__<tool>`    (claude.ai connector install)\n"
+    "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed as\n"
+    "`__SA_NS__<tool>` (the namespace prefix matches whatever Search Atlas\n"
+    "connector the user installed).\n"
     "If a referenced tool name isn't directly available in your tool set,\n"
     "call `ToolSearch` with the query `select:__SA_NS__<tool>`\n"
-    "to load its schema, then call the loaded tool. Use whichever variant works.\n"
-    "Either namespace produces an identical response shape.\n"
+    "to load its schema, then call the loaded tool.\n"
     "\n"
 )
 
@@ -641,13 +657,13 @@ def _called_required_tools(run: ClaudeRunResult, required: list[str]) -> bool:
 
 AUTH_PROBE_PROMPT = """You are a non-interactive auth probe for the SearchAtlas MCP connector.
 
-Call `__SA_NS__cg_list_brand_vaults` with empty input, then emit the result block.
+Call `__SA_NS__bv_list` with empty input, then emit the result block.
 
-If `__SA_NS__cg_list_brand_vaults` is not loaded in your tool list yet, first call
-`ToolSearch` with the query `__SA_NS__cg_list_brand_vaults` to surface it, then
+If `__SA_NS__bv_list` is not loaded in your tool list yet, first call
+`ToolSearch` with the query `__SA_NS__bv_list` to surface it, then
 call it.
 
-If even after ToolSearch you cannot locate `cg_list_brand_vaults` under ANY
+If even after ToolSearch you cannot locate `bv_list` under ANY
 namespace, the SearchAtlas connector is not installed in this session — emit
 the result block with authenticated: false and error: "tool_not_available".
 
@@ -655,14 +671,14 @@ Input: {}
 
 After the SA tool returns (or you confirm it's not available), emit on its own line, with no prefix:
 
-<<<RESULT>>>{"authenticated": <true|false>, "tool_called": "cg_list_brand_vaults", "error": "<short message or empty>"}<<<END>>>
+<<<RESULT>>>{"authenticated": <true|false>, "tool_called": "bv_list", "error": "<short message or empty>"}<<<END>>>
 
 Rules:
 - If the tool returns ANY result (even an empty list) → authenticated: true, error: "".
 - If the tool returns an authentication / OAuth / 401 / "not authenticated" / "unauthorized" / "connector not authenticated" error → authenticated: false, error: <the error message, single line, < 240 chars>.
 - Do NOT invent or simulate a response. The probe is invalid unless the real SA tool was invoked or confirmed unavailable.
 - After emitting the RESULT block, stop. Do not continue.
-- Do not call WebFetch, Read, Bash, Edit, or any tool other than ToolSearch (to load) and the SA cg_list_brand_vaults tool.
+- Do not call WebFetch, Read, Bash, Edit, or any tool other than ToolSearch (to load) and the SA bv_list tool.
 """
 
 
@@ -729,7 +745,7 @@ async def auth_probe(request: Request):
             AUTH_PROBE_PROMPT,
             timeout_s=45.0,
             expect_tools=True,
-            required_tool_substrings=["cg_list_brand_vaults"],
+            required_tool_substrings=["bv_list"],
         )
     except Exception as exc:
         audit("auth-probe:exception", {"rid": rid, "err": str(exc)})
@@ -760,7 +776,7 @@ async def auth_probe(request: Request):
 
     blob = run.result_blob or {}
     err_text = (blob.get("error") or "").strip()
-    called_sa_bv = _called_required_tools(run, ["cg_list_brand_vaults"])
+    called_sa_bv = _called_required_tools(run, ["bv_list"])
 
     # Tool was called and result_blob says authenticated → good.
     if called_sa_bv and bool(blob.get("authenticated")):
@@ -813,8 +829,8 @@ Location hint: {location or "(unknown)"}
 
 Fire BOTH tools in parallel (single tool batch):
 
-  1. __SA_NS__cg_list_brand_vaults  with input filtering by the hostname `{domain}`
-     (try {{ "search": "{domain}" }} or {{ "domain": "{domain}" }} — whichever the schema accepts).
+  1. __SA_NS__bv_list  with input filtering by the hostname `{domain}`
+     (try {{ "hostname": "{domain}" }} or {{ "search": "{domain}" }} — whichever the schema accepts).
   2. __SA_NS__gbp_list_locations    with input filtering by `{domain}` and/or `{business}`
      (try {{ "search": "{business or domain}" }} or {{ "domain": "{domain}" }} — whichever is accepted).
 
@@ -924,7 +940,7 @@ Fire all FOUR tools in parallel (single tool batch):
 
   1. __SA_NS__bv_get_details             input: {{ "uuid": "{bv_uuid}" }}
   2. __SA_NS__bv_get_business_info       input: {{ "uuid": "{bv_uuid}" }}
-  3. __SA_NS__bv_list_voice_profiles     input: {{ "hostname": "{hostname}" }}
+  3. __SA_NS__bv_list_voice_templates    input: {{}}  (takes no parameters)
   4. __SA_NS__bv_get_knowledge_graph     input: {{ "uuid": "{bv_uuid}" }}
 
 Then emit exactly one result block with the real values returned:
@@ -1135,7 +1151,7 @@ For each target keyword in `payload.target_keywords` (or, if empty, infer 3 seed
 Also fire ONCE in the same batch:
 
   - __SA_NS__gbp_list_categories            → category taxonomy
-  - __SA_NS__se_get_organic_competitors per keyword → discovered competitors
+  - __SA_NS__se_get_organic with view="competitors" (and the site_id) per keyword → discovered competitors
 
 Merge auto-discovered competitors with `payload.known_competitors`, cap at 5.
 
@@ -1196,7 +1212,7 @@ Finally emit exactly one result block:
     {{ "kw": "...", "vol": <int or null>, "intent": "...", "difficulty": <int or null>, "source": "se_lookup_keyword" }}
   ],
   "waves": {{
-    "wave1": ["se_lookup_keyword", "se_get_serp_overview", "gbp_list_categories", "se_get_organic_competitors", "se_get_serp_features"],
+    "wave1": ["se_lookup_keyword", "se_get_serp_overview", "gbp_list_categories", "se_get_organic", "se_get_serp_features"],
     "wave2": ["se_get_indexed_pages", "se_analyze_keyword_gap", "cg_create_topical_map", "cg_topic_suggestions"]
   }}
 }}
@@ -1446,7 +1462,7 @@ def build_prompt(payload: dict) -> str:
     L.append(f"Use slug `{slug}` for the local project folder.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `__SA_NS__cg_list_brand_vaults` with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `__SA_NS__bv_list` with empty params `{}` as an authentication probe.")
     L.append("")
     L.append("If that probe (or ANY subsequent `__SA_NS__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")
@@ -1489,7 +1505,7 @@ def build_prompt(payload: dict) -> str:
     L.append("## Phase 2 — Quick existence check")
     L.append("")
     L.append("Run these two SA lookups in parallel:")
-    L.append("- `cg_list_brand_vaults` — filter by domain. If exists, capture `brand_vault_uuid`.")
+    L.append("- `bv_list` — filter by hostname (domain). If exists, capture `brand_vault_uuid`.")
     L.append("- `gbp_list_locations` — filter by business name + location. If exists, capture `gbp_location_id`.")
     L.append("")
     L.append("Do not check OTTO, PPC, LLM Visibility — `/run-seo` provisions those after the site is live.")
@@ -1534,7 +1550,7 @@ def build_prompt(payload: dict) -> str:
     # ── Phase 4 ──
     L.append("## Phase 4 — Brand vault")
     L.append("")
-    L.append("If BV exists from Phase 2, pull all 4 surfaces in parallel: `bv_get_details`, `bv_get_business_info`, `bv_get_knowledge_graph`, `bv_list_voice_profiles`.")
+    L.append("If BV exists from Phase 2, pull all 4 surfaces in parallel: `bv_get_details`, `bv_get_business_info`, `bv_get_knowledge_graph`, `bv_list_voice_templates` (no params).")
     L.append("")
     L.append("If BV is missing, auto-create and populate from the crawl + operator materials:")
     L.append("- `bv_create` — create empty vault")
@@ -1614,7 +1630,7 @@ def build_prompt(payload: dict) -> str:
     if known_competitors:
         L.append(f"- Known competitors: {', '.join(known_competitors)}")
     else:
-        L.append("- Known competitors: (none — discover via `se_get_organic_competitors`)")
+        L.append("- Known competitors: (none — discover via `se_get_organic` with view=\"competitors\")")
     L.append("")
     L.append("---")
     L.append("")
@@ -1704,7 +1720,7 @@ def build_prompt(payload: dict) -> str:
     # ── Phase 11 ──
     L.append("## Phase 11 — Build + push to Website Studio")
     L.append("")
-    L.append("BV completeness check first: `bv_get_business_info`, `bv_list_voice_profiles`, `bv_get_knowledge_graph`, `bv_get_details`. Optional: `kg_validate_completeness`.")
+    L.append("BV completeness check first: `bv_get_business_info`, `bv_list_voice_templates`, `bv_get_knowledge_graph`, `bv_get_details`. Optional: `kg_validate_completeness`.")
     L.append("")
     L.append("Then scaffold Website Studio:")
     L.append("- `ws_create_project` with `domain`, `business_name`, `brand_vault_uuid`, `design_style`")

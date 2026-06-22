@@ -1005,7 +1005,7 @@ textarea { resize: vertical; min-height: 60px; }
     <li class="build-item" data-wave="1" data-step-id="se_lookup_keyword"><span class="check">✓</span><span class="tool-code">se_lookup_keyword</span>Validating target keywords</li>
     <li class="build-item" data-wave="1" data-step-id="se_get_serp_overview"><span class="check">✓</span><span class="tool-code">se_get_serp_overview</span>Mapping who ranks today</li>
     <li class="build-item" data-wave="1" data-step-id="gbp_list_categories"><span class="check">✓</span><span class="tool-code">gbp_list_categories</span>Pulling category taxonomy</li>
-    <li class="build-item" data-wave="1" data-step-id="se_get_organic_competitors"><span class="check">✓</span><span class="tool-code">se_get_organic_competitors</span>Discovering SA's competitor set</li>
+    <li class="build-item" data-wave="1" data-step-id="se_get_organic"><span class="check">✓</span><span class="tool-code">se_get_organic</span>Identifying organic competitors</li>
     <li class="build-item" data-wave="1" data-step-id="se_get_serp_features"><span class="check">✓</span><span class="tool-code">se_get_serp_features</span>Reading SERP feature patterns</li>
 
     <li class="wave-heading" data-wave-heading="2"><span class="wave-badge">Wave 2 · 4 parallel</span> Pattern-matching against winners</li>
@@ -1977,7 +1977,7 @@ async function renderBVConfirm() {
   const loadingSect = sect('Pulling from Brand Vault…');
   const loadingRow = document.createElement('div');
   loadingRow.className = 'hitl-row';
-  loadingRow.innerHTML = '<div class="hitl-val">Loading <code>bv_get_details</code>, <code>bv_get_business_info</code>, <code>bv_list_voice_profiles</code>, <code>bv_get_knowledge_graph</code>…</div>';
+  loadingRow.innerHTML = '<div class="hitl-val">Loading <code>bv_get_details</code>, <code>bv_get_business_info</code>, <code>bv_list_voice_templates</code>, <code>bv_get_knowledge_graph</code>…</div>';
   loadingSect.appendChild(loadingRow);
 
   let res, data;
@@ -2757,7 +2757,7 @@ function renderHITLSummary() {
   s = addSect('Target market');
   addRow(s, 'Industry', `${tm.industryTier1 || '—'}${tm.industryTier2 ? ' · ' + tm.industryTier2 : ''}`);
   addRow(s, 'Target keywords', tm.targetKeywords.length ? tm.targetKeywords.join(', ') : 'auto-derived from services × location × industry');
-  addRow(s, 'Known competitors', tm.knownCompetitors.length ? tm.knownCompetitors.join(', ') : 'auto-discovered via se_get_organic_competitors');
+  addRow(s, 'Known competitors', tm.knownCompetitors.length ? tm.knownCompetitors.join(', ') : 'auto-discovered via se_get_organic (view=competitors)');
 
   s = addSect('Site plan');
   addRow(s, 'Proposed', `${sm.total} pages · ${byTierLabel}`);

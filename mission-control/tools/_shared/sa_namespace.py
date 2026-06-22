@@ -8,7 +8,7 @@ Two-stage discovery:
   1. CLI fast path — parse ``claude mcp list --json``, find a server whose URL
      contains ``mcp.searchatlas.com``, return its name.
   2. Model probe fallback — spawn ``claude -p`` with a tiny prompt asking
-     Claude to find any tool whose function name is ``cg_list_brand_vaults``,
+     Claude to find any tool whose function name is ``bv_list``,
      return its full namespaced name, strip the suffix to get the prefix.
 
 Stage 2 catches claude.ai web connectors, which are invisible to
@@ -33,14 +33,14 @@ _FAILURE_TTL_S = 10.0
 
 _CLI_LIST_TIMEOUT_S = 10.0
 _PROBE_TIMEOUT_S = 20.0
-_PROBE_TOOL_NAME = "cg_list_brand_vaults"
+_PROBE_TOOL_NAME = "bv_list"
 
 _SA_URL_FRAGMENT = "mcp.searchatlas.com"
 
 _NS_PREFIX_RE = re.compile(r"^mcp__[A-Za-z0-9_]+__$")
 _NS_BLOCK_RE = re.compile(r"<<<NS>>>(.+?)<<<END>>>", re.DOTALL)
 
-_PROBE_PROMPT = """You have MCP tools available. Find any tool whose function name is exactly `cg_list_brand_vaults`. The namespace prefix is unknown — it may be `mcp__searchatlas__`, `mcp__claude_ai_Search_Atlas__`, `mcp__claude_ai_SA_MCP__`, `mcp__atlas__`, or anything else. We don't know what the user named their SearchAtlas connector.
+_PROBE_PROMPT = """You have MCP tools available. Find any tool whose function name is exactly `bv_list`. The namespace prefix is unknown — it may be `mcp__searchatlas__`, `mcp__claude_ai_Search_Atlas__`, `mcp__claude_ai_SA_MCP__`, `mcp__atlas__`, or anything else. We don't know what the user named their SearchAtlas connector.
 
 If you find a matching tool, emit exactly one line, with no other text:
 
@@ -220,7 +220,7 @@ def render_prompt(template: str, sa_ns: Optional[str]) -> str:
 
     If sa_ns is None (discovery failed), substitute with an empty string —
     the spawned Claude will then see naked tool names like
-    ``cg_list_brand_vaults`` and can still find them via ToolSearch (or fail
+    ``bv_list`` and can still find them via ToolSearch (or fail
     explicitly, which the caller handles via the structured auth-probe
     response). Idempotent.
     """

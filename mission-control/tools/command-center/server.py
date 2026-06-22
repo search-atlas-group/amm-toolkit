@@ -136,7 +136,7 @@ TOOL_LABELS: dict[str, str] = {
     "bv_update_business_info": "Saving business info",
     "bv_get_knowledge_graph":  "Loading knowledge graph",
     "bv_update_knowledge_graph": "Building the knowledge graph",
-    "bv_list_voice_profiles":  "Checking voice profiles",
+    "bv_list_voice_templates": "Checking voice profiles",
     "bv_select_voice_profile": "Activating the voice profile",
     "bv_upload_image":     "Uploading brand asset",
     "bv_list_images":      "Listing brand images",
@@ -164,8 +164,9 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_get_audit_report":         "Loading GBP audit",
     # SEO / Site explorer
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    "se_get_organic_keywords":      "Analyzing organic keywords",
-    "se_get_organic_competitors":   "Identifying organic competitors",
+    # se_get_organic takes view=keywords|competitors|pages; per-view progress
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
+    "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains",
     "se_get_serp_overview":         "Reading SERP overview",
@@ -216,8 +217,9 @@ TOOL_LABELS: dict[str, str] = {
     # LLM visibility
     "llmv_create_project":          "Setting up LLM visibility tracking",
     "llmv_submit_prompts":          "Querying LLMs",
-    "llmv_get_brand_overview":      "Reading brand presence in LLMs",
-    "llmv_get_visibility_trend":    "Reading visibility trend",
+    # llmv_get_overview takes view=brand|trend|topics|queries|sentiment; per-view
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
+    "llmv_get_overview":            "Reading brand presence in LLMs",
     "llmv_add_topic":               "Adding tracking topic",
     "llmv_add_query":               "Adding tracking query",
     # Account / quota
@@ -245,11 +247,27 @@ def short_tool_name(raw: str) -> str:
     return raw
 
 
+# A few SA tools multiplex distinct operations behind a `view` argument
+# (e.g. se_get_organic, llmv_get_overview). The old per-operation tool names
+# that used to give each its own progress label no longer exist, so key the
+# label on (bare tool name, view) to keep the per-view distinction.
+VIEW_LABELS: dict[tuple[str, str], str] = {
+    ("se_get_organic", "keywords"):    "Analyzing organic keywords",
+    ("se_get_organic", "competitors"): "Identifying organic competitors",
+    ("se_get_organic", "pages"):       "Analyzing top organic pages",
+    ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
+    ("llmv_get_overview", "trend"):    "Reading visibility trend",
+}
+
+
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
     """Returns a friendly label, or None if the tool should be hidden."""
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
+    view = (tool_input or {}).get("view")
+    if view and (short, view) in VIEW_LABELS:
+        return VIEW_LABELS[(short, view)]
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":

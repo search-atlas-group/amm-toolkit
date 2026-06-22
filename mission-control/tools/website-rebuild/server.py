@@ -128,12 +128,12 @@ TOOL_LABELS: dict[str, str] = {
     "bv_update_business_info": "Saving business info",
     "bv_get_knowledge_graph":  "Loading knowledge graph",
     "bv_update_knowledge_graph": "Building the knowledge graph",
-    "bv_list_voice_profiles":  "Checking voice profiles",
+    "bv_list_voice_templates": "Checking voice profiles",
     "bv_select_voice_profile": "Activating the voice profile",
     "bv_upload_image":     "Uploading brand asset",
     "bv_list_images":      "Listing brand images",
     "bv_list_sources":     "Listing brand sources",
-    "cg_list_brand_vaults": "Looking up brand vaults",
+    # (legacy brand-vault-list key removed — folded into the bv_list key above.)
     "update_refine_prompt":"Training the voice profile",
     "update_brand_vault":  "Saving brand details to the vault",
     "update_knowledge_graph": "Building the knowledge graph",
@@ -155,8 +155,9 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_create_audit_report_external": "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    "se_get_organic_keywords":      "Analyzing organic keywords",
-    "se_get_organic_competitors":   "Identifying organic competitors",
+    # se_get_organic takes view=keywords|competitors|pages; per-view progress
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
+    "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains to protect",
     "se_get_serp_overview":         "Reading SERP overview",
@@ -216,8 +217,9 @@ TOOL_LABELS: dict[str, str] = {
     "dpr_list_opportunities":       "Finding outreach opportunities",
     "llmv_create_project":          "Setting up LLM visibility tracking",
     "llmv_submit_prompts":          "Querying LLMs",
-    "llmv_get_brand_overview":      "Reading brand presence in LLMs",
-    "llmv_get_visibility_trend":    "Reading visibility trend",
+    # llmv_get_overview takes view=brand|trend|...; per-view labels live in
+    # VIEW_LABELS. This bare-name entry is the fallback label.
+    "llmv_get_overview":            "Reading brand presence in LLMs",
     "llmv_add_topic":               "Adding tracking topic",
     "llmv_add_query":               "Adding tracking query",
     "llmv_list_projects":           "Listing LLM Visibility projects",
@@ -243,10 +245,26 @@ def short_tool_name(raw: str) -> str:
     return raw
 
 
+# A few SA tools multiplex distinct operations behind a `view` argument
+# (e.g. se_get_organic, llmv_get_overview). The old per-operation tool names
+# that used to give each its own progress label no longer exist, so key the
+# label on (bare tool name, view) to keep the per-view distinction.
+VIEW_LABELS: dict[tuple[str, str], str] = {
+    ("se_get_organic", "keywords"):    "Analyzing organic keywords",
+    ("se_get_organic", "competitors"): "Identifying organic competitors",
+    ("se_get_organic", "pages"):       "Analyzing top organic pages",
+    ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
+    ("llmv_get_overview", "trend"):    "Reading visibility trend",
+}
+
+
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
+    view = (tool_input or {}).get("view")
+    if view and (short, view) in VIEW_LABELS:
+        return VIEW_LABELS[(short, view)]
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":
@@ -582,7 +600,8 @@ async def run_claude_session(
 
 def is_sa_tool(name: str) -> bool:
     """Detect any Search Atlas MCP call regardless of which namespace prefix
-    the local Claude install uses (`__SA_NS__*`, `__SA_NS__*`, etc.)."""
+    the local Claude install uses (e.g. `mcp__searchatlas__*`,
+    `mcp__claude_ai_Search_Atlas__*`)."""
     if not name:
         return False
     low = name.lower()
@@ -594,7 +613,7 @@ def filter_sa_tool_calls(tool_calls: list[dict]) -> list[dict]:
     return [tc for tc in tool_calls if is_sa_tool(tc.get("name", ""))]
 
 
-# Map a bare SA tool name (e.g. "cg_list_brand_vaults") to its full prefixed
+# Map a bare SA tool name (e.g. "bv_list") to its full prefixed
 # name using whatever SA namespace this user's connector lives at. Discovered
 # at runtime via the shared sa_namespace helper, so callers don't have to
 # guess prefixes.
@@ -651,25 +670,23 @@ def extract_json_from_text(text: str) -> Any | None:
 
 @app.post("/api/auth-probe")
 async def auth_probe(request: Request):
-    """Call cg_list_brand_vaults with empty params. If it succeeds (or returns
+    """Call bv_list with empty params. If it succeeds (or returns
     a normal "no vaults" payload), authentication is good. Any auth-style
     error → authenticated=false."""
     audit("auth-probe.request")
     prompt = (
-        "Call the Search Atlas MCP tool `cg_list_brand_vaults` with empty params `{}` "
-        "as an authentication probe. The tool will be exposed under one of these prefixed names — "
-        "use whichever variant is available:\n"
-        "  - `__SA_NS__cg_list_brand_vaults`\n"
-        "  - `__SA_NS__cg_list_brand_vaults`\n\n"
+        "Call the Search Atlas MCP tool `bv_list` with empty params `{}` "
+        "as an authentication probe. It is exposed as `__SA_NS__bv_list` "
+        "(the namespace prefix is whatever Search Atlas connector is configured).\n\n"
         "RULES:\n"
-        "- Call cg_list_brand_vaults exactly once via whichever Search Atlas namespace is connected.\n"
+        "- Call bv_list exactly once via whichever Search Atlas namespace is connected.\n"
         "- Do NOT call WebFetch, Read, Bash, or any other tool.\n"
         "- After the call returns, say nothing else. Stop.\n"
     )
     res = await run_claude_session(
         prompt,
         timeout_sec=120,
-        allowed_tools=await sa_allowed_variants(["cg_list_brand_vaults"]),
+        allowed_tools=await sa_allowed_variants(["bv_list"]),
     )
 
     if res["timed_out"]:
@@ -984,14 +1001,12 @@ def _build_asset_inheritance_prompt(domain: str) -> str:
 
 Run these Search Atlas MCP calls IN PARALLEL and return a single JSON object with the merged result. Do not narrate. Do not call any non-SearchAtlas tool.
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever variant is available in this session:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured in this session):
 
 Required calls (fire each exactly once, in parallel):
 
 1. `otto_find_project_by_hostname` with hostname=`{domain}`
-2. `cg_list_brand_vaults` with `{{}}` (then filter the response for vaults whose domain matches `{domain}` — case-insensitive, with or without www.)
+2. `bv_list` with `{{}}` (then filter the response for vaults whose domain matches `{domain}` — case-insensitive, with or without www.)
 3. `gbp_list_locations` with `{{}}` (then filter for locations whose website matches `{domain}`)
 4. `ppc_list_businesses` with `{{}}` (then filter for businesses whose domain matches `{domain}`)
 5. `llmv_list_projects` with `{{}}` (then filter for projects whose domain matches `{domain}`)
@@ -1031,7 +1046,7 @@ async def asset_inheritance(request: Request):
     prompt = _build_asset_inheritance_prompt(domain)
     allowed = await sa_allowed_variants([
         "otto_find_project_by_hostname",
-        "cg_list_brand_vaults",
+        "bv_list",
         "gbp_list_locations",
         "ppc_list_businesses",
         "llmv_list_projects",
@@ -1070,7 +1085,7 @@ async def asset_inheritance(request: Request):
                         "project_name": rjson.get("name"),
                         "url": rjson.get("url"),
                     }
-            elif name == "cg_list_brand_vaults":
+            elif name == "bv_list":
                 # Only found when a real BV object matches the searched domain AND has an ID.
                 bv_match = _find_asset_by_domain(rjson, domain, ("vault_id", "id", "uuid"))
                 if bv_match:
@@ -1107,9 +1122,7 @@ def _build_link_preservation_prompt(domain: str, urls: list[str]) -> str:
     url_lines = "\n".join(f"- `{u}`" for u in urls[:30])
     return f"""# Link equity preservation probe for `{domain}`
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 For EACH of the high-Authority Keep URLs below, fire IN PARALLEL:
 - `se_get_anchor_text` for that URL
@@ -1199,9 +1212,7 @@ def _build_pre_launch_prompt(domain: str, tracked: list[str]) -> str:
 
 Capture the CURRENT (pre-launch) state of the old domain so the rebuild can later compute a delta.
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 Required calls (fire in parallel):
 1. `krt_list_projects` with `{{}}` → find the KRT project matching `{domain}`.
@@ -1291,13 +1302,11 @@ def _build_new_page_evidence_prompt(domain: str, candidates: list[dict], competi
         slug = c.get("slug") or "(unnamed)"
         kw = c.get("targetKw") or c.get("title") or slug
         cand_lines.append(f"- slug=`{slug}` · primary_kw=`{kw}`")
-    comp_lines = "\n".join(f"- `{c}`" for c in (competitors or [])[:10]) or "- (no competitors supplied — discover via se_get_organic_competitors first)"
+    comp_lines = "\n".join(f"- `{c}`" for c in (competitors or [])[:10]) or "- (no competitors supplied — discover via se_get_organic with view=\"competitors\" first)"
 
     return f"""# NEW page evidence research for `{domain}`
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 For each NEW page candidate below, fire IN PARALLEL:
 1. `se_lookup_keyword` for its primary_kw (volume + difficulty + intent)
@@ -1354,7 +1363,7 @@ async def new_page_evidence(request: Request):
         "se_get_indexed_pages",
         "se_get_serp_features",
         "cg_topic_suggestions",
-        "se_get_organic_competitors",
+        "se_get_organic",
     ])
 
     async def event_stream():
@@ -1531,7 +1540,7 @@ def build_prompt(payload: dict) -> str:
     L.append("**Skip Phase 0** (target identification + scout ingest) — the wizard already did it.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `cg_list_brand_vaults` (under either `__SA_NS__` or `__SA_NS__` — use whichever namespace is connected) with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `__SA_NS__bv_list` with empty params `{}` as an authentication probe.")
     L.append("")
     L.append("If that probe (or ANY subsequent `__SA_NS__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")
