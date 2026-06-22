@@ -188,45 +188,40 @@ TOOL_LABELS: dict[str, str] = {
     "update_knowledge_graph": "Building the knowledge graph",
     "update_brand_vault_business_info": "Saving business info",
     "gbp_search_places":            "Searching Google for the business",
-    "gbp_list_unconnected_locations": "Looking up Google Business listings",
     "gbp_list_locations":           "Listing connected GBP locations",
     "gbp_get_location":             "Loading the GBP profile",
-    "gbp_get_location_stats":       "Reading GBP performance",
+    "gbp_get_location_metrics":     "Reading GBP performance",
     "gbp_get_location_recommendations": "Generating GBP recommendations",
     "gbp_generate_location_recommendations": "Generating GBP recommendations",
     "gbp_get_business_categories":  "Matching GBP categories",
     "gbp_list_categories":          "Pulling GBP category taxonomy",
     "gbp_list_attributes":          "Reading GBP attributes",
-    "gbp_upsert_attributes":        "Saving GBP attributes",
-    "gbp_upsert_standard_services": "Saving GBP services",
+    "gbp_manage_attributes":        "Saving GBP attributes",
+    "gbp_upsert_services":          "Saving GBP services",
     "gbp_update_location":          "Updating the GBP profile",
     "gbp_suggest_description":      "Drafting GBP description",
-    "gbp_create_audit_report_external": "Auditing the GBP profile",
+    "gbp_create_audit_report":      "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
     # se_get_organic takes view=keywords|competitors|pages; per-view progress
     # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "se_get_organic":               "Analyzing organic search data",
-    "se_get_backlinks":             "Sampling backlink profile",
-    "se_get_referring_domains":     "Mapping referring domains",
+    "se_get_links":                 "Analyzing link profile",
     "se_get_serp_overview":         "Mapping who ranks today",
-    "se_get_serp_features":         "Reading SERP features",
+    "se_get_analysis":              "Analyzing SEO metrics",
     "se_get_indexed_pages":         "Mirroring competitor page structures",
-    "se_analyze_keyword_gap":       "Analyzing keyword gaps",
+    "se_keyword_gap_analyze":       "Analyzing keyword gaps",
     "se_create_keyword_research":   "Setting up keyword research",
     "se_create_project":            "Creating the Site Explorer project",
     "se_lookup_keyword":            "Validating target keywords",
     "krt_create_project":           "Setting up keyword tracking",
     "krt_add_keywords":             "Adding target keywords",
-    "krt_bulk_add_keywords":        "Adding target keywords",
     "krt_refresh_rankings":         "Pulling current rankings",
     "cg_create_topical_map":        "Building topical map",
     "cg_search_topical_maps":       "Looking up topical maps",
     "cg_topic_suggestions":         "Pulling knowledge-graph topics",
     "cg_generate_complete_article": "Generating first article",
-    "cg_dkn_generate_article":      "Generating article from knowledge graph",
-    "cg_create_brand_vault":        "Creating brand vault",
-    "cg_get_brand_vault_details":   "Loading brand vault",
+    "dkn_generate_articles":        "Generating article from knowledge graph",
     "cg_run_content_grader":        "Grading content quality",
     # (legacy brand-vault-list key removed — folded into the bv_list key above,
     #  which already carries the same "Checking for an existing brand vault" label.)
@@ -235,20 +230,18 @@ TOOL_LABELS: dict[str, str] = {
     "otto_get_project_details":     "Loading OTTO project",
     "otto_create_audit":            "Creating the SEO audit",
     "otto_get_site_audit":          "Reading the SEO audit",
-    "otto_engage_project":          "Engaging OTTO automation",
-    "otto_get_project_issues_summary": "Reading site issues",
-    "otto_get_issues_by_type":      "Categorizing site issues",
+    "otto_set_engagement":          "Engaging OTTO automation",
+    "otto_get_project_issues":      "Reading site issues",
     "otto_generate_bulk_recommendations": "Generating SEO recommendations",
-    "otto_activate_instant_indexing":  "Activating instant indexing",
+    "otto_set_instant_indexing":    "Activating instant indexing",
     "otto_select_urls_for_indexing":   "Selecting URLs for indexing",
     "otto_generate_page_schema":    "Generating schema markup",
-    "otto_deploy_page_schema":      "Deploying schema",
-    "otto_show_quota":              "Checking your quota",
-    "otto_get_quota":               "Checking your quota",
-    "otto_get_task_status":         "Checking task status",
+    "otto_deploy_schema":           "Deploying schema",
+    "get_quota":                    "Checking your quota",
+    "verify_task_status":           "Checking task status",
     "otto_update_knowledge_graph":  "Updating knowledge graph",
     "indexer_submit_batch":         "Submitting URLs to Google",
-    "indexer_check_status":         "Checking indexing status",
+    "indexer_get_batch_data":       "Checking indexing status",
     "ws_create_project":            "Scaffolding Website Studio project",
     "ws_publish_project":           "Publishing to Website Studio",
     "ws_get_project":               "Verifying Website Studio state",
@@ -257,7 +250,6 @@ TOOL_LABELS: dict[str, str] = {
     "llmv_get_overview":            "Reading brand presence in LLMs",
     "kg_validate_completeness":     "Validating knowledge graph completeness",
     "get_balance":                  "Checking your balance",
-    "show_otto_quota":              "Checking your quota",
 }
 
 SILENT_TOOLS = {
@@ -288,6 +280,9 @@ VIEW_LABELS: dict[tuple[str, str], str] = {
     ("se_get_organic", "pages"):       "Analyzing top organic pages",
     ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
     ("llmv_get_overview", "trend"):    "Reading visibility trend",
+    ("se_get_links", "backlinks"):         "Sampling backlink profile",
+    ("se_get_links", "referring_domains"): "Mapping referring domains",
+    ("se_get_analysis", "serp_features"):  "Reading SERP features",
 }
 
 
@@ -1146,7 +1141,7 @@ For each target keyword in `payload.target_keywords` (or, if empty, infer 3 seed
 
   - __SA_NS__se_lookup_keyword       → volume + intent + difficulty
   - __SA_NS__se_get_serp_overview    → who ranks today
-  - __SA_NS__se_get_serp_features    → which SERP features
+  - __SA_NS__se_get_analysis with view="serp_features" (and the site_id) → which SERP features
 
 Also fire ONCE in the same batch:
 
@@ -1158,7 +1153,7 @@ Merge auto-discovered competitors with `payload.known_competitors`, cap at 5.
 ### Wave 2 (fire all four tools in a SINGLE tool batch, after Wave 1 returns)
 
   - __SA_NS__se_get_indexed_pages per competitor → real page structures
-  - __SA_NS__se_analyze_keyword_gap between competitors → unclaimed territory
+  - __SA_NS__se_keyword_gap_analyze between competitors → unclaimed territory
   - __SA_NS__cg_create_topical_map seeded with the Wave 1 keyword data
   - __SA_NS__cg_topic_suggestions (no BV uuid required — use `domain` if needed)
 
@@ -1170,7 +1165,7 @@ Produce a sitemap of 8–14 pages spread across these tiers:
 - `core`        — homepage, about, contact, services overview (always include all four)
 - `service`     — one per item in payload.services, capped at 8
 - `location`    — only if payload.location is set; one geo-targeted page
-- `landing`     — 1–2 gap-driven landing pages from se_analyze_keyword_gap
+- `landing`     — 1–2 gap-driven landing pages from se_keyword_gap_analyze
 - `compliance`  — privacy policy, terms of service (always include both)
 
 Each page object MUST have these fields. Use real values from the tool responses — never invent numbers:
@@ -1186,7 +1181,7 @@ Each page object MUST have these fields. Use real values from the tool responses
   "keywords": [{{ "kw": "...", "vol": <int or null>, "intent": "...", "difficulty": <int or null> }}, ...],
   "competitorEvidence": {{ "count": <int>, "examples": ["...", "..."] }},
   "serpFeatures": ["Local Pack", "People Also Ask"],
-  "contentGap": "<grounded sentence from se_analyze_keyword_gap or empty>",
+  "contentGap": "<grounded sentence from se_keyword_gap_analyze or empty>",
   "sections": ["Hero", "What to expect", "Pricing", "FAQ", "CTA"],
   "ctas": ["Book a visit", "Call now"],
   "evidence": {{
@@ -1212,8 +1207,8 @@ Finally emit exactly one result block:
     {{ "kw": "...", "vol": <int or null>, "intent": "...", "difficulty": <int or null>, "source": "se_lookup_keyword" }}
   ],
   "waves": {{
-    "wave1": ["se_lookup_keyword", "se_get_serp_overview", "gbp_list_categories", "se_get_organic", "se_get_serp_features"],
-    "wave2": ["se_get_indexed_pages", "se_analyze_keyword_gap", "cg_create_topical_map", "cg_topic_suggestions"]
+    "wave1": ["se_lookup_keyword", "se_get_serp_overview", "gbp_list_categories", "se_get_organic", "se_get_analysis"],
+    "wave2": ["se_get_indexed_pages", "se_keyword_gap_analyze", "cg_create_topical_map", "cg_topic_suggestions"]
   }}
 }}
 <<<END>>>
@@ -1618,7 +1613,7 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("**Note:** the wizard already ran the two-wave research before kicking off the build, and the per-page approvals below are LOCKED. You should still confirm coverage by running:")
     L.append("- `krt_create_project` for the domain")
-    L.append("- `krt_bulk_add_keywords` with the validated target KWs (listed in Phase 8 below)")
+    L.append("- `krt_add_keywords` with the validated target KWs (listed in Phase 8 below)")
     L.append("")
     L.append("### Target seeds (from operator)")
     L.append(f"- Industry tier 1: **{industry_t1 or '(not specified — infer from services)'}**")
@@ -1708,7 +1703,7 @@ def build_prompt(payload: dict) -> str:
     L.append("## Phase 10 — Content + copy")
     L.append("")
     L.append("For each row in `page-build-queue.csv`, generate copy in parallel batches:")
-    L.append("- `cg_dkn_generate_article` (page + brand voice + KW targets) → copy block")
+    L.append("- `dkn_generate_articles` (page + brand voice + KW targets) → copy block")
     L.append("- `cg_run_content_grader` → score against KW + readability")
     L.append("- Save to `copy/[slug].md`")
     L.append("")
@@ -1731,7 +1726,7 @@ def build_prompt(payload: dict) -> str:
     L.append("2. Generate page HTML using the approved components + copy")
     L.append("3. Push to WS via `ws_create_project` (homepage on first iteration) then per-page push for service / location / landing / compliance pages")
     L.append("4. Upload page images via `bv_upload_image` + WS asset references")
-    L.append("5. For each service / local / landing page: generate schema via `otto_generate_page_schema` and deploy with `otto_deploy_page_schema`")
+    L.append("5. For each service / local / landing page: generate schema via `otto_generate_page_schema` and deploy with `otto_deploy_schema`")
     L.append("6. Verify the page renders via `ws_get_project`")
     L.append("")
     L.append("Service / location pages with shared structure can be batched (Claude generates from template loop programmatically).")
@@ -1745,7 +1740,7 @@ def build_prompt(payload: dict) -> str:
     L.append("Final pre-publish sweep — all pages render in WS preview.")
     L.append("Then publish:")
     L.append("- `ws_publish_project` (project_id) → returns the WS-hosted URL — use EXACTLY what the tool returns; do NOT guess a URL pattern.")
-    L.append("- `otto_activate_instant_indexing` for the domain")
+    L.append("- `otto_set_instant_indexing` for the domain")
     L.append("- `indexer_submit_batch` with the approved page URLs → push to Google")
     L.append("- Emit DNS cutover instructions for the operator's custom domain")
     L.append("")

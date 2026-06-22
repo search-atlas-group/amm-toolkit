@@ -1037,9 +1037,9 @@ textarea { resize: vertical; min-height: 60px; }
 
   <div class="build-wave-header">Link-equity preservation · running in parallel</div>
   <ul class="build-list" id="link-preservation-list">
-    <li class="build-item wave-parallel" data-step-id="anchor"><span class="check">✓</span><span class="tool-code">se_get_anchor_text</span>Reading anchor text for high-Authority Keep pages</li>
-    <li class="build-item wave-parallel" data-step-id="refdomains"><span class="check">✓</span><span class="tool-code">se_get_referring_domains</span>Capturing referring domains to protect</li>
-    <li class="build-item wave-parallel" data-step-id="linkgraph"><span class="check">✓</span><span class="tool-code">se_get_link_network_graph</span>Mapping internal links for remap planning</li>
+    <li class="build-item wave-parallel" data-step-id="anchor"><span class="check">✓</span><span class="tool-code">se_get_links · view=anchor_text</span>Reading anchor text for high-Authority Keep pages</li>
+    <li class="build-item wave-parallel" data-step-id="refdomains"><span class="check">✓</span><span class="tool-code">se_get_links · view=referring_domains</span>Capturing referring domains to protect</li>
+    <li class="build-item wave-parallel" data-step-id="linkgraph"><span class="check">✓</span><span class="tool-code">se_get_links · view=link_network_graph</span>Mapping internal links for remap planning</li>
   </ul>
 
   <div class="page-map-toolbar">
@@ -1271,7 +1271,7 @@ textarea { resize: vertical; min-height: 60px; }
   <ul class="build-list" id="baseline-list">
     <li class="build-item" data-step-id="krtsnap"><span class="check">✓</span><span class="tool-code">krt_get_rankings</span>Snapshotting tracked keyword positions (against OLD site)</li>
     <li class="build-item" data-step-id="gsckw"><span class="check">✓</span><span class="tool-code">gsc_get_keyword_performance</span>Pulling GSC keyword baseline · 28-day window (against OLD site)</li>
-    <li class="build-item" data-step-id="gscpage"><span class="check">✓</span><span class="tool-code">gsc_get_page_performance</span>Pulling GSC per-page baseline (against OLD site)</li>
+    <li class="build-item" data-step-id="gscpage"><span class="check">✓</span><span class="tool-code">gsc_get_page_summary</span>Pulling GSC per-page baseline (against OLD site)</li>
   </ul>
 
   <div class="callout info" style="margin-top: 10px;">
@@ -2869,9 +2869,9 @@ function renderHITLSummary() {
     </div>
     <div class="hitl-section">
       <div class="hitl-heading">Link-equity preservation (Step 3)</div>
-      <div class="hitl-row"><div class="hitl-key">Anchor text captured</div><div class="hitl-val">${lpAnchorCount} high-Authority Keep pages · <code>se_get_anchor_text</code></div></div>
-      <div class="hitl-row"><div class="hitl-key">Referring domains</div><div class="hitl-val">${lpRefDomainsTotal} total domains to protect · <code>se_get_referring_domains</code></div></div>
-      <div class="hitl-row"><div class="hitl-key">Link graph</div><div class="hitl-val">${lpGraph.nodes || 0} nodes · ${lpGraph.internalEdges || 0} edges · ${lpGraph.orphans || 0} orphans · <code>se_get_link_network_graph</code></div></div>
+      <div class="hitl-row"><div class="hitl-key">Anchor text captured</div><div class="hitl-val">${lpAnchorCount} high-Authority Keep pages · <code>se_get_links · view=anchor_text</code></div></div>
+      <div class="hitl-row"><div class="hitl-key">Referring domains</div><div class="hitl-val">${lpRefDomainsTotal} total domains to protect · <code>se_get_links · view=referring_domains</code></div></div>
+      <div class="hitl-row"><div class="hitl-key">Link graph</div><div class="hitl-val">${lpGraph.nodes || 0} nodes · ${lpGraph.internalEdges || 0} edges · ${lpGraph.orphans || 0} orphans · <code>se_get_links · view=link_network_graph</code></div></div>
     </div>
     <div class="hitl-section">
       <div class="hitl-heading">Design</div>
@@ -3506,7 +3506,7 @@ function buildBeforeAfterRows() {
       label: 'Schema deployed',
       before: `<span class="ba-num">${schemaBefore}</span>`,
       // FAB-fix: schemaAfter was hardcoded "${totalAfter} of ${totalAfter}".
-      // Only claim 100% if we have real otto_deploy_page_schema confirmations
+      // Only claim 100% if we have real otto_deploy_schema confirmations
       // for every page. We don't capture that yet, so show planned coverage.
       after:  `<span class="ba-sub">${schemaPlanned} pages queued for schema deploy</span>`
     },
@@ -3546,7 +3546,7 @@ function buildBeforeAfterRows() {
       label: 'Indexing',
       before: `Standard Google crawl`,
       // FAB-fix: only claim "Instant indexing ON" if we have proof that
-      // otto_activate_instant_indexing + indexer_submit_batch actually fired
+      // otto_set_instant_indexing + indexer_submit_batch actually fired
       // (state.indexingActivated set from the SSE stream). Otherwise show
       // planned state and let the operator verify in OTTO.
       after:  state.indexingActivated

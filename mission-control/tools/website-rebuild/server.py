@@ -139,39 +139,34 @@ TOOL_LABELS: dict[str, str] = {
     "update_knowledge_graph": "Building the knowledge graph",
     "update_brand_vault_business_info": "Saving business info",
     "gbp_search_places":            "Searching Google for the business",
-    "gbp_list_unconnected_locations": "Looking up Google Business listings",
     "gbp_list_locations":           "Listing connected GBP locations",
     "gbp_get_location":             "Loading the GBP profile",
-    "gbp_get_location_stats":       "Reading GBP performance",
+    "gbp_get_location_metrics":     "Reading GBP performance",
     "gbp_get_location_recommendations": "Generating GBP recommendations",
     "gbp_generate_location_recommendations": "Generating GBP recommendations",
     "gbp_get_business_categories":  "Matching GBP categories",
     "gbp_list_categories":          "Listing GBP categories",
     "gbp_list_attributes":          "Reading GBP attributes",
-    "gbp_upsert_attributes":        "Saving GBP attributes",
-    "gbp_upsert_standard_services": "Saving GBP services",
+    "gbp_manage_attributes":        "Saving GBP attributes",
+    "gbp_upsert_services":          "Saving GBP services",
     "gbp_update_location":          "Updating the GBP profile",
     "gbp_suggest_description":      "Drafting GBP description",
-    "gbp_create_audit_report_external": "Auditing the GBP profile",
+    "gbp_create_audit_report":      "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
     # se_get_organic takes view=keywords|competitors|pages; per-view progress
     # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "se_get_organic":               "Analyzing organic search data",
-    "se_get_backlinks":             "Sampling backlink profile",
-    "se_get_referring_domains":     "Mapping referring domains to protect",
+    "se_get_links":                 "Analyzing link profile",
     "se_get_serp_overview":         "Reading SERP overview",
     "se_create_keyword_research":   "Setting up keyword research",
     "se_create_project":            "Creating the Site Explorer project",
     "se_lookup_keyword":            "Looking up keyword",
-    "se_get_anchor_text":           "Reading anchor text for high-Authority pages",
-    "se_get_link_network_graph":    "Mapping internal link network",
+    "se_get_analysis":              "Analyzing SEO metrics",
     "se_get_indexed_pages":         "Mirroring competitor page structures",
-    "se_analyze_keyword_gap":       "Analyzing keyword gaps",
-    "se_get_serp_features":         "Reading SERP features",
+    "se_keyword_gap_analyze":       "Analyzing keyword gaps",
     "krt_create_project":           "Setting up keyword tracking",
     "krt_add_keywords":             "Adding target keywords",
-    "krt_bulk_add_keywords":        "Adding target keywords",
     "krt_refresh_rankings":         "Pulling current rankings",
     "krt_get_rankings":             "Capturing pre-launch rank snapshot",
     "krt_list_projects":            "Listing keyword tracking projects",
@@ -179,29 +174,25 @@ TOOL_LABELS: dict[str, str] = {
     "cg_search_topical_maps":       "Looking up topical maps",
     "cg_topic_suggestions":         "Generating topic ideas",
     "cg_generate_complete_article": "Generating page copy",
-    "cg_dkn_generate_article":      "Generating article from knowledge graph",
-    "cg_create_brand_vault":        "Creating brand vault",
-    "cg_get_brand_vault_details":   "Loading brand vault",
+    "dkn_generate_articles":        "Generating article from knowledge graph",
     "cg_run_content_grader":        "Grading content quality",
     "otto_list_projects":           "Checking for an existing OTTO project",
     "otto_find_project_by_hostname":"Finding existing OTTO project",
     "otto_get_project_details":     "Loading OTTO project",
     "otto_create_audit":            "Creating the SEO audit",
     "otto_get_site_audit":          "Reading the SEO audit",
-    "otto_engage_project":          "Engaging OTTO automation",
-    "otto_get_project_issues_summary": "Reading site issues",
-    "otto_get_issues_by_type":      "Loading OTTO issue clusters",
+    "otto_set_engagement":          "Engaging OTTO automation",
+    "otto_get_project_issues":      "Reading site issues",
     "otto_generate_bulk_recommendations": "Generating SEO recommendations",
-    "otto_activate_instant_indexing":  "Activating instant indexing",
+    "otto_set_instant_indexing":    "Activating instant indexing",
     "otto_select_urls_for_indexing":   "Selecting URLs for indexing",
     "otto_generate_page_schema":    "Generating schema markup",
-    "otto_deploy_page_schema":      "Deploying schema",
-    "otto_show_quota":              "Checking your quota",
-    "otto_get_quota":               "Checking your quota",
+    "otto_deploy_schema":           "Deploying schema",
+    "get_quota":                    "Checking your quota",
     "otto_update_knowledge_graph":  "Updating knowledge graph",
     "indexer_submit_batch":         "Submitting URLs to Google",
     "gsc_get_keyword_performance":  "Pulling GSC keyword baseline",
-    "gsc_get_page_performance":     "Pulling GSC page baseline",
+    "gsc_get_page_summary":         "Pulling GSC page baseline",
     "gsc_get_sites":                "Listing Search Console sites",
     "ws_create_project":            "Scaffolding Website Studio project",
     "ws_publish_project":           "Publishing to Website Studio",
@@ -220,11 +211,10 @@ TOOL_LABELS: dict[str, str] = {
     # llmv_get_overview takes view=brand|trend|...; per-view labels live in
     # VIEW_LABELS. This bare-name entry is the fallback label.
     "llmv_get_overview":            "Reading brand presence in LLMs",
-    "llmv_add_topic":               "Adding tracking topic",
-    "llmv_add_query":               "Adding tracking query",
+    "llmv_add_topics":              "Adding tracking topic",
+    "llmv_add_queries":             "Adding tracking query",
     "llmv_list_projects":           "Listing LLM Visibility projects",
     "get_balance":                  "Checking your balance",
-    "show_otto_quota":              "Checking your quota",
 }
 
 SILENT_TOOLS = {
@@ -255,6 +245,11 @@ VIEW_LABELS: dict[tuple[str, str], str] = {
     ("se_get_organic", "pages"):       "Analyzing top organic pages",
     ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
     ("llmv_get_overview", "trend"):    "Reading visibility trend",
+    ("se_get_links", "backlinks"):          "Sampling backlink profile",
+    ("se_get_links", "referring_domains"):  "Mapping referring domains to protect",
+    ("se_get_links", "anchor_text"):        "Reading anchor text for high-Authority pages",
+    ("se_get_links", "link_network_graph"): "Mapping internal link network",
+    ("se_get_analysis", "serp_features"):   "Reading SERP features",
 }
 
 
@@ -1012,7 +1007,7 @@ Required calls (fire each exactly once, in parallel):
 5. `llmv_list_projects` with `{{}}` (then filter for projects whose domain matches `{domain}`)
 
 If OTTO returns a project, ALSO immediately fire:
-6. `otto_get_issues_by_type` for that project_id, in parallel with the rest.
+6. `otto_get_project_issues` for that project_id, in parallel with the rest.
 
 After all responses arrive, emit ONE final assistant message containing ONLY a JSON object with this exact shape (use `null` for missing data, NEVER fabricate IDs or fields):
 
@@ -1050,7 +1045,7 @@ async def asset_inheritance(request: Request):
         "gbp_list_locations",
         "ppc_list_businesses",
         "llmv_list_projects",
-        "otto_get_issues_by_type",
+        "otto_get_project_issues",
     ])
     res = await run_claude_session(prompt, timeout_sec=240, allowed_tools=allowed)
 
@@ -1102,7 +1097,7 @@ async def asset_inheritance(request: Request):
                 llmv_match = _find_asset_by_domain(rjson, domain, ("project_id", "id", "uuid"))
                 if llmv_match:
                     merged["llmv"] = {"found": True, "project_id": str(llmv_match["id"]), "domain": llmv_match.get("domain")}
-            elif name == "otto_get_issues_by_type" and isinstance(rjson, dict):
+            elif name == "otto_get_project_issues" and isinstance(rjson, dict):
                 merged.setdefault("otto", {})["issue_clusters"] = rjson
 
     # Detect if Claude emitted the error shape
@@ -1125,17 +1120,17 @@ def _build_link_preservation_prompt(domain: str, urls: list[str]) -> str:
 The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 For EACH of the high-Authority Keep URLs below, fire IN PARALLEL:
-- `se_get_anchor_text` for that URL
-- `se_get_referring_domains` for that URL
+- `se_get_links` with view="anchor_text" for that URL
+- `se_get_links` with view="referring_domains" for that URL
 
 ALSO fire once (in parallel with the rest):
-- `se_get_link_network_graph` for `{domain}`
+- `se_get_links` with view="link_network_graph" for `{domain}`
 
 URLs to protect:
 {url_lines}
 
 Hard rules:
-- Use ONLY the three Search Atlas tools above. No WebFetch, no Bash, no Read.
+- Use ONLY the `se_get_links` tool above (with the three views). No WebFetch, no Bash, no Read.
 - If a call returns an authentication error, emit ONLY `{{"error":"authentication_required"}}` and stop.
 
 After all responses arrive, emit ONE final assistant message containing ONLY a JSON object with this exact shape (omit / set null for missing data — NEVER fabricate):
@@ -1168,9 +1163,7 @@ async def link_preservation(request: Request):
 
     prompt = _build_link_preservation_prompt(domain, urls)
     allowed = await sa_allowed_variants([
-        "se_get_anchor_text",
-        "se_get_referring_domains",
-        "se_get_link_network_graph",
+        "se_get_links",
     ])
     res = await run_claude_session(prompt, timeout_sec=180, allowed_tools=allowed)
 
@@ -1219,7 +1212,7 @@ Required calls (fire in parallel):
 2. `krt_get_rankings` for that project_id (28-day window) → tracked-keyword positions.
 3. `gsc_get_sites` to find the GSC site property that matches `{domain}`.
 4. `gsc_get_keyword_performance` for that site, 28-day window.
-5. `gsc_get_page_performance` for that site, 28-day window.
+5. `gsc_get_page_summary` for that site, 28-day window.
 
 Operator-supplied keywords to also track (if not already in KRT):
 {tracked_lines}
@@ -1261,7 +1254,7 @@ async def pre_launch_baseline(request: Request):
         "krt_get_rankings",
         "gsc_get_sites",
         "gsc_get_keyword_performance",
-        "gsc_get_page_performance",
+        "gsc_get_page_summary",
     ])
     res = await run_claude_session(prompt, timeout_sec=180, allowed_tools=allowed)
 
@@ -1312,7 +1305,7 @@ For each NEW page candidate below, fire IN PARALLEL:
 1. `se_lookup_keyword` for its primary_kw (volume + difficulty + intent)
 2. `se_get_serp_overview` for that primary_kw (who ranks, page types)
 3. `se_get_indexed_pages` for the top 3 competitor URLs from that SERP
-4. `se_get_serp_features` for that primary_kw (SERP features to target)
+4. `se_get_analysis` with view="serp_features" for that primary_kw (SERP features to target)
 5. `cg_topic_suggestions` for the primary_kw (subtopics + adjacent terms)
 
 Candidates:
@@ -1361,7 +1354,7 @@ async def new_page_evidence(request: Request):
         "se_lookup_keyword",
         "se_get_serp_overview",
         "se_get_indexed_pages",
-        "se_get_serp_features",
+        "se_get_analysis",
         "cg_topic_suggestions",
         "se_get_organic",
     ])
@@ -1578,7 +1571,7 @@ def build_prompt(payload: dict) -> str:
     L.append("")
     L.append("Then fire in parallel for OTTO issue clusters:")
     L.append("- `otto_find_project_by_hostname` for the domain → load the existing project (or note absence).")
-    L.append("- `otto_get_issues_by_type` once a project is loaded → group issues into thin-content / schema / orphan / linking buckets.")
+    L.append("- `otto_get_project_issues` once a project is loaded → group issues into thin-content / schema / orphan / linking buckets.")
     L.append("Apply each operator action: `use` = no MCP write; `edit` = push the operator's edits via the appropriate `bv_update*` / `otto_update_*` / `gbp_update*` / `llmv_*` / PPC tool; `reject_fresh` = scaffold a new asset alongside the old one and route the rebuild at the new one; `add` = additive write only; `create` = fresh from scratch; `skip` = leave untouched.")
     L.append("")
     L.append("---")
@@ -1603,9 +1596,9 @@ def build_prompt(payload: dict) -> str:
         L.append(f"- `{url}` · action={action}{extra} · {title}")
     L.append("")
     L.append("Fire link-equity preservation in parallel for every high-Authority Keep page:")
-    L.append("- `se_get_anchor_text` per high-Authority Keep URL → capture inbound anchors.")
-    L.append("- `se_get_referring_domains` per high-Authority Keep URL → snapshot referring domains to protect through redirects.")
-    L.append("- `se_get_link_network_graph` once for the domain → build the internal-link graph for remap planning.")
+    L.append("- `se_get_links` with view=\"anchor_text\" per high-Authority Keep URL → capture inbound anchors.")
+    L.append("- `se_get_links` with view=\"referring_domains\" per high-Authority Keep URL → snapshot referring domains to protect through redirects.")
+    L.append("- `se_get_links` with view=\"link_network_graph\" once for the domain → build the internal-link graph for remap planning.")
     if link_preservation and link_preservation.get("anchorByUrl"):
         L.append(f"(Wizard already captured a preview via /api/link-preservation — anchors for {len(link_preservation.get('anchorByUrl') or {})} pages, link graph nodes {(link_preservation.get('linkGraph') or {}).get('nodes', 0)}. Confirm and extend via the MCP tools above.)")
     L.append("")
@@ -1620,9 +1613,9 @@ def build_prompt(payload: dict) -> str:
         L.append("- `se_lookup_keyword` for the primary target keyword (volume + difficulty).")
         L.append("- `se_get_serp_overview` for that keyword (who ranks, page types).")
         L.append("- `se_get_indexed_pages` for the top 3 competitor URLs (mirror their structure).")
-        L.append("- `se_get_serp_features` (SERP features to target — LOCAL_PACK, PAA, IMAGE_PACK, etc.).")
+        L.append("- `se_get_analysis` with view=\"serp_features\" (SERP features to target — LOCAL_PACK, PAA, IMAGE_PACK, etc.).")
         L.append("- `cg_topic_suggestions` to flesh out subtopics.")
-        L.append("- `se_analyze_keyword_gap` against the top 2-3 organic competitors to surface adjacent terms.")
+        L.append("- `se_keyword_gap_analyze` against the top 2-3 organic competitors to surface adjacent terms.")
         L.append("")
         L.append("NEW page candidates:")
         for p in new_pages:
@@ -1703,13 +1696,13 @@ def build_prompt(payload: dict) -> str:
     L.append("Execute the rebuild via Website Studio:")
     L.append(f"- `ws_create_project` (or load existing) for `{slug}` under domain `{domain}` with the new style `{new_style or 'modern_minimal'}`.")
     L.append("- For each Keep+redesign page: load old content (from scout HTML if provided, else scout text inventory), wrap in the new style components.")
-    L.append("- For each Keep+rewrite page: regenerate copy with `cg_dkn_generate_article` using the brand vault voice profile.")
+    L.append("- For each Keep+rewrite page: regenerate copy with `dkn_generate_articles` using the brand vault voice profile.")
     L.append("- For each Merge target: pull old sources, fold into the merge target page.")
-    L.append("- For each NEW (approved) page: greenfield generation via `cg_dkn_generate_article` using the market evidence from Phase 2.3.")
+    L.append("- For each NEW (approved) page: greenfield generation via `dkn_generate_articles` using the market evidence from Phase 2.3.")
     L.append("- Build the redirect map: every Delete URL maps to its `redirectTo`; every Merge URL maps to its `mergeInto`.")
     L.append("- Remap every internal link in the new build so nothing links to a Deleted/Merged URL.")
     L.append("- QA pass: link checker, schema presence, no 404s in the new build.")
-    L.append("- Generate JSON-LD schema per page via `otto_generate_page_schema`, then deploy via `otto_deploy_page_schema`.")
+    L.append("- Generate JSON-LD schema per page via `otto_generate_page_schema`, then deploy via `otto_deploy_schema`.")
     L.append("")
     L.append("---")
     L.append("")
@@ -1718,7 +1711,7 @@ def build_prompt(payload: dict) -> str:
     L.append("Before the cutover, snapshot the current state so Phase 7 can compute the delta:")
     L.append("- `krt_get_rankings` for the active KRT project → tracked-keyword positions (against the OLD site).")
     L.append("- `gsc_get_keyword_performance` 28-day window (against the OLD site).")
-    L.append("- `gsc_get_page_performance` 28-day window (against the OLD site).")
+    L.append("- `gsc_get_page_summary` 28-day window (against the OLD site).")
     L.append("Store all three snapshots in the rebuild artifacts directory — the post-launch verification depends on them.")
     L.append("")
     L.append("---")
@@ -1735,7 +1728,7 @@ def build_prompt(payload: dict) -> str:
     L.append("- `ws_publish_project` to push the new build live.")
     L.append("- Apply the redirect map via Website Studio redirect rules.")
     L.append("- Verify SSL provisioned.")
-    L.append("- `otto_activate_instant_indexing` for the project.")
+    L.append("- `otto_set_instant_indexing` for the project.")
     L.append("- `indexer_submit_batch` with every URL in the new build.")
     L.append("- Post-deploy sweep: sample 50 URLs from scout's inventory, confirm each resolves (200 / 301).")
     L.append("- Submit updated sitemap to Search Console.")

@@ -147,28 +147,26 @@ TOOL_LABELS: dict[str, str] = {
     "update_brand_vault_business_info": "Saving business info",
     # GBP
     "gbp_search_places":            "Searching Google for the business",
-    "gbp_list_unconnected_locations": "Looking up Google Business listings",
     "gbp_list_locations":           "Listing connected GBP locations",
     "gbp_get_location":             "Loading the GBP profile",
-    "gbp_get_location_stats":       "Reading GBP performance",
+    "gbp_get_location_metrics":     "Reading GBP performance",
     "gbp_get_location_recommendations": "Generating GBP recommendations",
     "gbp_generate_location_recommendations": "Generating GBP recommendations",
     "gbp_get_business_categories":  "Matching GBP categories",
     "gbp_list_categories":          "Listing GBP categories",
     "gbp_list_attributes":          "Reading GBP attributes",
-    "gbp_upsert_attributes":        "Saving GBP attributes",
-    "gbp_upsert_standard_services": "Saving GBP services",
+    "gbp_manage_attributes":        "Saving GBP attributes",
+    "gbp_upsert_services":          "Saving GBP services",
     "gbp_update_location":          "Updating the GBP profile",
     "gbp_suggest_description":      "Drafting GBP description",
-    "gbp_create_audit_report_external": "Auditing the GBP profile",
+    "gbp_create_audit_report":      "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     # SEO / Site explorer
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
     # se_get_organic takes view=keywords|competitors|pages; per-view progress
     # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "se_get_organic":               "Analyzing organic search data",
-    "se_get_backlinks":             "Sampling backlink profile",
-    "se_get_referring_domains":     "Mapping referring domains",
+    "se_get_links":                 "Analyzing link profile",
     "se_get_serp_overview":         "Reading SERP overview",
     "se_create_keyword_research":   "Setting up keyword research",
     "se_create_project":            "Creating the Site Explorer project",
@@ -176,16 +174,13 @@ TOOL_LABELS: dict[str, str] = {
     # Keyword tracking
     "krt_create_project":           "Setting up keyword tracking",
     "krt_add_keywords":             "Adding target keywords",
-    "krt_bulk_add_keywords":        "Adding target keywords",
     "krt_refresh_rankings":         "Pulling current rankings",
     # Content
     "cg_create_topical_map":        "Building the topical map",
     "cg_search_topical_maps":       "Looking up topical maps",
     "cg_topic_suggestions":         "Generating topic ideas",
     "cg_generate_complete_article": "Generating first article",
-    "cg_dkn_generate_article":      "Generating article from knowledge graph",
-    "cg_create_brand_vault":        "Creating brand vault",
-    "cg_get_brand_vault_details":   "Loading brand vault",
+    "dkn_generate_articles":        "Generating article from knowledge graph",
     "cg_run_content_grader":        "Grading content quality",
     # OTTO
     "otto_list_projects":           "Checking for an existing OTTO project",
@@ -193,14 +188,12 @@ TOOL_LABELS: dict[str, str] = {
     "otto_get_project_details":     "Loading OTTO project",
     "otto_create_audit":            "Creating the SEO audit",
     "otto_get_site_audit":          "Reading the SEO audit",
-    "otto_engage_project":          "Engaging OTTO automation",
-    "otto_get_project_issues_summary": "Reading site issues",
-    "otto_get_issues_by_type":      "Categorizing site issues",
+    "otto_set_engagement":          "Engaging OTTO automation",
+    "otto_get_project_issues":      "Reading site issues",
     "otto_generate_bulk_recommendations": "Generating SEO recommendations",
-    "otto_activate_instant_indexing":  "Activating instant indexing",
+    "otto_set_instant_indexing":    "Activating instant indexing",
     "otto_select_urls_for_indexing":   "Selecting URLs for indexing",
-    "otto_show_quota":              "Checking your quota",
-    "otto_get_quota":               "Checking your quota",
+    "get_quota":                    "Checking your quota",
     "otto_update_knowledge_graph":  "Updating knowledge graph",
     # PPC
     "ppc_create_business":          "Setting up PPC business",
@@ -220,11 +213,10 @@ TOOL_LABELS: dict[str, str] = {
     # llmv_get_overview takes view=brand|trend|topics|queries|sentiment; per-view
     # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "llmv_get_overview":            "Reading brand presence in LLMs",
-    "llmv_add_topic":               "Adding tracking topic",
-    "llmv_add_query":               "Adding tracking query",
+    "llmv_add_topics":              "Adding tracking topic",
+    "llmv_add_queries":             "Adding tracking query",
     # Account / quota
     "get_balance":                  "Checking your balance",
-    "show_otto_quota":              "Checking your quota",
 }
 
 # Tools we silently skip (internal / noisy)
@@ -257,6 +249,8 @@ VIEW_LABELS: dict[tuple[str, str], str] = {
     ("se_get_organic", "pages"):       "Analyzing top organic pages",
     ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
     ("llmv_get_overview", "trend"):    "Reading visibility trend",
+    ("se_get_links", "backlinks"):         "Sampling backlink profile",
+    ("se_get_links", "referring_domains"): "Mapping referring domains",
 }
 
 
@@ -496,7 +490,7 @@ def build_prompt(payload: dict) -> str:
         L.append("")
         L.append("Use `gbp_search_places` with the business name + city extracted in Phase 1. Find the listing whose website matches the domain (compare against `https://{domain}` and the bare hostname). If exactly one match is found, take its place_id and connect it to SearchAtlas via the appropriate brand-vault / GBP linking flow. If multiple plausible matches exist, list them in the summary and proceed without blocking — the agency will confirm in SA. Do not silently skip GBP — it's the most-touched profile.")
         L.append("")
-        L.append("After connection, run `gbp_create_audit_report_external` to start the GBP audit.")
+        L.append("After connection, run `gbp_create_audit_report` to start the GBP audit.")
         L.append("")
         L.append("---")
         L.append("")
