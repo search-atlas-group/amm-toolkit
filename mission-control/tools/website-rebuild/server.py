@@ -218,8 +218,9 @@ TOOL_LABELS: dict[str, str] = {
     "dpr_list_opportunities":       "Finding outreach opportunities",
     "llmv_create_project":          "Setting up LLM visibility tracking",
     "llmv_submit_prompts":          "Querying LLMs",
+    # llmv_get_overview takes view=brand|trend|...; per-view labels live in
+    # VIEW_LABELS. This bare-name entry is the fallback label.
     "llmv_get_overview":            "Reading brand presence in LLMs",
-    "llmv_get_visibility_trend":    "Reading visibility trend",
     "llmv_add_topic":               "Adding tracking topic",
     "llmv_add_query":               "Adding tracking query",
     "llmv_list_projects":           "Listing LLM Visibility projects",
@@ -245,10 +246,26 @@ def short_tool_name(raw: str) -> str:
     return raw
 
 
+# A few SA tools multiplex distinct operations behind a `view` argument
+# (e.g. se_get_organic, llmv_get_overview). The old per-operation tool names
+# that used to give each its own progress label no longer exist, so key the
+# label on (bare tool name, view) to keep the per-view distinction.
+VIEW_LABELS: dict[tuple[str, str], str] = {
+    ("se_get_organic", "keywords"):    "Analyzing organic keywords",
+    ("se_get_organic", "competitors"): "Identifying organic competitors",
+    ("se_get_organic", "pages"):       "Analyzing top organic pages",
+    ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
+    ("llmv_get_overview", "trend"):    "Reading visibility trend",
+}
+
+
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
+    view = (tool_input or {}).get("view")
+    if view and (short, view) in VIEW_LABELS:
+        return VIEW_LABELS[(short, view)]
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":
@@ -659,10 +676,8 @@ async def auth_probe(request: Request):
     audit("auth-probe.request")
     prompt = (
         "Call the Search Atlas MCP tool `bv_list` with empty params `{}` "
-        "as an authentication probe. The tool will be exposed under one of these prefixed names — "
-        "use whichever variant is available:\n"
-        "  - `__SA_NS__bv_list`\n"
-        "  - `__SA_NS__bv_list`\n\n"
+        "as an authentication probe. It is exposed as `__SA_NS__bv_list` "
+        "(the namespace prefix is whatever Search Atlas connector is configured).\n\n"
         "RULES:\n"
         "- Call bv_list exactly once via whichever Search Atlas namespace is connected.\n"
         "- Do NOT call WebFetch, Read, Bash, or any other tool.\n"
@@ -986,9 +1001,7 @@ def _build_asset_inheritance_prompt(domain: str) -> str:
 
 Run these Search Atlas MCP calls IN PARALLEL and return a single JSON object with the merged result. Do not narrate. Do not call any non-SearchAtlas tool.
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever variant is available in this session:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured in this session):
 
 Required calls (fire each exactly once, in parallel):
 
@@ -1109,9 +1122,7 @@ def _build_link_preservation_prompt(domain: str, urls: list[str]) -> str:
     url_lines = "\n".join(f"- `{u}`" for u in urls[:30])
     return f"""# Link equity preservation probe for `{domain}`
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 For EACH of the high-Authority Keep URLs below, fire IN PARALLEL:
 - `se_get_anchor_text` for that URL
@@ -1201,9 +1212,7 @@ def _build_pre_launch_prompt(domain: str, tracked: list[str]) -> str:
 
 Capture the CURRENT (pre-launch) state of the old domain so the rebuild can later compute a delta.
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 Required calls (fire in parallel):
 1. `krt_list_projects` with `{{}}` → find the KRT project matching `{domain}`.
@@ -1297,9 +1306,7 @@ def _build_new_page_evidence_prompt(domain: str, candidates: list[dict], competi
 
     return f"""# NEW page evidence research for `{domain}`
 
-The Search Atlas MCP is exposed under one of these namespace prefixes — use whichever is connected:
-- `__SA_NS__<tool>`
-- `__SA_NS__<tool>`
+The Search Atlas MCP tools are exposed as `__SA_NS__<tool>` (the namespace prefix is whatever Search Atlas connector is configured):
 
 For each NEW page candidate below, fire IN PARALLEL:
 1. `se_lookup_keyword` for its primary_kw (volume + difficulty + intent)
@@ -1533,7 +1540,7 @@ def build_prompt(payload: dict) -> str:
     L.append("**Skip Phase 0** (target identification + scout ingest) — the wizard already did it.")
     L.append("")
     L.append("**CRITICAL — FAIL HARD ON AUTHENTICATION ERRORS.**")
-    L.append("Before doing anything else, call `bv_list` (under either `__SA_NS__` or `__SA_NS__` — use whichever namespace is connected) with empty params `{}` as an authentication probe.")
+    L.append("Before doing anything else, call `__SA_NS__bv_list` with empty params `{}` as an authentication probe.")
     L.append("")
     L.append("If that probe (or ANY subsequent `__SA_NS__*` call) returns an authentication / OAuth / `not authenticated` / `unauthorized` / `401` / `connector not authenticated` error:")
     L.append("")

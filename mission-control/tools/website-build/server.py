@@ -204,9 +204,8 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_create_audit_report_external": "Auditing the GBP profile",
     "gbp_get_audit_report":         "Loading GBP audit",
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    # se_get_organic now takes view=keywords|competitors. friendly_label keys on
-    # the bare tool name only (not tool_input["view"]), so organic-keyword and
-    # organic-competitor steps collapse to this one key/label. FLAGGED FOR REVIEW.
+    # se_get_organic takes view=keywords|competitors|pages; per-view progress
+    # labels live in VIEW_LABELS. This bare-name entry is the fallback label.
     "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains",
@@ -279,10 +278,26 @@ def short_tool_name(raw: str) -> str:
     return raw
 
 
+# A few SA tools multiplex distinct operations behind a `view` argument
+# (e.g. se_get_organic, llmv_get_overview). The old per-operation tool names
+# that used to give each its own progress label no longer exist, so key the
+# label on (bare tool name, view) to keep the per-view distinction.
+VIEW_LABELS: dict[tuple[str, str], str] = {
+    ("se_get_organic", "keywords"):    "Analyzing organic keywords",
+    ("se_get_organic", "competitors"): "Identifying organic competitors",
+    ("se_get_organic", "pages"):       "Analyzing top organic pages",
+    ("llmv_get_overview", "brand"):    "Reading brand presence in LLMs",
+    ("llmv_get_overview", "trend"):    "Reading visibility trend",
+}
+
+
 def friendly_label(tool_name: str, tool_input: dict) -> str | None:
     short = short_tool_name(tool_name)
     if tool_name in SILENT_TOOLS or short in SILENT_TOOLS:
         return None
+    view = (tool_input or {}).get("view")
+    if view and (short, view) in VIEW_LABELS:
+        return VIEW_LABELS[(short, view)]
     if short in TOOL_LABELS:
         return TOOL_LABELS[short]
     if tool_name == "Bash":
@@ -431,14 +446,12 @@ def domain_to_slug(domain: str) -> str:
 
 
 MCP_NAMESPACE_HINT = (
-    "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed under one of two\n"
-    "namespace prefixes depending on how the user installed the connector:\n"
-    "  - `__SA_NS__<tool>`               (manual `claude mcp add` install)\n"
-    "  - `__SA_NS__<tool>`    (claude.ai connector install)\n"
+    "IMPORTANT — Search Atlas MCP namespace. SA tools are exposed as\n"
+    "`__SA_NS__<tool>` (the namespace prefix matches whatever Search Atlas\n"
+    "connector the user installed).\n"
     "If a referenced tool name isn't directly available in your tool set,\n"
     "call `ToolSearch` with the query `select:__SA_NS__<tool>`\n"
-    "to load its schema, then call the loaded tool. Use whichever variant works.\n"
-    "Either namespace produces an identical response shape.\n"
+    "to load its schema, then call the loaded tool.\n"
     "\n"
 )
 
