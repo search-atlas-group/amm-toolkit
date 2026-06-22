@@ -136,7 +136,7 @@ TOOL_LABELS: dict[str, str] = {
     "bv_update_business_info": "Saving business info",
     "bv_get_knowledge_graph":  "Loading knowledge graph",
     "bv_update_knowledge_graph": "Building the knowledge graph",
-    "bv_list_voice_profiles":  "Checking voice profiles",
+    "bv_list_voice_templates": "Checking voice profiles",
     "bv_select_voice_profile": "Activating the voice profile",
     "bv_upload_image":     "Uploading brand asset",
     "bv_list_images":      "Listing brand images",
@@ -164,8 +164,12 @@ TOOL_LABELS: dict[str, str] = {
     "gbp_get_audit_report":         "Loading GBP audit",
     # SEO / Site explorer
     "se_get_holistic_seo_scores":   "Scoring holistic SEO pillars",
-    "se_get_organic_keywords":      "Analyzing organic keywords",
-    "se_get_organic_competitors":   "Identifying organic competitors",
+    # NOTE: se_get_organic is now one tool taking view=keywords|competitors.
+    # friendly_label() keys on the bare tool name only (it does not inspect the
+    # `view` input), so both organic-keyword and organic-competitor steps collapse
+    # to this single key/label. Distinguishing them in the feed would require
+    # friendly_label() to branch on tool_input["view"]. FLAGGED FOR HUMAN REVIEW.
+    "se_get_organic":               "Analyzing organic search data",
     "se_get_backlinks":             "Sampling backlink profile",
     "se_get_referring_domains":     "Mapping referring domains",
     "se_get_serp_overview":         "Reading SERP overview",
@@ -216,7 +220,9 @@ TOOL_LABELS: dict[str, str] = {
     # LLM visibility
     "llmv_create_project":          "Setting up LLM visibility tracking",
     "llmv_submit_prompts":          "Querying LLMs",
-    "llmv_get_brand_overview":      "Reading brand presence in LLMs",
+    # llmv_get_overview takes view=brand|trend|topics|queries|sentiment; keyed on
+    # bare tool name, so brand-overview and visibility-trend both map here.
+    "llmv_get_overview":            "Reading brand presence in LLMs",
     "llmv_get_visibility_trend":    "Reading visibility trend",
     "llmv_add_topic":               "Adding tracking topic",
     "llmv_add_query":               "Adding tracking query",

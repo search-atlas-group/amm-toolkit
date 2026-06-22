@@ -3682,7 +3682,7 @@ function approveAndStart() {
 
 // ────────────────────────────────────────────────────────────
 // AUTH GATEKEEPER — must succeed before any step is interactable.
-// Calls /api/auth-probe (which fires cg_list_brand_vaults). On 401/502/504
+// Calls /api/auth-probe (which fires bv_list). On 401/502/504
 // the modal blocks the UI with a retry + Open Claude.ai link.
 // ────────────────────────────────────────────────────────────
 let _authState = { authenticated: false, checking: false };
@@ -3709,7 +3709,7 @@ function showAuthCheckingModal() {
   overlay.style.display = 'flex';
   document.getElementById('auth-modal-icon').textContent = '⏳';
   document.getElementById('auth-modal-title').textContent = 'Verifying Search Atlas access…';
-  document.getElementById('auth-modal-body').textContent = 'Calling cg_list_brand_vaults as an authentication probe. This may take 10–30 seconds the first time.';
+  document.getElementById('auth-modal-body').textContent = 'Calling bv_list as an authentication probe. This may take 10–30 seconds the first time.';
   document.getElementById('auth-modal-retry').style.display = 'none';
   const howto = document.getElementById('auth-modal-howto');
   if (howto) howto.style.display = 'none';
