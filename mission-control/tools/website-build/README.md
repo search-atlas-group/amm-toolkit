@@ -33,7 +33,7 @@ When you click **Approve · start build →**, the server builds a single self-c
 7. **Phase 7** — Market-evidence research (two parallel waves, 9 SA tools)
 8. **Phase 8** — Page queue from operator-approved decisions (`page-build-queue.csv`)
 9. **Phase 9** — Design style → BV + WS
-10. **Phase 10** — Content + copy (`cg_dkn_generate_article` per page)
+10. **Phase 10** — Content + copy (`dkn_generate_articles` per page)
 11. **Phase 11** — Build + push to Website Studio (`ws_create_project`, schema deploy, image upload)
 12. **Phase 12** — Publish + handoff (`ws_publish_project`, instant indexing, sitemap submission)
 

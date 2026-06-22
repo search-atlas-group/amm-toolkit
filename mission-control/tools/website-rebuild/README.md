@@ -14,9 +14,9 @@ When you click **Approve · start rebuild** at the pre-rebuild gate, the server 
 
 1. Inherits the SA assets per your `use / edit / add / reject_fresh / create / skip` decisions (OTTO, Brand Vault, GBP, PPC, LLM Visibility)
 2. Executes the page rebuild map — Keep+redesign, Keep+rewrite, Merge, Delete (with 301s), New (greenfield from approved topic gaps)
-3. Fires link-equity preservation in parallel for every high-Authority Keep page (`se_get_anchor_text`, `se_get_referring_domains`, `se_get_link_network_graph`)
+3. Fires link-equity preservation in parallel for every high-Authority Keep page (`se_get_links` with `view=anchor_text` / `view=referring_domains` / `view=link_network_graph`)
 4. Builds the rebuild in Website Studio per the locked design style, generates schema, deploys schema
-5. Captures the pre-launch baseline (`krt_get_rankings`, `gsc_get_keyword_performance`, `gsc_get_page_performance`)
+5. Captures the pre-launch baseline (`krt_get_rankings`, `gsc_get_keyword_performance`, `gsc_get_page_summary`)
 6. Publishes via `ws_publish_project`, applies the redirect map, activates instant indexing, batch-submits new URLs
 7. Surfaces both the WS live URL and the custom domain (with DNS-cutover status based on hosting mode)
 8. Returns the Before / After upgrade summary
