@@ -62,10 +62,10 @@ Every play needs a target. Ask the user (unless already established by `/searcha
 > Which client/domain is this for?
 
 Then resolve from the domain:
-- `project_id` via `project_management` → `find_project_by_hostname`
-- `brand_vault_uuid` via `brand_vault` → `list_brand_vaults` (filter by domain)
-- `location_id` via `gbp_locations_crud` → `list_locations` (filter by domain) — only if needed
-- `business_id` via `business_crud` → `list_businesses` (filter by domain) — only if needed
+- `project_id` via `otto_find_project_by_hostname`
+- `brand_vault_uuid` via `bv_list` (filter by domain)
+- `location_id` via `gbp_list_locations` (filter by domain) — only if needed
+- `business_id` via `ppc_list_businesses` (filter by domain) — only if needed
 
 If the play needs a resource that doesn't exist (e.g., play 8 GBP Optimize but no GBP location connected), tell the user and exit cleanly:
 > ⚠️ This play needs a connected GBP location. Run `/searchatlas:run-gbp` first to connect one.
@@ -81,10 +81,10 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** domain, client name (if creating new vault)
 
 **Steps:**
-1. If `brand_vault_uuid` exists: `brand_vault` → `retrieve_brand_vault_details`. Else: ask user for client name → `brand_vault` → `create_brand_vault`.
-2. `brand_vault` → `update_brand_vault_business_info` (ask for any missing fields: phone, email, address, hours)
-3. `brand_vault` → `update_refine_prompt` (set voice profile — ask for tone if not on file)
-4. `brand_vault` → `update_knowledge_graph` (seed with primary keyword + top 3 competitors — ask if not on file)
+1. If `brand_vault_uuid` exists: `bv_get_details`. Else: ask user for client name → `bv_create`.
+2. `bv_update_business_info` (ask for any missing fields: phone, email, address, hours)
+3. `brand_vault` → `update_refine_prompt` (set voice profile — ask for tone if not on file) *(brand-voice refine op — no confirmed flat tool; verify at runtime)*
+4. `bv_update_knowledge_graph` (seed with primary keyword + top 3 competitors — ask if not on file)
 
 **Output:** confirmation of what was set, brand vault UUID, link to view in SA.
 
@@ -95,11 +95,11 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** domain
 
 **Steps:**
-1. `project_management` → `engage_otto_project` (`hostname: <domain>`)
-2. `project_management` → `verify_otto_installation`
-3. `audit_management` → `create_audit` (`project_id`)
-4. Poll `get_otto_task_status` until SUCCESS (5–10s intervals)
-5. `seo_analysis` → `get_holistic_seo_pillar_scores` → display the four pillars
+1. `otto_set_engagement` (`hostname: <domain>`, engage)
+2. `otto_check_installation`
+3. `otto_create_audit` (`project_id`)
+4. Poll `verify_task_status` until SUCCESS (5–10s intervals)
+5. `se_get_holistic_seo_scores` → display the four pillars
 
 **Output:** project ID, install status, first pillar scores. Suggest `/searchatlas:scout` for a full diagnostic.
 
@@ -123,11 +123,11 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** domain, brand name, top 5 competitor names (suggest from organic competitors if not provided)
 
 **Steps:**
-1. `visibility` → `create_brand` (or schema-discover) with brand + domain + competitors
-2. Seed initial queries: ask user for 5–10 search queries their customers might type, OR auto-suggest from `organic` → `get_organic_keywords` (top 10 by intent)
-3. `visibility` → `submit_prompts` to run first analysis
+1. `llmv_create_project` (or schema-discover) with brand + domain + competitors
+2. Seed initial queries: ask user for 5–10 search queries their customers might type, OR auto-suggest from `se_get_organic` (view='keywords', top 10 by intent)
+3. `llmv_submit_prompts` to run first analysis
 4. Poll until complete
-5. `visibility` → `get_brand_overview` → display SoV, sentiment, top citations
+5. `llmv_get_overview` → display SoV, sentiment, top citations
 
 **Output:** brand ID, first SoV reading, link to LLM Visibility dashboard.
 
@@ -138,7 +138,7 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** pillar keyword, target location (city/region or "national")
 
 **Steps:**
-1. `topical_maps` → `create_topical_map` with pillar keyword + location
+1. `cg_create_topical_map` with pillar keyword + location
 2. Poll until complete
 3. Display the map: clusters, sub-topics, suggested article titles
 
@@ -151,10 +151,10 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** topic (one trophy piece — long, comprehensive, LLM-optimized)
 
 **Steps:**
-1. `content_generation` → `create_content_instance` with topic, mark as "trophy" (long-form, citation-rich)
-2. `content_generation` → `start_information_retrieval` → poll until SUCCESS
-3. `content_generation` → `start_headings_outline` → poll
-4. `content_generation` → `generate_complete_article` with trophy settings (longer word count, more sources, citation hooks for LLMs)
+1. `cg_create_content_instance` with topic, mark as "trophy" (long-form, citation-rich)
+2. `cg_start_information_retrieval` → poll until SUCCESS
+3. `cg_start_headings_outline` → poll
+4. `cg_generate_complete_article` with trophy settings (longer word count, more sources, citation hooks for LLMs)
 5. Save as draft. **Do not auto-publish.**
 
 **Output:** article ID, draft preview link, recommendation to publish via `/searchatlas:run-content`.
@@ -166,10 +166,10 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** article title, target keyword (suggest from topical map if available)
 
 **Steps:**
-1. `content_generation` → `create_content_instance` (standard blog)
-2. `start_information_retrieval` → poll
-3. `start_headings_outline` → poll
-4. `generate_complete_article`
+1. `cg_create_content_instance` (standard blog)
+2. `cg_start_information_retrieval` → poll
+3. `cg_start_headings_outline` → poll
+4. `cg_generate_complete_article`
 5. Save as draft.
 
 **Output:** article ID, preview link.
@@ -181,11 +181,11 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** `location_id` (must already exist — if not, tell user to run `/searchatlas:run-gbp` first)
 
 **Steps:**
-1. `gbp_locations_crud` → `get_location` → current state
-2. `gbp_locations_crud` → `get_location_recommendations` → list of suggested fixes
+1. `gbp_get_location` → current state
+2. `gbp_get_location_recommendations` → list of suggested fixes
 3. Show recommendations to user. Confirm which to apply.
-4. On confirm: `gbp_locations_crud` → `bulk_apply_recommendations` (only the ones approved)
-5. Optionally: `gbp_locations_crud` → `update_open_info` for description (ask user to review SA-suggested copy first)
+4. On confirm: `gbp_bulk_apply_recommendations` (only the ones approved)
+5. Optionally: `gbp_update_location` for description (ask user to review SA-suggested copy first)
 
 **Output:** count of recommendations applied, before/after summary.
 
@@ -253,8 +253,8 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** domain, brand name
 
 **Steps:**
-1. `visibility` → `get_citations_overview` (or schema-discover)
-2. `visibility` → `get_citations_urls` — list of URLs where the brand is cited in AI answers
+1. `llmv_get_citations_overview` (or schema-discover)
+2. `llmv_get_citations_urls` — list of URLs where the brand is cited in AI answers
 3. Group by domain, sort by frequency
 
 **Output:** table of citing domains, citation count, sample queries that triggered each citation.
@@ -304,11 +304,11 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** `brand_id` (from LLM Visibility), domain
 
 **Steps:**
-1. `visibility` → `list_topics` → current topics being tracked
-2. `visibility` → `list_queries` → current queries
-3. Use the brand vault + organic data + `topical_maps` to suggest 10–20 NEW topics/questions worth tracking
+1. `llmv_list_topics` → current topics being tracked
+2. `llmv_list_queries` → current queries
+3. Use the brand vault + organic data + topical-map data (`cg_search_topical_maps`) to suggest 10–20 NEW topics/questions worth tracking
 4. Show suggestions. Confirm which to add.
-5. On confirm: `visibility` → `add_topic` and `add_query` for each approved item.
+5. On confirm: `llmv_add_topics` and `llmv_add_queries` for each approved item.
 
 **Output:** count of topics/queries added, full updated list.
 
@@ -319,11 +319,11 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** `brand_id`
 
 **Steps:**
-1. `visibility` → `list_queries` with current performance data
+1. `llmv_list_queries` with current performance data
 2. Identify low-performing queries (no brand mention, ambiguous intent, too broad)
 3. For each, suggest a tighter rewrite
 4. Show before/after table. Confirm replacements.
-5. On confirm: `visibility` → `remove_query` (old) + `add_query` (new) per pair.
+5. On confirm: `llmv_remove_query` (old) + `llmv_add_queries` (new) per pair.
 
 **Output:** count of prompts refined, before/after summary.
 
@@ -334,8 +334,8 @@ Each play below is intentionally minimal. Confirm before any destructive write (
 **Inputs:** `brand_id`
 
 **Steps:**
-1. `visibility` → `get_competitor_share_of_voice` → competitor SoV per topic
-2. `visibility` → `get_competitor_visibility_rank` → competitor rank per query
+1. `llmv_get_competitor_data` → competitor SoV per topic
+2. `llmv_get_competitor_data` → competitor rank per query
 3. Identify queries where competitors get cited but the brand doesn't
 4. Cross-reference with the topical map: are these covered in content? Surface gaps.
 5. Tag gaps as: "no content yet" / "content exists but not optimized for AI" / "competitor brand mentioned more"

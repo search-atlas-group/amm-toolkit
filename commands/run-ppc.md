@@ -24,15 +24,15 @@ Ask the user for:
 
 Load `workflows/ppc-launch.yaml` and execute:
 
-1. **Create business** — `business_crud` → `create` with name, type, domain, then `validate_business`
+1. **Create business** — `ppc_create_business` with name, type, domain, then `ppc_validate_business`
 2. **Generate products** — For each landing page URL:
-   - `product_crud` → `generate_product_details` (AI extracts product info from the page)
-   - `product_crud` → `add_product`
-3. **Validate + approve** — `product_mgmt` → `bulk_validate_landing_page_urls` then `bulk_approve_products`
-4. **Create keyword clusters** — `product_crud` → `bulk_create_keyword_clusters` (this is an async task — poll with `task` → `get_otto_ppc_task_status`)
-5. **Send to Google Ads** — `campaign` → `send_to_google_ads_account` with the Ads account ID and daily budget
-6. **Activate campaigns** — `product_mgmt` → `bulk_update_remote_status` set to ENABLED
-7. **Create landing pages (optional)** — If requested, use `website_studio_tools` → `create_project`
+   - `ppc_generate_product_details` (AI extracts product info from the page)
+   - `ppc_add_product`
+3. **Validate + approve** — `ppc_bulk_validate_landing_pages` then `ppc_review_products` to approve
+4. **Create keyword clusters** — `ppc_bulk_create_keyword_clusters` (this is an async task — poll with `verify_task_status`)
+5. **Send to Google Ads** — `ppc_send_to_google_ads` with the Ads account ID and daily budget
+6. **Activate campaigns** — `ppc_bulk_update_remote_status` set to ENABLED
+7. **Create landing pages (optional)** — If requested, use `ws_create_project`
 
 ### Step 3: Confirm Before Activation
 
@@ -82,6 +82,6 @@ After writing the file, print the path in chat so the user can open it.
 ## Golden Rules
 
 - Always validate landing page URLs before approving products
-- Poll `get_otto_ppc_task_status` after bulk keyword cluster creation — it's async
+- Poll `verify_task_status` after bulk keyword cluster creation — it's async
 - Never activate campaigns without user confirmation
-- Use `task` → `wait` between poll attempts (5–10 seconds)
+- Wait 5–10 seconds between poll attempts

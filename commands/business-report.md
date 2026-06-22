@@ -18,36 +18,36 @@ Ask the user which business or domain they want to report on. If unclear, run `/
 Run these in parallel where possible:
 
 **OTTO SEO**
-- `project_management` → `find_project_by_hostname` (get project by domain)
-- `project_management` → `get_otto_project_details` (health score, pages, issues)
-- `seo_analysis` → `get_holistic_seo_pillar_scores` (Technical, Content, Authority, UX)
+- `otto_find_project_by_hostname` (get project by domain)
+- `otto_get_project_details` (health score, pages, issues)
+- `se_get_holistic_seo_scores` (Technical, Content, Authority, UX)
 
 **Brand Vault**
-- `brand_vault` → `list_brand_vaults` (filter by domain)
-- `brand_vault` → `get_brand_vault_overview`
+- `bv_list` (filter by domain)
+- `bv_get_details` (view='overview')
 
 **Content**
-- `content_retrieval` → `get_project_articles` (articles for this domain)
-- `content_retrieval` → `get_article_summary`
+- `cg_list_articles` (articles for this domain)
+- `cg_get_article_summary`
 
 **Site Explorer**
-- `organic` → `get_organic_keywords` (top keywords, count)
-- `organic` → `get_organic_competitors` (competitor domains)
-- `backlinks` → `get_site_backlinks` (backlink count, top referring domains)
-- `analysis` → `get_position_distribution`
-- `analysis` → `get_serp_features`
+- `se_get_organic` (view='keywords') (top keywords, count)
+- `se_get_organic` (view='competitors') (competitor domains)
+- `se_get_links` (backlink count, top referring domains)
+- `se_get_analysis` (view='positions')
+- `se_get_analysis` (view='serp_features')
 
 **GBP (if applicable)**
-- `gbp_locations_crud` → `list_locations` (filter by domain/name)
-- `gbp_locations_crud` → `get_location_stats`
+- `gbp_list_locations` (filter by domain/name)
+- `gbp_get_location_metrics` (view='stats')
 
 **PPC (if applicable)**
-- `business_crud` → `list` (filter by domain)
-- `campaign` → `list_campaigns_with_metrics`
+- `ppc_list_businesses` (filter by domain)
+- `ppc_list_campaigns` (with metrics)
 
 **LLM Visibility (if configured)**
-- `visibility` → `get_brand_overview`
-- `sentiment` → `get_sentiment_overview`
+- `llmv_get_overview`
+- `llmv_get_overview` (view='sentiment')
 
 ### Step 3: Present Report
 

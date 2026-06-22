@@ -19,28 +19,28 @@ Ask the user which authority building components they want:
 ### Press Release Workflow
 
 1. Ask for: client name, topic/headline, angle (expansion, award, launch, etc.), target keywords
-2. **Create press release** — `press_release_content` → `create` with client + topic
-3. **Write content** — `press_release_content` → `write_press_release` with the angle and keywords
-4. **Check distribution options** — `press_release_distribution` → `get_press_release_categories`
-5. **Distribute** — `press_release_distribution` → `publish_press_release` with chosen network (standard/premium/elite)
+2. **Create press release** — `pr_create` with client + topic
+3. **Write content** — `pr_write` with the angle and keywords
+4. **Check distribution options** — `pr_get_publish_options`
+5. **Distribute** — `pr_publish` with chosen network (standard/premium/elite)
 
 **Confirm before distribution** — show the press release content and distribution cost.
 
 ### Cloud Stack Workflow
 
 1. Ask for: anchor text, target URL (page to point links to)
-2. **List templates** — `cloud_stack_content` → `list_templates`
-3. **Create cloud stack** — `cloud_stack_content` → `create` with client info + template
-4. **Check providers** — `cloud_stack_distribution` → `get_cloud_stack_providers`
-5. **Build** — `cloud_stack_distribution` → `build_cloud_stack`
-6. **Publish** — `cloud_stack_distribution` → `publish_cloud_stack`
+2. **List templates** — `cs_list_templates`
+3. **Create cloud stack** — `cs_create` with client info + template
+4. **Check providers** — `cs_get_providers`
+5. **Build** — `cs_build`
+6. **Publish** — `cs_publish`
 
 ### Digital PR Workflow
 
 1. Ask for: outreach topic, target publications (optional)
-2. **Create campaign** — `digital_pr_campaign_service` → `create_campaign`
-3. **Set up email template** — `digital_pr_template_service` → `create` or `list` existing templates
-4. **Activate** — `digital_pr_campaign_service` → `toggle_campaign` (active: true)
+2. **Create campaign** — `dpr_create_campaign`
+3. **Set up email template** — `dpr_create_template` or `dpr_list_templates` for existing templates
+4. **Activate** — `dpr_set_campaign_active` (active: true)
 
 ### Optional: Monitor Backlinks
 

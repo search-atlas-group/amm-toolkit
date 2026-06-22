@@ -25,13 +25,13 @@ Restart Claude Desktop. First tool call triggers OAuth — sign into SearchAtlas
 ```
 Use the SearchAtlas MCP to show me a complete account overview. Run these tools in order:
 
-1. `project_management` → list_otto_projects — name, domain, health score, page count, issue count
-2. `brand_vault` → list_brand_vaults — name, domain, voice profile status
-3. `gbp_locations_crud` → list_locations — name, city/state, verified/unverified, connected
-4. `business_crud` → list — business name, domain, product count, campaign count
-5. For each business → `campaign` → list_campaigns_with_metrics — name, status, budget, impressions, clicks, cost
-6. `content_retrieval` → count_articles — total + by status (draft, published, scheduled)
-7. `quota_management` → get_otto_quota — sites used/total, AI generation used/total
+1. `otto_list_projects` — name, domain, health score, page count, issue count
+2. `bv_list` — name, domain, voice profile status
+3. `gbp_list_locations` — name, city/state, verified/unverified, connected
+4. `ppc_list_businesses` — business name, domain, product count, campaign count
+5. For each business → `ppc_list_campaigns` — name, status, budget, impressions, clicks, cost
+6. `cg_list_articles` (no count tool — count the returned items) — total + by status (draft, published, scheduled)
+7. `get_quota` — sites used/total, AI generation used/total
 
 Render exactly in this format (replace placeholders with real data):
 
@@ -68,19 +68,19 @@ PHASE 1 — Identify target
 
 PHASE 2 — Existence check (do not create anything)
 For {domain}, look up:
-- `project_management` → find_project_by_hostname  → project_id or null
-- `brand_vault` → list_brand_vaults (filter by domain) → brand_vault_uuid or null
-- `gbp_locations_crud` → list_locations (filter by domain) → location_id or null
-- `business_crud` → list_businesses (filter by domain) → business_id or null
-- `visibility` → list_brands (filter by domain) → brand_id or null
+- `otto_find_project_by_hostname`  → project_id or null
+- `bv_list` (filter by domain) → brand_vault_uuid or null
+- `gbp_list_locations` (filter by domain) → location_id or null
+- `ppc_list_businesses` (filter by domain) → business_id or null
+- `llmv_list_projects` (filter by domain) → brand_id or null
 
 PHASE 3 — Parallel discovery (only for resources that exist; fail-soft)
-- OTTO (project_id) → get_otto_project_details, get_holistic_seo_pillar_scores, list_audits
-- Site Explorer (no ID needed) → get_organic_keywords (limit 100), get_organic_competitors (limit 5), get_position_distribution, get_site_backlinks (limit 50), get_site_referring_domains (limit 25)
-- Brand Vault (uuid) → retrieve_brand_vault_details, list_voice_profiles, get_knowledge_graph
-- GBP (location_id) → get_location_stats, list_reviews
-- PPC (business_id) → list_campaigns_with_metrics
-- LLM Visibility (brand_id) → get_brand_overview, get_sentiment_overview
+- OTTO (project_id) → otto_get_project_details, se_get_holistic_seo_scores, otto_get_site_audit
+- Site Explorer (no ID needed) → se_get_organic (view='keywords', limit 100), se_get_organic (view='competitors', limit 5), se_get_analysis (view='positions'), se_get_links (limit 50)
+- Brand Vault (uuid) → bv_get_details, bv_list_voice_templates, bv_get_knowledge_graph
+- GBP (location_id) → gbp_get_location_metrics (view='stats'), gbp_list_reviews
+- PPC (business_id) → ppc_list_campaigns
+- LLM Visibility (brand_id) → llmv_get_overview (view='brand'), llmv_get_overview (view='sentiment')
 
 PHASE 4 — Score each pillar (✅ Healthy · ⚠️ Needs Work · ❌ Missing) using these thresholds:
 - OTTO SEO healthy when health ≥ 70 and issues < 25
@@ -169,7 +169,7 @@ Output the HTML inside one ```html code block. I'll save it manually to the path
 Pull a complete deep-dive on {domain} from SearchAtlas. Same data scope as the scout, but the focus is full business state rather than a triage rubric.
 
 Steps:
-1. Identify resources: find_project_by_hostname, list_brand_vaults, list_locations, list_businesses, list_brands — collect IDs.
+1. Identify resources: otto_find_project_by_hostname, bv_list, gbp_list_locations, ppc_list_businesses, llmv_list_projects — collect IDs.
 2. Pull current state for each that exists:
    - OTTO project: health, pages, issues, recent suggestions, deployment status
    - Brand vault: voice profile, business info, knowledge graph completeness
@@ -200,20 +200,20 @@ Fetch the homepage, contact, about, and services pages. Extract:
 - Brand colors (extract from logo/CSS), brand voice cues (formal/casual, jargon level)
 
 PHASE 2 — Brand vault
-`brand_vault` → create_brand_vault with everything extracted. Save brand_vault_uuid.
-Then push voice profile, business info, knowledge graph in parallel using the appropriate update tools.
+`bv_create` with everything extracted. Save brand_vault_uuid.
+Then push business info and knowledge graph in parallel via bv_update_business_info and bv_update_knowledge_graph, and set the voice profile via bv_select_voice_profile.
 
 PHASE 3 — OTTO project
-`project_management` → create_otto_project for {domain}. Connect GSC if available. Save project_id.
+`otto_create_audit` (with create_otto_project=true) for {domain}. Connect GSC if available. Save project_id.
 
 PHASE 4 — GBP
-`gbp_locations_crud` → search_places to find the Google Business Profile. If found, surface place_id and instructions to connect it.
+`gbp_search_places` to find the Google Business Profile. If found, surface place_id and instructions to connect it.
 
 PHASE 5 — PPC business shell
-`business_crud` → create a business (no campaigns yet). Save business_id.
+`ppc_create_business` (no campaigns yet). Save business_id.
 
 PHASE 6 — LLM visibility
-`visibility` → create_brand for AI visibility tracking. Save brand_id.
+`llmv_create_project` for AI visibility tracking. Save brand_id.
 
 PHASE 7 — Generate client files for me to save locally
 
@@ -259,13 +259,13 @@ Use clear phase headings like "## Phase 1 — Reading the site". Keep narration 
 ```
 Run the SearchAtlas SEO workflow for {domain}. This is monthly maintenance — assume the OTTO project already exists.
 
-1. `project_management` → find_project_by_hostname → project_id
-2. `holistic_audit` → get_holistic_seo_pillar_scores → current pillar state
-3. `recommendations` → generate_bulk_recommendations for the project; poll with otto_wait until status = SUCCESS
-4. `schema` → list_page_schemas → review any pending deployments and deploy approved ones
-5. `indexing` → list_indexing_sitemaps → check indexing health, submit any missing URLs
-6. `backlinks` → get_site_backlinks summary for last 30 days
-7. `quota_management` → get_otto_quota → confirm we have headroom for this month
+1. `otto_find_project_by_hostname` → project_id
+2. `se_get_holistic_seo_scores` → current pillar state
+3. `otto_generate_bulk_recommendations` for the project; poll `verify_task_status` until status = SUCCESS
+4. `otto_list_schemas` → review any pending deployments and deploy approved ones
+5. `otto_manage_indexing_sitemaps` → check indexing health, submit any missing URLs
+6. `se_get_links` summary for last 30 days
+7. `get_quota` → confirm we have headroom for this month
 
 Render chat output exactly in this format:
 
@@ -289,12 +289,12 @@ Replace `View →` with the deep link in the SearchAtlas dashboard for each acti
 ```
 Optimize the Google Business Profile for {domain}. Two modes: optimization (first-time setup) or monthly (ongoing maintenance). Run optimization by default; pivot to monthly if location_id has been touched in the last 30 days.
 
-1. `gbp_locations_crud` → list_locations → find location_id for {domain}
-2. `gbp_locations_crud` → get_location_recommendations → categorize each by risk
-3. For LOW-risk recommendations (description tightening, missing categories, missing services, missing hours, missing attributes), apply automatically via the relevant gbp_*_crud update tools.
+1. `gbp_list_locations` → find location_id for {domain}
+2. `gbp_get_location_recommendations` → categorize each by risk
+3. For LOW-risk recommendations (description tightening, missing categories, missing services, missing hours, missing attributes), apply automatically via the relevant gbp_manage_* update tools.
 4. For HIGH-risk recommendations (address changes, primary category swaps), surface for my approval before doing anything.
-5. `gbp_posts` → list_posts → if no posting cadence, propose an automated schedule via gbp_automated_posting
-6. `gbp_reviews` → list_reviews → flag unanswered reviews
+5. `gbp_list_posts` → if no posting cadence, propose an automated schedule via gbp_update_posting_settings
+6. `gbp_list_reviews` → flag unanswered reviews
 
 Render chat output as one of these two blocks, depending on mode.
 
@@ -328,12 +328,12 @@ Surface anything awaiting my approval at the bottom.
 ```
 Generate content for {domain}.
 
-1. `project_management` → find_project_by_hostname → project_id; identify or create the content project
-2. `content_generation` → cg_search_topical_maps for this project. If none exist, propose 3 topical clusters from the site's existing pages + keyword research, then create the best one with cg_create_topical_map.
-3. From the topical map, pick the 3 highest-priority unwritten articles and `content_generation` → cg_dkn_bulk_generate_articles.
-4. Poll cg_dkn_get_article_status until generation completes.
+1. `otto_find_project_by_hostname` → project_id; identify or create the content project
+2. `cg_search_topical_maps` for this project. If none exist, propose 3 topical clusters from the site's existing pages + keyword research, then create the best one with cg_create_topical_map.
+3. From the topical map, pick the 3 highest-priority unwritten articles and generate them via dkn_generate_articles.
+4. Poll dkn_get_article_status until generation completes.
 5. For each article, run cg_run_content_grader and capture the score.
-6. Optionally cg_publish_wordpress_article or cg_publish_cms_article — only if I confirm.
+6. Optionally cg_push_article (to WordPress or another CMS connector) — only if I confirm.
 
 Render chat output exactly in this format:
 
@@ -359,7 +359,7 @@ Render chat output exactly in this format:
 ```
 Build and launch a PPC campaign for {domain}.
 
-1. `business_crud` → list → find or create the business for this domain
+1. `ppc_list_businesses` → find the business for this domain (or `ppc_create_business`)
 2. `ppc_check_write_permissions` — confirm we can push to Google Ads
 3. `ppc_discover_products` — get product candidates from landing pages
 4. `ppc_review_products` and `ppc_bulk_approve_products`
@@ -415,10 +415,10 @@ Render chat output exactly in this format:
 ```
 Run a SearchAtlas LLM Visibility audit for {domain}.
 
-1. `visibility` → list_brands → find or create the brand for {domain}
-2. `llmv_get_brand_overview` — share of voice, sentiment, mention count
+1. `llmv_list_projects` → find or create the brand for {domain} (create via `llmv_create_project`)
+2. `llmv_get_overview` (view='brand') — share of voice, sentiment, mention count
 3. `llmv_list_queries` → which prompts trigger mentions of this brand
-4. `llmv_get_competitor_share_of_voice` — how we stack up
+4. `llmv_get_competitor_data` — how we stack up
 5. `llmv_get_citations_overview` — which sources LLMs cite when mentioning us
 6. `llmv_get_sentiment_trend` — last 30 days
 
@@ -447,7 +447,7 @@ Render chat output exactly in this format:
 I have a local `clients/{client_slug}/brand-profile.md` file with brand data. Sync it two ways with my SearchAtlas brand vault {brand_vault_uuid}.
 
 1. Read the markdown file's content (I'll paste it below).
-2. Compare each field against what's in SA via `brand_vault` → retrieve_brand_vault_details + retrieve_voice_profile + get_knowledge_graph.
+2. Compare each field against what's in SA via `bv_get_details` + `bv_list_voice_templates` + `bv_get_knowledge_graph`.
 3. For each field, classify as: (a) only in MD, (b) only in SA, (c) different in both, (d) same.
 4. For (a) — push MD → SA via the appropriate update tools (bv_update_business_info, bv_update_knowledge_graph, etc.).
 5. For (b) — surface the SA-only fields and ask me whether to pull them into MD.
@@ -505,7 +505,7 @@ For Resend email: ask Claude to call the Resend HTTP API directly with your `RES
 - **One client per thread.** Same rule as Claude Code — context bleeds otherwise.
 - **Be explicit about the MCP** if you have multiple connected. Say "Use the SearchAtlas MCP" in the first message.
 - **Authorize once.** First tool call opens a browser tab. Approve. Token stays alive until you sign out of SearchAtlas.
-- **Schema discovery still works.** Not sure what a tool needs? Ask: *"Call `project_management` with empty params and show me the schema."*
+- **Schema discovery still works.** Not sure what a tool needs? Ask: *"Call `otto_list_projects` with empty params and show me the schema."*
 - **Save your favorite prompts.** Drop them into a Claude Desktop Project's instructions for reuse.
 - **Outputs come as code blocks.** Where the slash command would write a file, the Desktop version returns the same content fenced in a ```html or ```markdown block. Copy, save it locally yourself — or just keep it in the chat.
 

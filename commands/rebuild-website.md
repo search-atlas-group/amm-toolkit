@@ -75,7 +75,7 @@ For a rebuild, all SA assets typically already exist. Pull them in parallel:
 | Tool | Captures |
 |---|---|
 | `mcp__searchatlas__otto_find_project_by_hostname` | OTTO project · pillar scores already in scout output |
-| `mcp__searchatlas__cg_list_brand_vaults` | Brand Vault (may need editing for new direction) |
+| `mcp__searchatlas__bv_list` | Brand Vault (may need editing for new direction) |
 | `mcp__searchatlas__gbp_list_locations` | GBP (usually preserved through rebuild) |
 | `mcp__searchatlas__ppc_list_businesses` | PPC if running ads |
 | `mcp__searchatlas__llmv_list_projects` | LLMV if tracking |
@@ -427,7 +427,7 @@ QA runs against the new Website Studio preview state (the old site stays live un
 |---|---|
 | Every URL in scout's inventory has new page OR redirect | Cross-check `page-rebuild-map.csv` vs `redirect-map.csv` |
 | No internal links return 404 in new build | WS crawl against new preview |
-| Pillar scores hit or beat scout's baseline (against new WS preview) | Run `holistic_audit` against new preview URL |
+| Pillar scores hit or beat scout's baseline (against new WS preview) | Run `se_get_holistic_seo_scores` against new preview URL |
 | Preserved URLs still rank for tracked keywords | `mcp__searchatlas__se_get_keyword_intent` on top 10 ranking KWs |
 
 ### Pre-launch baseline capture

@@ -18,14 +18,14 @@ Ask the user:
 
 Load `workflows/seo-onboarding.yaml` and execute:
 
-1. **Create OTTO project** — `project_management` → `engage_otto_project` with the client's domain, then `verify_otto_installation`
-2. **Create site audit** — `audit_management` → `create_audit` with the project ID
-3. **Get pillar scores** — `seo_analysis` → `get_holistic_seo_pillar_scores` for Technical, Content, Authority, UX
-4. **Create brand vault** — `brand_vault` → `create_brand_vault` with domain + client name, then set voice profile
-5. **Keyword research** — `keyword_research` → `create_keyword_research_project` with pillar keyword + location
-6. **Topical map** — `topical_maps` → `create_topical_map` from pillar keyword
-7. **Generate articles** — `content_generation` → run the 4-step article workflow for each title from the topical map:
-   - `create_content_instance` → `start_information_retrieval` → poll → `start_headings_outline` → poll → `generate_complete_article`
+1. **Create OTTO project** — `otto_set_engagement` with the client's domain, then `otto_check_installation`
+2. **Create site audit** — `otto_create_audit` with the project ID
+3. **Get pillar scores** — `se_get_holistic_seo_scores` for Technical, Content, Authority, UX
+4. **Create brand vault** — `bv_create` with domain + client name, then set voice profile
+5. **Keyword research** — `se_create_keyword_research` with pillar keyword + location
+6. **Topical map** — `cg_create_topical_map` from pillar keyword
+7. **Generate articles** — run the 4-step article workflow for each title from the topical map:
+   - `cg_create_content_instance` → `cg_start_information_retrieval` → poll → `cg_start_headings_outline` → poll → `cg_generate_complete_article`
 
 Ask the user for: domain, client name, pillar keyword, target location, pillar URL, number of articles (default: 4).
 
@@ -33,13 +33,13 @@ Ask the user for: domain, client name, pillar keyword, target location, pillar U
 
 Load `workflows/monthly-seo.yaml` and execute:
 
-1. **Issues overview** — `project_management` → `get_otto_project_details` + `manual_reprocess_autopilot`
-2. **Apply suggestions** — `suggestion_management` → `edit_suggestions_bulk` (apply all approved)
-3. **Deploy schemas** — `schema_markup` → `list_domain_level_schemas` + `deploy_domain_level_schema`
-4. **Fix indexing** — `indexing_management` → check sitemaps + submit URLs for indexing
-5. **Expand topical map** — `topical_maps` → `create_topical_map` with this month's keyword
+1. **Issues overview** — `otto_get_project_details` + `otto_manual_reprocess_autopilot`
+2. **Apply suggestions** — `otto_edit_suggestions_bulk` (apply all approved)
+3. **Deploy schemas** — `otto_list_schemas` + `otto_deploy_schema`
+4. **Fix indexing** — `otto_manage_indexing_sitemaps` to check sitemaps + `otto_select_urls_for_indexing` to submit URLs for indexing
+5. **Expand topical map** — `cg_create_topical_map` with this month's keyword
 6. **Generate articles** — 4-step workflow per article
-7. **Grade content** — `article_management` → `run_content_grader` on existing articles
+7. **Grade content** — `cg_run_content_grader` on existing articles
 
 Ask the user for: OTTO project ID (or domain to look it up), monthly keyword, articles to generate, articles to grade.
 
