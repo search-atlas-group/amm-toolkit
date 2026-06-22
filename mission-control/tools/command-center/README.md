@@ -18,7 +18,7 @@ Then watch Claude run the full onboarding live in the activity feed.
 When you click **Onboard client →**, the server builds a single self-contained prompt and spawns `claude -p`. Claude:
 
 1. Crawls the domain to extract business name, industry, contact, address, hours, services
-2. Creates the SearchAtlas brand vault and pushes everything (`brand_vault` MCP tools)
+2. Creates the SearchAtlas brand vault and pushes everything (`bv_*` MCP tools)
 3. Layers your brand voice + the knowledge drop into the refine prompt — that's the agency's edge over a website scrape
 4. Runs each selected service's onboarding playbook from `workflows/`:
 

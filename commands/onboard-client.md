@@ -28,17 +28,17 @@ Which option? (1 or 2)
 
 ### A1: Select Client From Account
 
-1. Call `brand_vault` → `list_brand_vaults` with empty params `{}`
+1. Call `bv_list` with empty params `{}`
 2. Display as a numbered list, member picks a number
 
 ### A2: Full Brand Vault Pull (4 parallel calls)
 
 | Call | Tool | Params | What It Returns |
 |------|------|--------|-----------------|
-| 1 | `brand_vault` → `retrieve_brand_vault_details` | `brand_vault_uuid` | Name, domain, logo URL, brand colors, description, assets |
-| 2 | `brand_vault` → `get_brand_vault_business_info` | `brand_vault_uuid` | Address, city, state, zip, phone, email, hours, social links |
-| 3 | `brand_vault` → `get_knowledge_graph` | `hostname` | Entity graph, topic clusters, competitor entities |
-| 4 | `brand_vault` → `list_voice_profiles` | `hostname` | Tone, writing style, example phrases, active voice profile |
+| 1 | `bv_get_details` | `brand_vault_uuid` | Name, domain, logo URL, brand colors, description, assets |
+| 2 | `bv_get_business_info` | `brand_vault_uuid` | Address, city, state, zip, phone, email, hours, social links |
+| 3 | `bv_get_knowledge_graph` | `hostname` | Entity graph, topic clusters, competitor entities |
+| 4 | `bv_list_voice_templates` | `hostname` | Tone, writing style, example phrases, active voice profile |
 
 ### A3: Confirm — Member Reviews and Edits
 
@@ -83,9 +83,9 @@ Does this look right? (yes / edit [field name])
 
 ### A5: Discover Service IDs (parallel, silent)
 
-- **OTTO Project ID** → `project_management` → `list_otto_projects`, match by domain
-- **GBP Location ID** → `gbp_locations_crud` → `list_locations`, match by domain
-- **PPC Business ID** → `business_crud` → `list_businesses`, match by domain
+- **OTTO Project ID** → `otto_list_projects`, match by domain
+- **GBP Location ID** → `gbp_list_locations`, match by domain
+- **PPC Business ID** → `ppc_list_businesses`, match by domain
 
 → Skip to **Phase 2: Identify Needs**
 
@@ -129,23 +129,23 @@ Ask one at a time:
 After collecting all info, create the brand vault and immediately push all collected data:
 
 **Step 1 — Create vault:**
-- `brand_vault` → `create_brand_vault` with name + domain
+- `bv_create` with name + domain
 - Capture the returned `brand_vault_uuid`
 
 **Step 2 — Push business info:**
-- `brand_vault` → `update_brand_vault_business_info` with phone, email, address, hours, description
+- `bv_update_business_info` with phone, email, address, hours, description
 
 **Step 3 — Push brand data:**
-- `brand_vault` → `update_brand_vault` with logo, colors, industry
+- `bv_update` with logo, colors, industry
 
 **Step 4 — Push voice profile:**
-- `brand_vault` → `update_refine_prompt` with tone, writing style, style notes
+- `brand_vault` → `update_refine_prompt` with tone, writing style, style notes *(brand-voice refine op — no confirmed flat tool; verify the correct tool at runtime)*
 
 **Step 5 — Seed knowledge graph:**
-- `brand_vault` → `update_knowledge_graph` with primary keyword, competitor domains, key service topics
+- `bv_update_knowledge_graph` with primary keyword, competitor domains, key service topics
 
 **Step 6 — Push transcripts (if provided):**
-- `brand_vault` → `update_refine_prompt` appending any pasted content as brand voice training material
+- `brand_vault` → `update_refine_prompt` appending any pasted content as brand voice training material *(brand-voice refine op — no confirmed flat tool; verify the correct tool at runtime)*
 
 Show progress as each step completes. Confirm SA write succeeded before moving on.
 
@@ -159,11 +159,11 @@ Use this mapping whenever pushing local changes back to SA (Path A edits, Path B
 
 | `brand-profile.md` Section | Fields | SA Tool | Params |
 |----------------------------|--------|---------|--------|
-| Business | Name, description, industry, logo, colors | `update_brand_vault` | `brand_vault_uuid` |
-| Contact & Location | Phone, email, address, city, state, zip, hours | `update_brand_vault_business_info` | `brand_vault_uuid` |
-| Brand Voice | Tone, writing style, example phrases, avoid list | `update_refine_prompt` | `hostname` |
-| Knowledge Graph | Entities, topic clusters, competitors | `update_knowledge_graph` | `hostname` |
-| Transcripts & Assets | Pasted content, uploaded text | `update_refine_prompt` (append) | `hostname` |
+| Business | Name, description, industry, logo, colors | `bv_update` | `brand_vault_uuid` |
+| Contact & Location | Phone, email, address, city, state, zip, hours | `bv_update_business_info` | `brand_vault_uuid` |
+| Brand Voice | Tone, writing style, example phrases, avoid list | `update_refine_prompt` *(brand-voice refine op — verify flat tool at runtime)* | `hostname` |
+| Knowledge Graph | Entities, topic clusters, competitors | `bv_update_knowledge_graph` | `hostname` |
+| Transcripts & Assets | Pasted content, uploaded text | `update_refine_prompt` (append) *(brand-voice refine op — verify flat tool at runtime)* | `hostname` |
 
 ---
 

@@ -49,7 +49,7 @@ For greenfield, we only check the 2 SA assets that exist independent of having a
 
 | Tool | Captures |
 |---|---|
-| `mcp__searchatlas__cg_list_brand_vaults` (filter by domain) | `brand_vault_uuid` if exists |
+| `mcp__searchatlas__bv_list` (filter by domain) | `brand_vault_uuid` if exists |
 | `mcp__searchatlas__gbp_list_locations` (filter by domain/name) | `gbp_location_id` if exists |
 
 **Do not check:** OTTO, PPC, LLM Visibility. These require a live crawlable site — `/searchatlas:run-seo` provisions them once the site has had time to be crawled.
@@ -94,7 +94,7 @@ Pull all 4 surfaces in parallel:
 | `mcp__searchatlas__bv_get_details` | Name, domain, logo, colors, description |
 | `mcp__searchatlas__bv_get_business_info` | Address, hours, phone, email, service areas, social |
 | `mcp__searchatlas__bv_get_knowledge_graph` | Entities, topic clusters, competitor domains |
-| `mcp__searchatlas__bv_list_voice_profiles` | Tone, writing style, active voice |
+| `mcp__searchatlas__bv_list_voice_templates` | Tone, writing style, active voice |
 
 Display confirmation. Operator confirms or edits (edits push back via `bv_update*`).
 
@@ -106,9 +106,9 @@ Display confirmation. Operator confirms or edits (edits push back via `bv_update
 Sources crawled in parallel:
   · inputs/manifest.json (operator materials)
   · WebFetch on domain (in case there's placeholder content)
-  · mcp__searchatlas__se_get_organic_competitors → top 2 → WebFetch
-  · mcp__searchatlas__llmv_get_brand_overview (if business has any prior LLM mentions)
-  · mcp__searchatlas__se_get_organic_keywords (for the business name as branded search)
+  · mcp__searchatlas__se_get_organic (view='competitors') → top 2 → WebFetch
+  · mcp__searchatlas__llmv_get_overview (if business has any prior LLM mentions)
+  · mcp__searchatlas__se_get_organic (view='keywords') (for the business name as branded search)
 ```
 
 Then:
@@ -232,7 +232,7 @@ Pure research. No operator interaction. Two parallel waves fire SA tools simulta
 | `mcp__searchatlas__se_lookup_keyword` (per target KW) | volume + intent + difficulty |
 | `mcp__searchatlas__se_get_serp_overview` (per target KW) | who's ranking |
 | `mcp__searchatlas__gbp_list_categories` | category taxonomy |
-| `mcp__searchatlas__se_get_organic_competitors` (per target KW) | auto-discovered competitor set |
+| `mcp__searchatlas__se_get_organic` (view='competitors', per target KW) | auto-discovered competitor set |
 | `mcp__searchatlas__se_get_serp_features` (per target KW) | LOCAL PACK, FAQ, IMAGE PACK, etc. |
 
 Wave 1 → merge: `competitor_set = operator_competitors ∪ auto_competitors` (final 3–5).
@@ -433,7 +433,7 @@ Every page lives in Website Studio from the moment Claude finishes generating it
 ```
 Quick BV completeness check:
   ✅ Business name + location populated         bv_get_business_info
-  ✅ Voice profile present                       bv_list_voice_profiles
+  ✅ Voice profile present                       bv_list_voice_templates
   ✅ Knowledge graph (entities, competitors)    bv_get_knowledge_graph
   ✅ Brand assets uploaded (logo, etc.)         bv_get_details
   ✅ Design style + color tokens set             bv_get_details

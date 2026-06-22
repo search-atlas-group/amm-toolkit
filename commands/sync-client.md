@@ -49,11 +49,11 @@ Read `brand-profile.md` and push each section to SA using the correct tool:
 
 | Section | Fields | SA Tool | Params |
 |---------|--------|---------|--------|
-| Business | Name, description, industry, logo URL, brand colors | `brand_vault` → `update_brand_vault` | `brand_vault_uuid` |
-| Contact & Location | Phone, email, address, city, state, zip, hours, service areas | `brand_vault` → `update_brand_vault_business_info` | `brand_vault_uuid` |
-| Brand Voice | Tone, writing style, example phrases, avoid list | `brand_vault` → `update_refine_prompt` | `hostname` |
-| Knowledge Graph | Key entities, topic clusters, competitor domains | `brand_vault` → `update_knowledge_graph` | `hostname` |
-| Transcripts & Assets | Any content listed under "Content Transcripts & Assets" | `brand_vault` → `update_refine_prompt` (append) | `hostname` |
+| Business | Name, description, industry, logo URL, brand colors | `bv_update` | `brand_vault_uuid` |
+| Contact & Location | Phone, email, address, city, state, zip, hours, service areas | `bv_update_business_info` | `brand_vault_uuid` |
+| Brand Voice | Tone, writing style, example phrases, avoid list | `update_refine_prompt` | `hostname` |
+| Knowledge Graph | Key entities, topic clusters, competitor domains | `bv_update_knowledge_graph` | `hostname` |
+| Transcripts & Assets | Any content listed under "Content Transcripts & Assets" | `update_refine_prompt` (append) | `hostname` |
 
 ### Push Steps
 
@@ -71,10 +71,10 @@ Read `brand-profile.md` and push each section to SA using the correct tool:
    ```
 
 2. **Execute pushes in order:**
-   - `update_brand_vault` → business + brand data
-   - `update_brand_vault_business_info` → contact + location
+   - `bv_update` → business + brand data
+   - `bv_update_business_info` → contact + location
    - `update_refine_prompt` → voice + transcripts
-   - `update_knowledge_graph` → entities + topics
+   - `bv_update_knowledge_graph` → entities + topics
 
 3. **Confirm each write** — verify SA returned success before moving to the next call
 
@@ -89,10 +89,10 @@ Fetch fresh data from SA and update `brand-profile.md`.
 ### Pull Steps
 
 1. Run 4 parallel calls:
-   - `brand_vault` → `retrieve_brand_vault_details` (brand_vault_uuid)
-   - `brand_vault` → `get_brand_vault_business_info` (brand_vault_uuid)
-   - `brand_vault` → `get_knowledge_graph` (hostname)
-   - `brand_vault` → `list_voice_profiles` (hostname)
+   - `bv_get_details` (brand_vault_uuid)
+   - `bv_get_business_info` (brand_vault_uuid)
+   - `bv_get_knowledge_graph` (hostname)
+   - `bv_list_voice_templates` (hostname)
 
 2. **Show a diff first** — what changed in SA since last pull:
    ```
@@ -134,7 +134,7 @@ Push this to the SearchAtlas brand vault to improve content generation? (yes / s
 ```
 
 If yes:
-- `brand_vault` → `update_refine_prompt` with the new content appended as context
+- `update_refine_prompt` with the new content appended as context
 - Confirm write success
 
 ---

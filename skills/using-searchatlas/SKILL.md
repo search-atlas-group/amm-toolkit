@@ -20,8 +20,8 @@ The official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI
 
 1. **Schema discovery first.** Before calling any tool for the first time, send it with empty params `{}` to discover the real schema. Documentation may be outdated; the API response shows correct param names, types, and required fields.
 2. **Read error messages.** Parameter Validation Error → wrong params (the error contains the schema). Internal Server Error → backend, retry later. 401 → OAuth expired, re-authorize. "Tool not found" → name changed, rediscover.
-3. **Poll async tasks.** Many operations return a task ID. Poll with `get_otto_task_status` / `get_otto_ppc_task_status`, use `otto_wait` between polls (5–10s), continue until `status = SUCCESS`.
-4. **Watch tool-name collisions.** Some short names map to multiple tools. If a tool behaves unexpectedly, try the full prefixed name (e.g. `otto_project_management`) and verify via schema discovery.
+3. **Poll async tasks.** Many operations return a task ID. Poll with `verify_task_status` (5–10s between polls), continue until `status = SUCCESS`.
+4. **Verify tool names via schema discovery.** Tools are flat, per-operation (e.g. `otto_list_projects`, `bv_list`). If a tool behaves unexpectedly or isn't found, list the available SearchAtlas tools and verify the exact name via schema discovery.
 5. **Never hardcode IDs.** Discover project/location/business IDs via API first. Use `/searchatlas:my-account` to get the user's current resources before running workflows.
 6. **Never expose secrets.** API keys come from `.env` or MCP config — never print them. When sharing results, include only public-safe data.
 7. **Never hardcode paths.** Plugin assets (workflows, integrations, scripts) → `$CLAUDE_PLUGIN_ROOT`. User data → `$SA_CLIENTS_DIR` (defaults to `~/.searchatlas/clients/`, env-overridable). Never write a literal path with a username.
@@ -37,22 +37,22 @@ The official SearchAtlas command-line toolkit — SEO, GBP, PPC, content, and AI
 
 Param names are inconsistent across tools — **always use schema discovery first**. Common gotchas:
 
-| Tool group | "domain" param | "ID" param |
+| Tool family | "domain" param | "ID" param |
 |---|---|---|
-| `brand_vault` (CRUD) | — | `brand_vault_uuid` |
-| `brand_vault` (read-only) | `hostname` | — |
-| `organic`, `backlinks`, `analysis` | `project_identifier` | `project_identifier` |
-| `holistic_audit` | `domain` | — |
-| `gbp_locations_crud` | — | `location_id` (integer) |
-| `business_crud` | — | `google_ads_account_id` + `google_ads_client_id` |
-| `project_management` | `project_id` (UUID) | `project_id` |
+| `bv_*` (CRUD) | — | `brand_vault_uuid` |
+| `bv_*` (read-only) | `hostname` (accepted as `identifier`) | — |
+| `se_*` (Site Explorer) | `site_id` (from `se_list_sites`) | `site_id` |
+| `se_get_holistic_seo_scores` | `domain` | — |
+| `gbp_*` | — | `location_id` (integer) |
+| `ppc_*` | — | `business_id`; account ops need `google_ads_account_id` + `google_ads_client_id` |
+| `otto_*` | `project_identifier` (UUID or hostname) | `project_identifier` |
 
-**Known collision:** `project_management` may resolve to content-project ops instead of OTTO. If you see `list_content_projects` instead of `list_otto_projects`, you hit the wrong tool — retry or use brand-vault data (it includes linked OTTO project IDs).
+**Tip:** OTTO tools accept either a project UUID or a hostname as `project_identifier`; resolve a hostname to a UUID first with `otto_find_project_by_hostname` when an op requires the UUID. Brand-vault read tools also resolve a hostname to a UUID for you.
 
 ## 5. Account Discovery Flow
 
 When a user asks about their account, gather in this order, then present a clean summary with counts and key metrics:
-1. OTTO projects (`project_management` → list) · 2. Brand vaults (`brand_vault` → list) · 3. GBP locations (`gbp_locations` → list) · 4. PPC (`business_crud` → list businesses, then `campaign`) · 5. Content (`content` tools) · 6. LLM visibility (`ai_visibility` tools).
+1. OTTO projects (`otto_list_projects`) · 2. Brand vaults (`bv_list`) · 3. GBP locations (`gbp_list_locations`) · 4. PPC (`ppc_list_businesses`, then `ppc_list_campaigns`) · 5. Content (`cg_list_articles`) · 6. LLM visibility (`llmv_list_projects`).
 
 ## 6. Intent Routing — Match Request to Command
 
@@ -73,17 +73,17 @@ When a user mentions a client, domain, project, or their own brand, route by how
 
 | User says… | Tool path |
 |---|---|
-| "their keywords" / "what do they rank for" | `organic` → `get_organic_keywords` |
-| "backlinks" | `backlinks` → `get_site_backlinks` + `get_site_referring_domains` |
-| "SEO health" / "pillar scores" | `holistic_audit` → `get_holistic_seo_pillar_scores` |
-| "GBP profile" | `gbp_locations_crud` → `get_location` |
-| "GBP stats / performance" | `gbp_locations_crud` → `get_location_stats` |
-| "brand vault / voice" | `brand_vault` → `retrieve_brand_vault_details` |
-| "articles / content status" | `content_retrieval` → `get_article_summary` / `get_project_articles` |
-| "PPC / ad performance" | `campaign` → `list_campaigns_with_metrics` |
-| "AI visibility / LLM mentions" | `visibility` → `get_brand_overview` |
-| "competitors" | `organic` → `get_organic_competitors` |
-| "quota / how much left" | `quota_management` → `show_otto_quota` |
+| "their keywords" / "what do they rank for" | `se_get_organic` (view='keywords') |
+| "backlinks" | `se_get_links` |
+| "SEO health" / "pillar scores" | `se_get_holistic_seo_scores` |
+| "GBP profile" | `gbp_get_location` |
+| "GBP stats / performance" | `gbp_get_location_metrics` (view='stats') |
+| "brand vault / voice" | `bv_get_details` |
+| "articles / content status" | `cg_get_article_summary` / `cg_list_articles` |
+| "PPC / ad performance" | `ppc_list_campaigns` |
+| "AI visibility / LLM mentions" | `llmv_get_overview` (view='brand') |
+| "competitors" | `se_get_organic` (view='competitors') |
+| "quota / how much left" | `get_quota` |
 
 **Action requests → run the workflow:** "run SEO"/"monthly maintenance" → `/searchatlas:run-seo` · "optimize GBP" → `/searchatlas:run-gbp` · "launch ads"/"set up PPC" → `/searchatlas:run-ppc` · "create content"/"topical map" → `/searchatlas:run-content` · "press release"/"build authority" → `/searchatlas:run-pr` · "AI visibility audit" → `/searchatlas:run-visibility` · "post to Slack/Discord" → `/searchatlas:send-slack` / `send-discord` · "email the report" → `/searchatlas:send-email` · "post to Circle" → `/searchatlas:send-circle`.
 

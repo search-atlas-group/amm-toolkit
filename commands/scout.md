@@ -23,7 +23,7 @@ Ask the user:
 > Which domain do you want to scout? (paste a URL, or type `list` to pick from your account)
 
 If they type `list`:
-- `project_management` → `list_otto_projects` (empty params)
+- `otto_list_projects` (empty params)
 - Display as numbered menu, member picks a number
 
 Capture: `domain`, `client_slug` (suggest from domain — e.g., `apple.com` → `apple`), and `project_id` if one already exists.
@@ -32,11 +32,11 @@ Capture: `domain`, `client_slug` (suggest from domain — e.g., `apple.com` → 
 
 Check what already exists for this domain — do **not** create anything:
 
-- `project_management` → `find_project_by_hostname` (`hostname: <domain>`) → `project_id` or null
-- `brand_vault` → `list_brand_vaults` (filter by domain) → `brand_vault_uuid` or null
-- `gbp_locations_crud` → `list_locations` (filter by domain or business name) → `location_id` or null
-- `business_crud` → `list_businesses` (filter by domain) → `business_id` or null
-- `visibility` → `list_brands` (filter by domain) → `brand_id` or null
+- `otto_find_project_by_hostname` (`hostname: <domain>`) → `project_id` or null
+- `bv_list` (filter by domain) → `brand_vault_uuid` or null
+- `gbp_list_locations` (filter by domain or business name) → `location_id` or null
+- `ppc_list_businesses` (filter by domain) → `business_id` or null
+- `llmv_list_projects` (filter by domain) → `brand_id` or null
 
 Mark each as `exists` or `missing`. If everything is `missing`, this is a brand-new domain — `/searchatlas:scout` will report that and recommend `/searchatlas:onboard-client`. **Do not engage anything.**
 
@@ -45,32 +45,32 @@ Mark each as `exists` or `missing`. If everything is `missing`, this is a brand-
 Run all groups that have a corresponding ID. Skip cleanly if the resource doesn't exist.
 
 **Group A — OTTO & SEO Health** (only if `project_id` exists)
-- `project_management` → `get_otto_project_details` → health score, page count, issue count, deployment status
-- `seo_analysis` → `get_holistic_seo_pillar_scores` → Technical · Content · Authority · UX (0-100)
-- `audit_management` → `list_audits` → most recent audit run date + status
+- `otto_get_project_details` → health score, page count, issue count, deployment status
+- `se_get_holistic_seo_scores` → Technical · Content · Authority · UX (0-100)
+- `otto_get_site_audit` → most recent audit run date + status
 
 **Group B — Site Explorer** (works on any domain, no project required)
-- `organic` → `get_organic_keywords` (limit 100) → top kws, count, avg position
-- `organic` → `get_organic_competitors` (limit 5) → top competitor domains
-- `analysis` → `get_position_distribution` → counts in pos 1-3 / 4-10 / 11-20 / 21+
-- `backlinks` → `get_site_backlinks` (limit 50) → backlink count
-- `backlinks` → `get_site_referring_domains` (limit 25) → referring domains, top by DA
+- `se_get_organic` (view='keywords', limit 100) → top kws, count, avg position
+- `se_get_organic` (view='competitors', limit 5) → top competitor domains
+- `se_get_analysis` (view='positions') → counts in pos 1-3 / 4-10 / 11-20 / 21+
+- `se_get_links` (limit 50) → backlink count
+- `se_get_links` (limit 25) → referring domains, top by DA
 
 **Group C — Brand Vault** (only if `brand_vault_uuid` exists)
-- `brand_vault` → `retrieve_brand_vault_details` → completeness check (description, logo, colors)
-- `brand_vault` → `list_voice_profiles` → is there an active voice profile?
-- `brand_vault` → `get_knowledge_graph` → is the KG populated?
+- `bv_get_details` → completeness check (description, logo, colors)
+- `bv_list_voice_templates` → is there an active voice profile?
+- `bv_get_knowledge_graph` → is the KG populated?
 
 **Group D — GBP** (only if `location_id` exists)
-- `gbp_locations_crud` → `get_location_stats` → views, clicks, calls (last 30d)
-- `gbp_locations_crud` → `list_reviews` → review count, avg rating, reply rate
+- `gbp_get_location_metrics` (view='stats') → views, clicks, calls (last 30d)
+- `gbp_list_reviews` → review count, avg rating, reply rate
 
 **Group E — PPC** (only if `business_id` exists)
-- `campaign` → `list_campaigns_with_metrics` → active campaigns, monthly spend, CTR
+- `ppc_list_campaigns` (with metrics) → active campaigns, monthly spend, CTR
 
 **Group F — LLM Visibility** (only if `brand_id` exists)
-- `visibility` → `get_brand_overview` → mention count, share-of-voice
-- `sentiment` → `get_sentiment_overview` → positive/neutral/negative split
+- `llmv_get_overview` → mention count, share-of-voice
+- `llmv_get_overview` (view='sentiment') → positive/neutral/negative split
 
 Run groups in parallel. Each group should fail-soft — if one tool errors, mark that data point unavailable and continue.
 
@@ -257,7 +257,7 @@ Score bar style: `████████░░` (filled blocks for score/10, r
 
 - **Read-only.** No engaging projects, no creating brand vaults, no deploying anything. The only writes are the SA Report Builder report and the local HTML.
 - **Skip cleanly.** If a resource doesn't exist (no GBP, no PPC, no LLM brand), mark the pillar `not set up` and continue. Never block.
-- **Always discover IDs from the domain** — never hardcode. Resolve via `find_project_by_hostname`, `list_brand_vaults`, etc.
+- **Always discover IDs from the domain** — never hardcode. Resolve via `otto_find_project_by_hostname`, `bv_list`, etc.
 - **Schema discovery on first use** — if any tool errors, call with `{}` to get the schema, then retry. Especially important for the Report Builder create tool, which may not match the names of the visible read tools.
 - **Tie every recommendation to a command.** No "improve content" — say "run `/searchatlas:summit-shot 5` (Topical Map) to expand coverage."
 - **Pick top 4–6 priorities, not all 11.** Quality over quantity.

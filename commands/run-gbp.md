@@ -18,25 +18,25 @@ Ask the user:
 
 Load `workflows/gbp-optimization.yaml` and execute:
 
-1. **Load location** — `gbp_locations_crud` → `load_location` to sync latest from Google
-2. **Get current state** — `gbp_locations_crud` → `get_location` + `get_location_stats`
-3. **AI recommendations** — `gbp_locations_recommendations` → `generate_recommendations` then `bulk_apply_recommendations` (apply CHANGE + ADD types, skip DELETE for manual review)
-4. **Fix categories** — `gbp_locations_categories_crud` → set primary + additional categories
-5. **Add services** — `gbp_locations_services_crud` → add/update services with AI-generated descriptions
-6. **Add attributes** — `gbp_locations_attributes_crud` → fill in missing attributes
-7. **AI description + deploy** — `gbp_locations_deployment` → `suggest_description` then `deploy_location`
+1. **Load location** — `gbp_get_location` to sync latest from Google
+2. **Get current state** — `gbp_get_location` + `gbp_get_location_metrics`
+3. **AI recommendations** — `gbp_generate_location_recommendations` then `gbp_bulk_apply_recommendations` (apply CHANGE + ADD types, skip DELETE for manual review)
+4. **Fix categories** — `gbp_manage_categories` to set primary + additional categories
+5. **Add services** — `gbp_upsert_services` to add/update services with AI-generated descriptions
+6. **Add attributes** — `gbp_manage_attributes` to fill in missing attributes
+7. **AI description + deploy** — `gbp_suggest_description` to generate, `gbp_update_location` to save, then `gbp_bulk_deploy_locations` to push the changes live to Google
 
-Ask the user for: GBP location ID (or help them find it via `list_locations`), primary category, additional categories, services to add.
+Ask the user for: GBP location ID (or help them find it via `gbp_list_locations`), primary category, additional categories, services to add.
 
 ### Monthly Maintenance
 
 Load `workflows/gbp-monthly.yaml` and execute:
 
-1. **Review replies** — `gbp_reviews` → `list_reviews` (unanswered) → `ai_generate_review_reply` → `publish_review_reply` for each
-2. **Generate posts** — `gbp_posts_generation` → `bulk_generate_posts` + `bulk_create_posts`
-3. **Automated posting** — `gbp_posts_automation` → configure + enable automated posting
-4. **Publish posts** — `gbp_posts_crud` → `approve_post` + `publish_post` for pending posts
-5. **Performance summary** — `gbp_locations_crud` → `get_location_stats`
+1. **Review replies** — `gbp_list_reviews` (unanswered) → `gbp_ai_generate_review_reply` → `gbp_set_review_reply_published` for each
+2. **Generate posts** — `gbp_bulk_generate_posts` + `gbp_bulk_publish_posts`
+3. **Automated posting** — `gbp_update_posting_settings` to configure + enable automated posting
+4. **Publish posts** — `gbp_set_post_status` to approve + publish pending posts
+5. **Performance summary** — `gbp_get_location_metrics`
 
 Ask the user for: GBP location ID, number of posts to generate (default: 8), post type, whether to enable auto-posting.
 
@@ -88,6 +88,6 @@ After writing the file, print the path in chat so the user can open it.
 
 ## Golden Rules
 
-- Always `load_location` first to sync the latest state from Google
+- Always `gbp_get_location` first to sync the latest state from Google
 - Confirm before deploying changes — deployment pushes to Google
 - Skip DELETE-type recommendations — they should be reviewed manually

@@ -20,13 +20,13 @@ Ask the user for:
 
 ### Step 2: Execute Workflow
 
-1. **Brand overview** — `visibility` → `get_brand_overview` with brand + domain
-2. **Visibility trend** — `visibility` → `get_visibility_trend`
-3. **Competitor ranking** — `visibility` → `get_competitor_visibility_rank` + `get_competitor_share_of_voice`
-4. **Sentiment** — `sentiment` → `get_sentiment_overview` + `get_sentiment_trend` by topic
-5. **Prompt simulation** — `prompt_simulator` → `submit_prompts` with the user's prompts, then poll `check_ps_status` until complete, then `get_ps_responses` + `get_ps_summary` + `get_ps_visibility`
-6. **SERP analysis** — `analysis` → `get_serp_features` + `get_position_distribution` + `get_historical_trends`
-7. **Export (optional)** — `project_management` → `work_summary_export` if the user has an OTTO project
+1. **Brand overview** — `llmv_get_overview` with brand + domain
+2. **Visibility trend** — `llmv_get_overview` (trend view)
+3. **Competitor ranking** — `llmv_get_competitor_data` for visibility rank + share of voice
+4. **Sentiment** — `llmv_get_sentiment_trend` by topic
+5. **Prompt simulation** — `llmv_submit_prompts` with the user's prompts, then poll `llmv_check_ps_status` until complete, then `llmv_get_ps_analysis`
+6. **SERP analysis** — `se_get_serp_overview` for SERP features, position distribution, and historical trends
+7. **Export (optional)** — `otto_export_work_summary` if the user has an OTTO project
 
 ### Step 3: Recommendations
 

@@ -17,7 +17,7 @@ Ask the user:
 ### Creating a New Topical Map
 
 1. Ask for: keyword, domain, pillar URL
-2. Call `topical_maps` → `create_topical_map` with the keyword, domain, and pillar URL
+2. Call `cg_create_topical_map` with the keyword, domain, and pillar URL
 3. Present the generated clusters and article titles
 4. Ask which articles to generate (all or specific ones)
 
@@ -25,24 +25,24 @@ Ask the user:
 
 For each article title, run the **4-step article workflow**:
 
-1. **Create instance** — `content_generation` → `create_content_instance`
+1. **Create instance** — `cg_create_content_instance`
    - Pass: article title, topical map ID, brand vault ID (if available)
-2. **Information retrieval** — `content_generation` → `start_information_retrieval`
-   - Then poll with `poll_information_retrieval` until status = completed
-3. **Headings outline** — `content_generation` → `start_headings_outline`
-   - Then poll with `poll_headings_outline` until status = completed
-4. **Generate article** — `content_generation` → `generate_complete_article`
+2. **Information retrieval** — `cg_start_information_retrieval`
+   - Then poll with `cg_wait_for_task` until status = completed
+3. **Headings outline** — `cg_start_headings_outline`
+   - Then poll with `cg_wait_for_task` until status = completed
+4. **Generate article** — `cg_generate_complete_article`
 
 ### Optional: Content Grading
 
 After generation, ask if the user wants to grade the articles:
-- `article_management` → `run_content_grader` for each article
+- `cg_run_content_grader` for each article
 
 ### Optional: Publishing
 
 Ask if the user wants to publish:
-- **WordPress** — `content_publication` → `publish_wordpress_article`
-- **CMS** — `content_publication` → `publish_cms_article`
+- **WordPress** — `cg_push_article` (WordPress connector)
+- **CMS** — `cg_push_article` (CMS connector)
 
 ### Final Step: Save Workflow Log
 
