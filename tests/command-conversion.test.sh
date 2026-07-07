@@ -6,7 +6,15 @@ cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" 2>/dev/null || exit 1
 # Plugin commands are namespaced as /searchatlas:<name> at invocation.
 
 NAME="$1"
-[ -z "$NAME" ] && { echo "FAIL: pass a command name (e.g. scout)"; exit 1; }
+if [ -z "$NAME" ]; then
+  # No arg: iterate every command so a bare suite run exercises the whole surface.
+  rc=0
+  for f in commands/*.md; do
+    bash "$0" "$(basename "$f" .md)" || rc=1
+  done
+  [ "$rc" -eq 0 ] && echo "PASS: all commands structurally correct"
+  exit "$rc"
+fi
 FILE="commands/${NAME}.md"
 
 [ -f "$FILE" ] || { echo "FAIL: $FILE missing"; exit 1; }
