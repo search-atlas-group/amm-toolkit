@@ -13,7 +13,7 @@ How to connect the SearchAtlas MCP server to Claude Code.
 Run this once in your terminal:
 
 ```bash
-claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
 ```
 
 That's it. No API key, no JSON editing.
@@ -72,5 +72,5 @@ The MCP exposes a large set of tools. Use schema discovery — ask Claude to lis
 
 ```bash
 claude mcp remove searchatlas
-claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
 ```
