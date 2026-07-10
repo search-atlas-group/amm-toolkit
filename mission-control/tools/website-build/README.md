@@ -47,7 +47,7 @@ The operator's wizard inputs (services, materials, target market, page decisions
 - **Claude Code CLI** — install from <https://claude.com/code>
 - **SearchAtlas MCP configured** — from the toolkit root:
   ```bash
-  claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+  claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
   ```
   First call will trigger OAuth.
 
@@ -149,7 +149,7 @@ cd /path/to/toolkit-root
 claude -p --output-format stream-json --verbose "Run /build-website end-to-end for example.com. Skip Phase 0."
 ```
 
-**`SearchAtlas MCP not configured`** in the header — run `claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp` from the toolkit root, then refresh.
+**`SearchAtlas MCP not configured`** in the header — run `claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp` from the toolkit root, then refresh.
 
 **Stream cuts off mid-build** — closing the browser tab kills the SSE connection but the underlying `claude -p` subprocess will keep running until it finishes. Reload to see the final state from the artifacts on disk.
 

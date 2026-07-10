@@ -48,7 +48,7 @@ integrations:
     use_case: Create and update issues, check project status, manage sprints
     mcp_type: http_oauth
     setup:
-      command: "claude mcp add linear --type http https://mcp.linear.app/sse"
+      command: "claude mcp add linear --transport http https://mcp.linear.app/sse"
       note: "OAuth — authorize on first use inside Claude Code"
     requires: []
     policy_risk: false

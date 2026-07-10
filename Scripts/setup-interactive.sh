@@ -44,11 +44,11 @@ if claude mcp list 2>/dev/null | grep -q "searchatlas"; then
   read -p "  Re-add it? (y/n): " READD
   if [[ "$READD" == "y" || "$READD" == "Y" ]]; then
     claude mcp remove searchatlas 2>/dev/null || true
-    claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+    claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
     echo "  Configured: searchatlas → https://mcp.searchatlas.com/mcp"
   fi
 else
-  claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+  claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
   echo "  Configured: searchatlas → https://mcp.searchatlas.com/mcp"
 fi
 

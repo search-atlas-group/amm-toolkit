@@ -68,7 +68,7 @@ install_claude_code() {
     info "Claude Code — not detected, skipped"
     return 1
   fi
-  if claude mcp add "${SERVER_NAME}" --type http "${ENDPOINT}" >/dev/null 2>&1; then
+  if claude mcp add "${SERVER_NAME}" --transport http "${ENDPOINT}" >/dev/null 2>&1; then
     ok "Claude Code — added SearchAtlas"
   else
     ok "Claude Code — already configured"

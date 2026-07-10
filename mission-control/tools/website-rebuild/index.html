@@ -3382,7 +3382,7 @@ async function checkConn() {
     } else if (data.claude_available) {
       dot.className = 'conn-dot warn';
       txt.textContent = 'SA MCP not configured';
-      if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp`;
+      if (wrap) wrap.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp`;
     } else {
       dot.className = 'conn-dot bad';
       txt.textContent = 'Claude CLI not found';

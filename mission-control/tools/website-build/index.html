@@ -3027,7 +3027,7 @@ async function checkHealth() {
     } else if (data.claude_available) {
       dot.className = 'health-dot warn';
       txt.textContent = 'SA MCP not configured';
-      pill.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp`;
+      pill.title = `Claude: ${data.claude_path || 'found'}\nSA MCP: NOT configured\nRun: claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp`;
     } else {
       dot.className = 'health-dot bad';
       txt.textContent = 'Claude CLI not found';

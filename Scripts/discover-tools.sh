@@ -13,7 +13,7 @@
 #
 # Requirements:
 #   - claude CLI installed and authenticated
-#   - SearchAtlas MCP connected (claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp)
+#   - SearchAtlas MCP connected (claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp)
 #
 # This script generates a discovery prompt that you paste into Claude Code.
 # Claude runs the schema calls and saves results as structured JSON.

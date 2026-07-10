@@ -113,7 +113,7 @@ For each selected integration, follow the exact steps below. Complete one fully 
 
 2. Add the MCP:
    ```bash
-   claude mcp add linear --type http https://mcp.linear.app/sse
+   claude mcp add linear --transport http https://mcp.linear.app/sse
    ```
 
 3. Tell the member: *"Done. Next time you ask me anything about Linear, it'll prompt you to authorize in the browser — just click Allow."*

@@ -522,7 +522,7 @@ Write-Host ""
 Write-Host "  You should see your SearchAtlas account summary."
 Write-Host "  If you do — you're fully set up. If not, re-run:"
 Write-Host ""
-Write-Host "    claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp" -ForegroundColor Cyan
+Write-Host "    claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp" -ForegroundColor Cyan
 Write-Host ""
 Write-Hr
 Write-Host ""

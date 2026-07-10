@@ -282,7 +282,7 @@ taskkill /F /PID <pid>                  # then re-run register-bridges-windows.p
 **OAuth keeps failing**
 ```
 claude mcp remove searchatlas
-claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
 ```
 Restart Claude Code (or Claude Desktop) afterwards.
 

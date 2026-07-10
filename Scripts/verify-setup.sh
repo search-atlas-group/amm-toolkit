@@ -87,7 +87,7 @@ if command -v claude &>/dev/null; then
     echo "$PASS SearchAtlas MCP: configured"
   else
     echo "$FAIL SearchAtlas MCP: not found"
-    echo "       Fix: claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp"
+    echo "       Fix: claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp"
     errors=$((errors + 1))
   fi
 fi

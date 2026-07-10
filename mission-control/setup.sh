@@ -318,7 +318,7 @@ if claude mcp list 2>/dev/null | grep -q "searchatlas"; then
     echo "SearchAtlas MCP already configured."
 else
     echo "Adding SearchAtlas MCP server..."
-    claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+    claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
     echo "SearchAtlas MCP configured."
 fi
 

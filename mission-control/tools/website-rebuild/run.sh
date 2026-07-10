@@ -42,7 +42,7 @@ if claude mcp list 2>/dev/null | grep -qi "searchatlas"; then
 else
   echo -e "  ${YELLOW}⚠${NC}  SearchAtlas MCP not configured"
   echo -e "      Run from the toolkit root:"
-  echo -e "      ${DIM}claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp${NC}"
+  echo -e "      ${DIM}claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp${NC}"
   echo ""
 fi
 

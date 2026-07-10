@@ -29,7 +29,7 @@ When you click **Approve · start rebuild** at the pre-rebuild gate, the server 
 - **Claude Code CLI** — install from <https://claude.com/code>
 - **SearchAtlas MCP configured** — from the toolkit root:
   ```bash
-  claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp
+  claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp
   ```
   First call will trigger OAuth.
 - **A scout output file for the target domain** — run `/scout <domain>` first if you don't already have one. The wizard ingests scout's HTML / JSON / Markdown export as the source of truth.
@@ -135,7 +135,7 @@ cd /path/to/toolkit
 claude -p --output-format stream-json --verbose "Run /rebuild-website for example.com end-to-end with scout output already ingested."
 ```
 
-**`SearchAtlas MCP not configured`** in the header — run `claude mcp add searchatlas --type http https://mcp.searchatlas.com/mcp` from the toolkit root, then refresh.
+**`SearchAtlas MCP not configured`** in the header — run `claude mcp add searchatlas --transport http https://mcp.searchatlas.com/mcp` from the toolkit root, then refresh.
 
 **Stream cuts off mid-rebuild** — closing the browser tab kills the SSE connection but the underlying `claude -p` subprocess will keep running until it finishes. Reload to see the final state from the artifacts on disk.
 
