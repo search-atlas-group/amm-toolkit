@@ -347,8 +347,8 @@ They press `y`. Plugin installed, MCP registered, AGENTS.md loaded, commands ava
 1. **Pull latest repo** so the script and plugin manifest are current.
 2. **Move client data:** `<repo>/clients/*` → `~/.searchatlas/clients/`, reshape into `scouts/`, `reports/`, `workflows/`, `shots/` subfolders. Idempotent — skip files already at destination.
 3. **Uninstall legacy commands** from `~/.claude/commands/`. Operates from a hardcoded whitelist of the toolkit's known command filenames (`scout.md`, `business-report.md`, `my-account.md`, `onboard-client.md`, `sync-client.md`, `summit-shot.md`, `help.md`, `run-seo.md`, `run-gbp.md`, `run-ppc.md`, `run-content.md`, `run-pr.md`, `run-visibility.md`, `send-slack.md`, `send-discord.md`, `send-email.md`, `send-circle.md`). Never touches commands the toolkit didn't install, including unrelated user commands or other plugins.
-4. **Remove the legacy SessionStart auto-update hook** (the `git pull` shim installed by the old `setup.sh`) from `~/.claude/settings.json`. The plugin's own SessionStart hook from §7 is a separate hook, registered via the plugin's `hooks/hooks.json` — it gets installed automatically when the plugin loads and is not affected by this step.
-5. **Add plugin auto-install declarations** to `~/.claude/settings.json` (merge, don't overwrite):
+4. **Remove the legacy SessionStart auto-update hook** (the `git pull` shim installed by the old `setup.sh`) from `$HOME/.claude/settings.json`. The plugin's own SessionStart hook from §7 is a separate hook, registered via the plugin's `hooks/hooks.json` — it gets installed automatically when the plugin loads and is not affected by this step.
+5. **Add plugin auto-install declarations** to `$HOME/.claude/settings.json` (merge, don't overwrite):
    ```json
    {
      "extraKnownMarketplaces": [

@@ -131,7 +131,7 @@ The command will ask you the right questions and fill in the template automatica
 
 1. Copy the template:
    ```bash
-   cp workflows/seo-onboarding.yaml plans/acme-corp-2026-03.yaml
+   cp workflows/seo-onboarding.yaml acme-corp-2026-03.yaml
    ```
 
 2. Fill in client info, IDs, and config

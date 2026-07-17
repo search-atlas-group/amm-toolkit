@@ -12,9 +12,7 @@ Every prompt below is **output-faithful** with its slash command: same tool call
 
 The universal installer auto-detects Claude Desktop and writes the MCP config to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash
-```
+`curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/install-mcp.sh | bash`
 
 Restart Claude Desktop. First tool call triggers OAuth — sign into SearchAtlas, approve, done. No second MCP to install.
 
@@ -515,6 +513,4 @@ For Resend email: ask Claude to call the Resend HTTP API directly with your `RES
 
 If you're running these workflows daily, full Claude Code is faster: slash commands, Mission Control wizards (3 web wizards), send integrations, workflow templates, and a `clients/{slug}/` folder per client.
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"
-```
+`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/search-atlas-group/amm-toolkit/main/Scripts/quickstart-mac.sh)"`
