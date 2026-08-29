@@ -45,6 +45,7 @@ Display this command reference to the user:
 🛠️ SETUP & UTILITIES
   /searchatlas:setup-integrations  Configure Slack, Discord, email, and Circle webhook integrations
   /searchatlas:security-scan       Scan any GitHub repo for threats before cloning or running it
+  /searchatlas:launch-website      Plan a new site launch — architecture, per-page SEO briefs, schemas, tracking
   /searchatlas:build-website       Build a client website using SearchAtlas Website Builder
   /searchatlas:rebuild-website     Rebuild or redeploy an existing client website
   /searchatlas:help                This command list

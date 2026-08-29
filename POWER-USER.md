@@ -43,7 +43,7 @@ The quickstart will:
 │   │   ├── workflows/                 ← /run-seo, /run-gbp, /run-ppc, /run-content, ...
 │   │   ├── clients/                   ← /onboard-client, /sync-client, /summit-shot
 │   │   ├── sharing/                   ← /send-slack, /send-discord, /send-email, /send-circle
-│   │   └── advanced/                  ← /build-website, /rebuild-website, /setup-integrations, /security-scan
+│   │   └── advanced/                  ← /launch-website, /build-website, /rebuild-website, /setup-integrations, /security-scan
 │   ├── docs/                          ← MCP setup, tool reference, slash commands, Desktop prompts
 │   ├── guides/                        ← how-to guides
 │   ├── integrations/                  ← Slack, Discord, email, Circle send scripts

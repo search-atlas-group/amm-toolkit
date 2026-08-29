@@ -76,6 +76,7 @@ The first SearchAtlas tool call prompts a one-time OAuth sign-in (create a free 
 ### Setup & Utilities
 - `/searchatlas:setup-integrations` — Configure Slack/Discord/Email/Circle webhooks
 - `/searchatlas:security-scan` — Scan local setup for exposed secrets
+- `/searchatlas:launch-website` — Plan a new site launch (architecture, SEO briefs, schemas)
 - `/searchatlas:build-website`, `/searchatlas:rebuild-website` — Marketing site generation
 - `/searchatlas:help` — Command reference
 

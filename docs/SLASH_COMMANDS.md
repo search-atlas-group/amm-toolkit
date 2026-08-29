@@ -77,6 +77,7 @@ Same workflows as the Mission Control web wizards, runnable from chat.
 
 | Command | What it does |
 |---|---|
+| [`/launch-website`](../commands/launch-website.md) | Plan a new site launch — site architecture, per-page SEO briefs, schema matrix, tracking setup, grounded in live SA data |
 | [`/build-website`](../commands/build-website.md) | Greenfield site build — domain + a few fields → planned, designed, built, launched on Website Studio |
 | [`/rebuild-website`](../commands/rebuild-website.md) | Redesign an existing site — consumes `/scout` output, executes page-by-page with link-equity preservation |
 
