@@ -9,17 +9,6 @@ Turn discovery inputs (URL, services, locations) into a complete pre-launch plan
 architecture, per-page briefs with primary + long-tail keywords, metadata, modules, FAQs,
 schemas and internal linking — grounded in real Search Atlas data.
 
-> **Note on companion files:** this command's instructions below reference a file tree
-> (`spec/master-template-spec.md`, `references/page-types.md`,
-> `references/searchatlas-playbook.md`, `references/internal-linking.md`,
-> `references/local-seo-layer.md`, `spec/sitemap-rules.md`, `spec/measurement.md`,
-> `examples/goswiftpro-fairfax/`, `assets/dashboard-template.html`,
-> `qa/tool_manifest.json`, `qa/lint_skill_tools.py`) that is **not included** in this
-> flat `commands/` file and does not exist elsewhere in this repo. Most of the operative
-> rules are also stated inline in the phase text below — proceed with those. A `Read` of
-> any of the paths above will fail; do not block on it, and do not invent the missing
-> file's content.
-
 For the web UI version, see [POWER-USER.md § Mission Control](../POWER-USER.md#mission-control--web-wizards) once one exists — today this command has no Mission Control wizard counterpart.
 
 **Scope:** local service businesses with **1–5 physical locations**. Not national
@@ -326,8 +315,7 @@ missing reads as complete.
 
 ### `dashboard.html`
 
-A self-contained HTML dashboard summarizing the plan. Build it inline from the plan data —
-this command ships no `assets/dashboard-template.html`; do not attempt to read one.
+A self-contained HTML dashboard summarizing the plan, built inline from the plan data.
 
 ### `notes.md`
 
