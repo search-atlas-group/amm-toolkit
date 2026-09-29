@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent System Audit — What It Does and Where You Intervene</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --card: #ffffff;
+    --ink: #1a1d23;
+    --muted: #5c6470;
+    --line: #d8dce2;
+    --accent: #2563eb;
+    --accent-soft: #eaf1fe;
+    --warn: #b45309;
+    --warn-soft: #fef3e2;
+    --good: #15803d;
+    --good-soft: #e9f6ee;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  /* Fixed light theme */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+    padding: 40px 24px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+       color: var(--muted); margin-bottom: 12px; }
+
+  /* Section 1: system layers */
+  .layers { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .layer {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 600;
+  }
+  .layer small { display: block; font-weight: 400; color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+  @media (max-width: 800px) { .layers { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 520px) { .layers { grid-template-columns: repeat(2, 1fr); } }
+
+  .probe { text-align: center; color: var(--muted); font-size: 13px; margin: 14px 0 40px; }
+  .probe .arrow { display: block; font-size: 18px; color: var(--accent); margin: 2px 0; }
+
+  /* Section 2: pipeline */
+  .pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .phase {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; position: relative;
+  }
+  .phase .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--card);
+    font-size: 12px; font-weight: 700; margin-bottom: 6px;
+  }
+  .phase h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
+  .phase p { font-size: 12px; color: var(--muted); }
+  .gear { display: inline-block; margin-top: 6px; font-family: var(--mono); font-size: 10px;
+          color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; }
+  .phase.intervene { border: 2px solid var(--warn); background: var(--warn-soft); }
+  .phase.intervene .num { background: var(--warn); color: var(--bg); }
+  .phase.intervene .you {
+    display: block; margin-top: 6px; font-size: 11px; font-weight: 700; color: var(--warn);
+  }
+  .phase.gate { border: 2px solid var(--good); background: var(--good-soft); }
+  .phase.gate .num { background: var(--good); color: var(--bg); }
+  .flow-note { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 13px; padding: 2px 0; }
+
+  /* Section 3: intervene summary */
+  .interventions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .int {
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--warn);
+    border-radius: 8px; padding: 12px 14px; font-size: 12.5px;
+  }
+  .int strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .int span { color: var(--muted); }
+  @media (max-width: 680px) { .interventions { grid-template-columns: 1fr; } }
+
+  .rules {
+    margin-top: 32px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 18px; font-size: 13px;
+  }
+  .rules h2 { margin-bottom: 8px; }
+  .rules li { margin: 4px 0 4px 18px; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Agent System Audit</h1>
+  <div class="sub">What the audit examines, how it runs, and the four points where you (the operator) step in. Everything else runs without you.</div>
+
+  <h2>1 · The system being audited</h2>
+  <div class="layers">
+    <div class="layer">Context load<small>what every session pays at turn one</small></div>
+    <div class="layer">Rules<small>the prose layer</small></div>
+    <div class="layer">Hooks<small>the mechanical guards</small></div>
+    <div class="layer">Enforcement<small>what actually fires</small></div>
+    <div class="layer">Agent fleet<small>workers + schedules</small></div>
+    <div class="layer">Memory + search<small>what agents can recall</small></div>
+    <div class="layer">Runtimes<small>every CLI profile</small></div>
+  </div>
+  <div class="probe">
+    <span class="arrow">&#9660;</span>
+    probed by parallel read-only auditors, one per layer, writing to a scratchpad: nothing is changed during diagnosis
+    <span class="arrow">&#9660;</span>
+  </div>
+
+  <h2>2 · How the audit runs</h2>
+  <div class="pipeline">
+    <div class="phase">
+      <div class="num">0</div>
+      <h3>Measure baseline</h3>
+      <p>Token load, rule bytes, dispatch weight, correction rate, index freshness. Numbers before opinions.</p>
+      <span class="gear">Nodens · Opus</span>
+    </div>
+    <div class="phase">
+      <div class="num">1</div>
+      <h3>Fan out auditors</h3>
+      <p>Eleven parallel read-only lanes, each with a common-error checklist for its layer. Severity-ranked findings.</p>
+      <span class="gear">Ithaqua · Sonnet</span>
+    </div>
+    <div class="phase">
+      <div class="num">2</div>
+      <h3>Test enforcement</h3>
+      <p>Attempt what every "mandatory" guard claims to prevent. Typically 30–50% of them do nothing.</p>
+      <span class="gear">Nodens · Opus</span>
+    </div>
+    <div class="flow-note">&#9660;</div>
+    <div class="phase">
+      <div class="num">3</div>
+      <h3>Classify transcripts</h3>
+      <p>Every user turn sorted into a failure taxonomy. Runs on a different model family than the one being audited, so the system is not grading itself.</p>
+      <span class="gear">Mi-Go · Nug · Ubbo-Sathla</span>
+    </div>
+    <div class="phase intervene">
+      <div class="num">4</div>
+      <h3>Fix plan</h3>
+      <p>Keep / convert / delete decision rules applied to every finding, safety items first.</p>
+      <span class="you">YOU: approve scope, make the keep/delete calls</span>
+    </div>
+    <div class="phase">
+      <div class="num">5</div>
+      <h3>Fix, phase by phase</h3>
+      <p>One layer at a time. Every change gets a changelog with the verification command and its output. Repeated prose rules become hooks, tests, or get deleted. Silent failures become loud ones.</p>
+      <span class="gear">Dagon · Shoggoth</span>
+    </div>
+    <div class="flow-note">&#9660;</div>
+    <div class="phase">
+      <div class="num">6</div>
+      <h3>Red-team the claims</h3>
+      <p>An adversarial agent tries to falsify every "done" claim with the cheapest possible test. It will find false ones; that is the point.</p>
+      <span class="gear">Nyarlathotep · Opus</span>
+    </div>
+    <div class="phase">
+      <div class="num">7</div>
+      <h3>Repair memory + search</h3>
+      <p>The store goes on a diet (small index, merged duplicates, retired regenerators) and the index is rebuilt: index, refresh job, loud failure, one skill telling agents to search before re-asking you.</p>
+      <span class="gear">Yog-Sothoth · Opus</span>
+    </div>
+    <div class="phase gate">
+      <div class="num">8</div>
+      <h3>Re-measure and close</h3>
+      <p>Every Phase 0 metric re-run. Closes only when targets are met, tests pass, and no untested "mandatory" remains.</p>
+    </div>
+  </div>
+
+  <div style="height:36px"></div>
+
+  <h2>3 · Where you intervene</h2>
+  <div class="interventions">
+    <div class="int">
+      <strong>Phase 0 — set the targets</strong>
+      <span>You approve what "good" means: the metric targets the audit closes against.</span>
+    </div>
+    <div class="int">
+      <strong>Phase 4 — the decision gate</strong>
+      <span>Scope approval, keep/delete calls on findings, and anything that touches credentials, money, or data history. Everything mechanical proceeds without you.</span>
+    </div>
+    <div class="int">
+      <strong>Blocked paths, anytime</strong>
+      <span>Fixes that need your password, your account, or your authority queue up as a dry-run command list, never worked around.</span>
+    </div>
+    <div class="int">
+      <strong>Phase 8 — the close</strong>
+      <span>You read the before/after table and the red-team report, and accept or reopen.</span>
+    </div>
+  </div>
+
+  <div class="rules">
+    <h2>Three rules that hold throughout</h2>
+    <ul>
+      <li><strong>Read-only until Phase 4.</strong> Diagnosis changes nothing, so the findings stay honest.</li>
+      <li><strong>Never fix a rule with another rule.</strong> If a rule was rewritten before and the problem persisted, the fix is mechanical or deletion.</li>
+      <li><strong>Nothing is "done" without the verification run and read back in the same session.</strong> Changelog entries carry the command and its output.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
